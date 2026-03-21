@@ -1,0 +1,79 @@
+{
+  "commandTypes": {
+    "BUILD_FEATURE": {
+      "description": "Build a new feature, module, or file from scratch.",
+      "keywords": ["build", "create", "add", "make", "new", "implement", "write", "set up", "scaffold"],
+      "targetAreas": ["intake", "dataverse", "automation", "ui", "production", "sales", "quotes", "ops"]
+    },
+    "MODIFY_FEATURE": {
+      "description": "Change, update, or extend an existing feature.",
+      "keywords": ["change", "update", "modify", "fix", "tweak", "adjust", "edit", "refactor", "improve"],
+      "targetAreas": ["intake", "dataverse", "automation", "ui", "production", "sales", "quotes", "ops"]
+    },
+    "CREATE_TABLE": {
+      "description": "Create a new Dataverse table or entity.",
+      "keywords": ["table", "entity", "dataverse table", "new table", "create table"],
+      "targetAreas": ["dataverse"]
+    },
+    "UPDATE_TABLE": {
+      "description": "Add or modify columns on an existing Dataverse table.",
+      "keywords": ["column", "field", "add column", "rename column", "update table", "add field"],
+      "targetAreas": ["dataverse"]
+    },
+    "CREATE_FLOW": {
+      "description": "Create a new Power Automate flow.",
+      "keywords": ["flow", "automation", "power automate", "trigger", "new flow", "create flow"],
+      "targetAreas": ["automation"]
+    },
+    "UPDATE_FLOW": {
+      "description": "Modify an existing Power Automate flow.",
+      "keywords": ["update flow", "change flow", "modify flow", "fix flow", "edit flow"],
+      "targetAreas": ["automation"]
+    },
+    "CREATE_UI": {
+      "description": "Create a new UI screen, form, or dashboard.",
+      "keywords": ["screen", "form", "dashboard", "ui", "page", "view", "canvas app", "model-driven"],
+      "targetAreas": ["ui"]
+    },
+    "FIX_BUG": {
+      "description": "Fix a bug, error, or unexpected behavior.",
+      "keywords": ["bug", "error", "broken", "crash", "fix", "not working", "wrong", "failed", "issue"],
+      "targetAreas": ["intake", "dataverse", "automation", "ui", "production", "sales", "quotes", "ops"]
+    },
+    "QUOTE_OPS": {
+      "description": "Operations related to quoting and pricing.",
+      "keywords": ["quote", "price", "pricing", "estimate", "bid", "cost", "margin"],
+      "targetAreas": ["quotes", "sales"]
+    },
+    "SALES_OPS": {
+      "description": "Operations related to sales and customers.",
+      "keywords": ["customer", "sale", "invoice", "payment", "square", "lead", "prospect"],
+      "targetAreas": ["sales"]
+    },
+    "PRODUCTION_OPS": {
+      "description": "Operations related to production and fulfillment.",
+      "keywords": ["production", "print", "ship", "shipping", "garment", "art", "proof", "order status", "queue"],
+      "targetAreas": ["production"]
+    },
+    "DOCUMENT_SYSTEM": {
+      "description": "Create or update documentation.",
+      "keywords": ["document", "docs", "readme", "spec", "write up", "explain", "describe"],
+      "targetAreas": ["ops"]
+    },
+    "UNKNOWN": {
+      "description": "Command could not be classified. Requires clarification.",
+      "keywords": [],
+      "targetAreas": ["unknown"]
+    }
+  },
+  "targetAreaKeywords": {
+    "intake": ["intake", "email", "order", "webhook", "pipeline", "extraction"],
+    "dataverse": ["dataverse", "table", "column", "entity", "schema", "crm"],
+    "automation": ["flow", "automate", "power automate", "trigger", "schedule"],
+    "ui": ["screen", "form", "dashboard", "app", "canvas", "model-driven"],
+    "production": ["production", "print", "queue", "garment", "proof", "art", "ship"],
+    "sales": ["sales", "customer", "invoice", "square", "payment", "lead"],
+    "quotes": ["quote", "price", "estimate", "margin", "bid", "cost"],
+    "ops": ["document", "readme", "spec", "deploy", "backup", "config"]
+  }
+}

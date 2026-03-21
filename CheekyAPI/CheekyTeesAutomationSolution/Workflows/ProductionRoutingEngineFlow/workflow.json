@@ -1,0 +1,6 @@
+{
+  "name": "Production Routing Engine - Workflow Metadata",
+  "id": "b5e6f7a8-2c3d-4123-8d0e-444444444444",
+  "description": "Workflow wrapper for Production Routing Engine flow",
+  "definitionFile": "definition.json"
+}

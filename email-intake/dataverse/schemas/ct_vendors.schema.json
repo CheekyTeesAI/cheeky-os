@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ct_vendors",
+  "description": "Vendor/supplier records for Cheeky Tees. Tracks blank garment suppliers, ink vendors, and other supply chain contacts. Standalone table — no foreign key relationships.",
+  "tableName": "ct_vendors",
+  "tableDisplayName": "Vendors",
+  "tableSetName": "ct_vendorses",
+  "primaryKey": "ct_vendorsid",
+  "primaryNameColumn": "ct_name",
+  "fields": [
+    {
+      "fieldName": "ct_vendorsid",
+      "displayName": "Vendor ID",
+      "dataverseType": "uniqueidentifier",
+      "required": true,
+      "description": "Auto-generated primary key (GUID)."
+    },
+    {
+      "fieldName": "ct_name",
+      "displayName": "Vendor Name",
+      "dataverseType": "string",
+      "maxLength": 200,
+      "required": true,
+      "description": "Company or vendor name (e.g. S&S Activewear, SanMar)."
+    },
+    {
+      "fieldName": "ct_contactname",
+      "displayName": "Contact Name",
+      "dataverseType": "string",
+      "maxLength": 200,
+      "required": false,
+      "description": "Primary contact person at the vendor."
+    },
+    {
+      "fieldName": "ct_email",
+      "displayName": "Email",
+      "dataverseType": "string",
+      "maxLength": 200,
+      "required": false,
+      "description": "Vendor contact email address."
+    },
+    {
+      "fieldName": "ct_phone",
+      "displayName": "Phone",
+      "dataverseType": "string",
+      "maxLength": 50,
+      "required": false,
+      "description": "Vendor contact phone number."
+    },
+    {
+      "fieldName": "ct_producttype",
+      "displayName": "Product Type",
+      "dataverseType": "string",
+      "maxLength": 200,
+      "required": false,
+      "description": "Type of products supplied (e.g. blank tees, ink, transfer paper, packaging)."
+    },
+    {
+      "fieldName": "ct_leadtimedays",
+      "displayName": "Lead Time (Days)",
+      "dataverseType": "integer",
+      "required": false,
+      "description": "Typical lead time in business days from order to delivery."
+    },
+    {
+      "fieldName": "ct_paymentterms",
+      "displayName": "Payment Terms",
+      "dataverseType": "string",
+      "maxLength": 100,
+      "required": false,
+      "description": "Payment terms (e.g. Net 30, COD, Prepaid)."
+    },
+    {
+      "fieldName": "ct_notes",
+      "displayName": "Notes",
+      "dataverseType": "string",
+      "maxLength": 4000,
+      "required": false,
+      "description": "Free-text notes about the vendor (minimums, discounts, quality notes, etc.)."
+    }
+  ],
+  "relationships": []
+}

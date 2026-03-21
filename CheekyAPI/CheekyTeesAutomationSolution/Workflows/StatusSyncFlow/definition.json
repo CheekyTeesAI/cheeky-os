@@ -1,0 +1,194 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "properties": {
+    "displayName": "Status Sync Flow",
+    "description": "Keeps order header status aligned with task/job progress. When all tasks for an order complete, advances order stage. When QC passes and payment is full, marks order as Completed.",
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "triggers": {
+        "When_a_task_is_updated": {
+          "type": "ApiConnection",
+          "inputs": {
+            "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+            "method": "post",
+            "path": "/datasets/default/tables/crb_tasks/onupdateditems",
+            "queries": {
+              "filter": "crb_status eq 100000002"
+            }
+          },
+          "description": "Triggers when a task status changes to Completed (100000002)"
+        }
+      },
+      "actions": {
+        "GetRelatedOrder": {
+          "type": "ApiConnection",
+          "inputs": {
+            "host": { "connection": { "name": "@connections['shared_commondataservice']['connectionId']" } },
+            "method": "get",
+            "path": "/datasets/default/tables/crb_orders/items/@{triggerBody()?['_crb_orderid_value']}"
+          },
+          "runAfter": {}
+        },
+        "GetAllTasksForOrder": {
+          "type": "ApiConnection",
+          "runAfter": { "GetRelatedOrder": [ "Succeeded" ] },
+          "inputs": {
+            "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+            "method": "get",
+            "path": "/datasets/default/tables/crb_tasks/items",
+            "queries": {
+              "$filter": "_crb_orderid_value eq @{triggerBody()?['_crb_orderid_value']}"
+            }
+          }
+        },
+        "CheckAllTasksComplete": {
+          "type": "Compose",
+          "runAfter": { "GetAllTasksForOrder": [ "Succeeded" ] },
+          "inputs": {
+            "totalTasks": "@length(body('GetAllTasksForOrder')?['value'])",
+            "completedTasks": "@length(filter(body('GetAllTasksForOrder')?['value'], item => item?['crb_status'] == 100000002))",
+            "allComplete": "@equals(length(body('GetAllTasksForOrder')?['value']), length(filter(body('GetAllTasksForOrder')?['value'], item => item?['crb_status'] == 100000002)))"
+          }
+        },
+        "CheckTaskType": {
+          "type": "Switch",
+          "runAfter": { "CheckAllTasksComplete": [ "Succeeded" ] },
+          "expression": "@triggerBody()?['crb_tasktype']",
+          "cases": {
+            "QualityCheck_Completed": {
+              "case": 100000003,
+              "actions": {
+                "UpdateOrderQCStatus": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "patch",
+                    "path": "/datasets/default/tables/crb_orders/items/@{triggerBody()?['_crb_orderid_value']}",
+                    "body": {
+                      "crb_qcstatus": 100000001,
+                      "crb_productionstatus": 100000002
+                    }
+                  },
+                  "description": "Set QC Status to Pass, Production Status to Completed"
+                },
+                "CheckPaymentForCompletion": {
+                  "type": "If",
+                  "runAfter": { "UpdateOrderQCStatus": [ "Succeeded" ] },
+                  "expression": "@equals(body('GetRelatedOrder')?['crb_paymentstatus'], 100000003)",
+                  "actions": {
+                    "MarkOrderCompleted": {
+                      "type": "ApiConnection",
+                      "inputs": {
+                        "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                        "method": "patch",
+                        "path": "/datasets/default/tables/crb_orders/items/@{triggerBody()?['_crb_orderid_value']}",
+                        "body": {
+                          "crb_orderstage": 100000005,
+                          "crb_deliverystatus": 100000001
+                        }
+                      },
+                      "description": "QC passed + Paid in Full = Mark Completed + Ready for Pickup"
+                    },
+                    "LogCompletion": {
+                      "type": "ApiConnection",
+                      "runAfter": { "MarkOrderCompleted": [ "Succeeded" ] },
+                      "inputs": {
+                        "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                        "method": "post",
+                        "path": "/datasets/default/tables/crb_progresstracker/items",
+                        "body": {
+                          "crb_progressname": "@{concat('Order Completed - ', body('GetRelatedOrder')?['crb_ordername'])}",
+                          "crb_action": "Auto-Completed: QC Pass + Paid in Full",
+                          "crb_previousstatus": "Printing",
+                          "crb_newstatus": "Completed",
+                          "crb_changedby": "Cheeky AI",
+                          "crb_changedate": "@utcNow()",
+                          "crb_orderid@odata.bind": "@{concat('/crb_orders(', triggerBody()?['_crb_orderid_value'], ')')}"
+                        }
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {
+                      "FlagReadyForPickupPendingPayment": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                          "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                          "method": "patch",
+                          "path": "/datasets/default/tables/crb_orders/items/@{triggerBody()?['_crb_orderid_value']}",
+                          "body": {
+                            "crb_deliverystatus": 100000000,
+                            "crb_notes": "@{concat(coalesce(body('GetRelatedOrder')?['crb_notes'], ''), ' | QC PASSED but payment not complete. Hold for pickup until Paid in Full.')}"
+                          }
+                        },
+                        "description": "QC passed but not paid in full - hold delivery"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "Printing_Completed": {
+              "case": 100000002,
+              "actions": {
+                "UpdateProductionStatus": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "patch",
+                    "path": "/datasets/default/tables/crb_orders/items/@{triggerBody()?['_crb_orderid_value']}",
+                    "body": {
+                      "crb_productionstatus": 100000001
+                    }
+                  },
+                  "description": "Set Production Status to In Progress when printing task completes"
+                }
+              }
+            }
+          },
+          "default": {
+            "actions": {
+              "UpdateProgressTracker": {
+                "type": "ApiConnection",
+                "inputs": {
+                  "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                  "method": "post",
+                  "path": "/datasets/default/tables/crb_progresstracker/items",
+                  "body": {
+                    "crb_progressname": "@{concat('Task Completed - ', triggerBody()?['crb_taskname'])}",
+                    "crb_action": "Task Completed",
+                    "crb_previousstatus": "In Progress",
+                    "crb_newstatus": "Completed",
+                    "crb_changedby": "Cheeky AI",
+                    "crb_changedate": "@utcNow()",
+                    "crb_orderid@odata.bind": "@{concat('/crb_orders(', triggerBody()?['_crb_orderid_value'], ')')}"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "SyncOrderStageIfAllComplete": {
+          "type": "If",
+          "runAfter": { "CheckTaskType": [ "Succeeded" ] },
+          "expression": "@outputs('CheckAllTasksComplete')?['allComplete']",
+          "actions": {
+            "AdvanceToCompleted": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                "method": "patch",
+                "path": "/datasets/default/tables/crb_orders/items/@{triggerBody()?['_crb_orderid_value']}",
+                "body": {
+                  "crb_productionstatus": 100000002
+                }
+              },
+              "description": "All tasks complete - mark production as Completed"
+            }
+          }
+        }
+      }
+    }
+  }
+}

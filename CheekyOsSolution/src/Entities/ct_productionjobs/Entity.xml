@@ -1,0 +1,210 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Entity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name LocalizedName="ProductionJobs" OriginalName="ProductionJobs">ct_productionjobs</Name>
+  <ObjectTypeCode>0</ObjectTypeCode>
+  <EntityInfo>
+    <entity Name="ct_productionjobs">
+      <LocalizedNames><LocalizedName description="ProductionJobs" languagecode="1033" /></LocalizedNames>
+      <LocalizedCollectionNames><LocalizedCollectionName description="Production Jobs" languagecode="1033" /></LocalizedCollectionNames>
+      <Descriptions><Description description="Cheeky OS Production Jobs" languagecode="1033" /></Descriptions>
+      <attributes>
+        <attribute PhysicalName="ct_productionjobsid">
+          <Type>primarykey</Type><Name>ct_productionjobsid</Name><LogicalName>ct_productionjobsid</LogicalName>
+          <RequiredLevel>systemrequired</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind</DisplayMask>
+          <ValidForUpdateApi>0</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>0</IsCustomField><IsAuditEnabled>0</IsAuditEnabled>
+          <IsSecured>0</IsSecured><IsCustomizable>0</IsCustomizable><IsRenameable>0</IsRenameable>
+          <displaynames><displayname description="ct_productionjobs" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_name">
+          <Type>nvarchar</Type><Name>ct_name</Name><LogicalName>ct_name</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel><DisplayMask>PrimaryName|ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><MaxLength>200</MaxLength><Length>200</Length>
+          <displaynames><displayname description="Job Name" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_ordernumber">
+          <Type>nvarchar</Type><Name>ct_ordernumber</Name><LogicalName>ct_ordernumber</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><MaxLength>100</MaxLength><Length>100</Length>
+          <displaynames><displayname description="Order Number" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_productiontype">
+          <Type>picklist</Type><Name>ct_productiontype</Name><LogicalName>ct_productiontype</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="ct_productiontype_pj"><OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="Production Type" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="DTG" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="DTF" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="Screen Print" languagecode="1033" /></labels></option>
+              <option value="100000003"><labels><label description="Embroidery" languagecode="1033" /></labels></option>
+              <option value="100000004"><labels><label description="Vinyl" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="Production Type" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_jobstatus">
+          <Type>picklist</Type><Name>ct_jobstatus</Name><LogicalName>ct_jobstatus</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="ct_jobstatus"><OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="Status" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="Queued" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="In Production" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="QC" languagecode="1033" /></labels></option>
+              <option value="100000003"><labels><label description="Complete" languagecode="1033" /></labels></option>
+              <option value="100000004"><labels><label description="On Hold" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="Status" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_garmenttype">
+          <Type>nvarchar</Type><Name>ct_garmenttype</Name><LogicalName>ct_garmenttype</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><MaxLength>200</MaxLength><Length>200</Length>
+          <displaynames><displayname description="Garment Type" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_garmentcolor">
+          <Type>nvarchar</Type><Name>ct_garmentcolor</Name><LogicalName>ct_garmentcolor</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><MaxLength>100</MaxLength><Length>100</Length>
+          <displaynames><displayname description="Garment Color" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_quantity">
+          <Type>int</Type><Name>ct_quantity</Name><LogicalName>ct_quantity</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <MinValue>0</MinValue><MaxValue>1000000</MaxValue>
+          <displaynames><displayname description="Quantity" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_frontprint">
+          <Type>bit</Type><Name>ct_frontprint</Name><LogicalName>ct_frontprint</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><DefaultValue>0</DefaultValue>
+          <displaynames><displayname description="Front Print" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_backprint">
+          <Type>bit</Type><Name>ct_backprint</Name><LogicalName>ct_backprint</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><DefaultValue>0</DefaultValue>
+          <displaynames><displayname description="Back Print" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_blankstatus">
+          <Type>picklist</Type><Name>ct_blankstatus</Name><LogicalName>ct_blankstatus</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="ct_blankstatus"><OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="Blank Status" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="Not Ordered" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="Ordered" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="Received" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="Blank Status" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_artworkapproved">
+          <Type>bit</Type><Name>ct_artworkapproved</Name><LogicalName>ct_artworkapproved</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><DefaultValue>0</DefaultValue>
+          <displaynames><displayname description="Artwork Approved" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_productionready">
+          <Type>bit</Type><Name>ct_productionready</Name><LogicalName>ct_productionready</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><DefaultValue>0</DefaultValue>
+          <displaynames><displayname description="Production Ready" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_qcresult">
+          <Type>picklist</Type><Name>ct_qcresult</Name><LogicalName>ct_qcresult</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="ct_qcresult"><OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="QC Result" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="Pending" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="Passed" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="Failed" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="QC Result" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_vendorroute">
+          <Type>nvarchar</Type><Name>ct_vendorroute</Name><LogicalName>ct_vendorroute</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><MaxLength>200</MaxLength><Length>200</Length>
+          <displaynames><displayname description="Vendor Route" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_startdate">
+          <Type>datetime</Type><Name>ct_startdate</Name><LogicalName>ct_startdate</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <Format>date</Format><CanChangeDateTimeBehavior>1</CanChangeDateTimeBehavior><Behavior>1</Behavior>
+          <displaynames><displayname description="Start Date" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_completeddate">
+          <Type>datetime</Type><Name>ct_completeddate</Name><LogicalName>ct_completeddate</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <Format>date</Format><CanChangeDateTimeBehavior>1</CanChangeDateTimeBehavior><Behavior>1</Behavior>
+          <displaynames><displayname description="Completed Date" languagecode="1033" /></displaynames>
+        </attribute>
+      </attributes>
+      <EntitySetName>ct_productionjobses</EntitySetName>
+      <PrimaryIdAttribute>ct_productionjobsid</PrimaryIdAttribute>
+      <PrimaryNameAttribute>ct_name</PrimaryNameAttribute>
+      <IsBPFEntity>0</IsBPFEntity><IsCustomEntity>1</IsCustomEntity><IsActivity>0</IsActivity>
+      <IsAvailableOffline>1</IsAvailableOffline><IsDocumentManagementEnabled>0</IsDocumentManagementEnabled>
+      <AutoRouteToOwnerQueue>0</AutoRouteToOwnerQueue><IsConnectionsEnabled>0</IsConnectionsEnabled>
+      <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><IsMappable>1</IsMappable>
+      <IsDuplicateDetectionEnabled>0</IsDuplicateDetectionEnabled>
+      <CanCreateAttributes>1</CanCreateAttributes><CanCreateForms>1</CanCreateForms>
+      <CanCreateViews>1</CanCreateViews><CanCreateCharts>1</CanCreateCharts>
+      <CanModifyAdditionalSettings>1</CanModifyAdditionalSettings>
+      <IsAuditEnabled>1</IsAuditEnabled><OwnershipTypeMask>UserOwned</OwnershipTypeMask>
+      <IntroducedVersion>1.0</IntroducedVersion>
+      <IsVisibleInMobile>1</IsVisibleInMobile><IsVisibleInMobileClient>1</IsVisibleInMobileClient>
+      <IsReadOnlyInMobileClient>0</IsReadOnlyInMobileClient>
+      <HasNotes>1</HasNotes><HasActivities>0</HasActivities><PrimaryFieldName>ct_name</PrimaryFieldName>
+    </entity>
+  </EntityInfo>
+</Entity>

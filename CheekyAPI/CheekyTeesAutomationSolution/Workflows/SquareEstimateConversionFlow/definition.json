@@ -1,0 +1,703 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "properties": {
+    "displayName": "Square Estimate Conversion",
+    "description": "Monitors Square estimate/invoice events. Converts accepted estimates into Orders, attaches SquareInvoiceID, calculates margin, enforces 45% margin gate, generates ProductionJobs when deposit is paid.",
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "triggers": {
+        "When_Square_Estimate_Event_Received": {
+          "type": "Request",
+          "kind": "Http",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "event_type": { "type": "string" },
+                "SquareInvoiceID": { "type": "string" },
+                "SquareEstimateID": { "type": "string" },
+                "SquareCustomerID": { "type": "string" },
+                "CustomerName": { "type": "string" },
+                "CustomerEmail": { "type": "string" },
+                "CustomerPhone": { "type": "string" },
+                "InvoiceAmount": { "type": "number" },
+                "EstimateCost": { "type": "number" },
+                "InvoiceStatus": { "type": "string" },
+                "InvoiceURL": { "type": "string" },
+                "DepositPaid": { "type": "boolean" },
+                "GarmentType": { "type": "string" },
+                "Quantity": { "type": "integer" },
+                "ProductionType": { "type": "string" },
+                "DueDate": { "type": "string" }
+              },
+              "required": [ "SquareInvoiceID", "InvoiceStatus" ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Initialize_ProcessingResult": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "ProcessingResult",
+                "type": "string",
+                "value": "started"
+              }
+            ]
+          },
+          "runAfter": {}
+        },
+        "CheckEventType": {
+          "type": "Switch",
+          "expression": "@coalesce(triggerBody()?['InvoiceStatus'], 'unknown')",
+          "cases": {
+            "Estimate_Accepted": {
+              "case": "ACCEPTED",
+              "actions": {
+                "CheckDuplicateOrder": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "get",
+                    "path": "/api/data/v9.2/crb_orderses",
+                    "queries": {
+                      "$filter": "crb_squareinvoiceid eq '@{triggerBody()?['SquareInvoiceID']}'",
+                      "$top": 1
+                    }
+                  },
+                  "runAfter": {}
+                },
+                "CheckIfOrderExists": {
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "greater": [
+                          "@length(body('CheckDuplicateOrder')?['value'])",
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "OrderAlreadyExists_Response": {
+                      "type": "Response",
+                      "inputs": {
+                        "statusCode": 200,
+                        "body": {
+                          "status": "skipped",
+                          "reason": "Order already exists for this Square invoice",
+                          "squareInvoiceId": "@{triggerBody()?['SquareInvoiceID']}"
+                        }
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {
+                      "FindCustomerBySquareId": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                          "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                          "method": "get",
+                          "path": "/api/data/v9.2/crb_customerses",
+                          "queries": {
+                            "$filter": "crb_squarecustomerid eq '@{triggerBody()?['SquareCustomerID']}'",
+                            "$top": 1
+                          }
+                        },
+                        "runAfter": {}
+                      },
+                      "CheckIfCustomerExists": {
+                        "type": "If",
+                        "expression": {
+                          "and": [
+                            {
+                              "greater": [
+                                "@length(body('FindCustomerBySquareId')?['value'])",
+                                0
+                              ]
+                            }
+                          ]
+                        },
+                        "actions": {},
+                        "else": {
+                          "actions": {
+                            "CreateNewCustomer": {
+                              "type": "ApiConnection",
+                              "inputs": {
+                                "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                                "method": "post",
+                                "path": "/api/data/v9.2/crb_customerses",
+                                "body": {
+                                  "crb_customername": "@{coalesce(triggerBody()?['CustomerName'], 'Unknown Customer')}",
+                                  "crb_email": "@{coalesce(triggerBody()?['CustomerEmail'], '')}",
+                                  "crb_phone": "@{coalesce(triggerBody()?['CustomerPhone'], '')}",
+                                  "crb_squarecustomerid": "@{coalesce(triggerBody()?['SquareCustomerID'], '')}"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "runAfter": {
+                          "FindCustomerBySquareId": [ "Succeeded" ]
+                        }
+                      },
+                      "CalculateMargin": {
+                        "type": "Compose",
+                        "inputs": {
+                          "invoiceAmount": "@triggerBody()?['InvoiceAmount']",
+                          "estimateCost": "@coalesce(triggerBody()?['EstimateCost'], 0)",
+                          "marginPercent": "@if(greater(triggerBody()?['InvoiceAmount'], 0), mul(div(sub(triggerBody()?['InvoiceAmount'], coalesce(triggerBody()?['EstimateCost'], 0)), triggerBody()?['InvoiceAmount']), 100), 0)"
+                        },
+                        "runAfter": {
+                          "CheckIfCustomerExists": [ "Succeeded" ]
+                        }
+                      },
+                      "CheckMarginGate": {
+                        "type": "If",
+                        "expression": {
+                          "and": [
+                            {
+                              "greaterOrEquals": [
+                                "@outputs('CalculateMargin')?['marginPercent']",
+                                45
+                              ]
+                            }
+                          ]
+                        },
+                        "actions": {
+                          "CreateOrderFromEstimate": {
+                            "type": "ApiConnection",
+                            "inputs": {
+                              "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                              "method": "post",
+                              "path": "/api/data/v9.2/crb_orderses",
+                              "body": {
+                                "crb_ordername": "@{concat('SQ-', triggerBody()?['SquareInvoiceID'])}",
+                                "crb_ordersource": "Square Estimate",
+                                "crb_orderstage": 100000000,
+                                "crb_totalamount": "@triggerBody()?['InvoiceAmount']",
+                                "crb_marginpercent": "@outputs('CalculateMargin')?['marginPercent']",
+                                "crb_depositpaid": false,
+                                "crb_squareinvoiceid": "@{triggerBody()?['SquareInvoiceID']}",
+                                "crb_customeremail": "@{coalesce(triggerBody()?['CustomerEmail'], '')}",
+                                "crb_garmenttype": "@{coalesce(triggerBody()?['GarmentType'], '')}",
+                                "crb_quantity": "@coalesce(triggerBody()?['Quantity'], 0)",
+                                "crb_orderdate": "@{utcNow()}",
+                                "crb_duedate": "@{coalesce(triggerBody()?['DueDate'], '')}",
+                                "crb_status": "Active",
+                                "crb_notes": "@{concat('Auto-created from Square estimate ', triggerBody()?['SquareEstimateID'], '. Margin: ', string(outputs('CalculateMargin')?['marginPercent']), '%')}"
+                              }
+                            },
+                            "runAfter": {}
+                          },
+                          "SetResult_OrderCreated": {
+                            "type": "SetVariable",
+                            "inputs": {
+                              "name": "ProcessingResult",
+                              "value": "order_created"
+                            },
+                            "runAfter": {
+                              "CreateOrderFromEstimate": [ "Succeeded" ]
+                            }
+                          }
+                        },
+                        "else": {
+                          "actions": {
+                            "CreateFlaggedOrder": {
+                              "type": "ApiConnection",
+                              "inputs": {
+                                "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                                "method": "post",
+                                "path": "/api/data/v9.2/crb_orderses",
+                                "body": {
+                                  "crb_ordername": "@{concat('SQ-', triggerBody()?['SquareInvoiceID'], ' [LOW MARGIN]')}",
+                                  "crb_ordersource": "Square Estimate",
+                                  "crb_orderstage": 100000000,
+                                  "crb_totalamount": "@triggerBody()?['InvoiceAmount']",
+                                  "crb_marginpercent": "@outputs('CalculateMargin')?['marginPercent']",
+                                  "crb_depositpaid": false,
+                                  "crb_squareinvoiceid": "@{triggerBody()?['SquareInvoiceID']}",
+                                  "crb_customeremail": "@{coalesce(triggerBody()?['CustomerEmail'], '')}",
+                                  "crb_garmenttype": "@{coalesce(triggerBody()?['GarmentType'], '')}",
+                                  "crb_quantity": "@coalesce(triggerBody()?['Quantity'], 0)",
+                                  "crb_orderdate": "@{utcNow()}",
+                                  "crb_status": "Flagged - Low Margin",
+                                  "crb_notes": "@{concat('MARGIN GATE FAILED. Margin: ', string(outputs('CalculateMargin')?['marginPercent']), '% (minimum 45%). Production blocked until reviewed.')}"
+                                }
+                              },
+                              "runAfter": {}
+                            },
+                            "SendLowMarginAlert": {
+                              "type": "ApiConnection",
+                              "inputs": {
+                                "host": { "connection": { "name": "@connections['shared_office365']['connectionId']" } },
+                                "method": "post",
+                                "path": "/v2/Mail",
+                                "body": {
+                                  "To": "Customer.service@cheekyteesllc.com",
+                                  "Subject": "@{concat('LOW MARGIN ALERT: Order SQ-', triggerBody()?['SquareInvoiceID'])}",
+                                  "Body": "@{concat('<p><strong>Margin Gate Failed</strong></p><p>Order: SQ-', triggerBody()?['SquareInvoiceID'], '</p><p>Customer: ', coalesce(triggerBody()?['CustomerName'], 'Unknown'), '</p><p>Amount: $', string(triggerBody()?['InvoiceAmount']), '</p><p>Cost: $', string(coalesce(triggerBody()?['EstimateCost'], 0)), '</p><p>Margin: ', string(outputs('CalculateMargin')?['marginPercent']), '%</p><p>Minimum required: 45%</p><p><strong>Production is BLOCKED until this order is reviewed.</strong></p>')}",
+                                  "Importance": "High"
+                                }
+                              },
+                              "runAfter": {
+                                "CreateFlaggedOrder": [ "Succeeded" ]
+                              }
+                            },
+                            "SetResult_Flagged": {
+                              "type": "SetVariable",
+                              "inputs": {
+                                "name": "ProcessingResult",
+                                "value": "flagged_low_margin"
+                              },
+                              "runAfter": {
+                                "SendLowMarginAlert": [ "Succeeded" ]
+                              }
+                            }
+                          }
+                        },
+                        "runAfter": {
+                          "CalculateMargin": [ "Succeeded" ]
+                        }
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "CheckDuplicateOrder": [ "Succeeded" ]
+                  }
+                }
+              }
+            },
+            "Deposit_Paid": {
+              "case": "PAID",
+              "actions": {
+                "FindOrderByInvoiceId": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "get",
+                    "path": "/api/data/v9.2/crb_orderses",
+                    "queries": {
+                      "$filter": "crb_squareinvoiceid eq '@{triggerBody()?['SquareInvoiceID']}'",
+                      "$top": 1
+                    }
+                  },
+                  "runAfter": {}
+                },
+                "CheckOrderFoundForPayment": {
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "greater": [
+                          "@length(body('FindOrderByInvoiceId')?['value'])",
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "GetExistingMargin": {
+                      "type": "Compose",
+                      "inputs": {
+                        "orderId": "@first(body('FindOrderByInvoiceId')?['value'])?['crb_ordersid']",
+                        "orderName": "@first(body('FindOrderByInvoiceId')?['value'])?['crb_ordername']",
+                        "currentMargin": "@first(body('FindOrderByInvoiceId')?['value'])?['crb_marginpercent']",
+                        "currentStatus": "@first(body('FindOrderByInvoiceId')?['value'])?['crb_status']"
+                      },
+                      "runAfter": {}
+                    },
+                    "CheckMarginBeforeProduction": {
+                      "type": "If",
+                      "expression": {
+                        "or": [
+                          {
+                            "equals": [
+                              "@outputs('GetExistingMargin')?['currentStatus']",
+                              "Flagged - Low Margin"
+                            ]
+                          },
+                          {
+                            "less": [
+                              "@coalesce(outputs('GetExistingMargin')?['currentMargin'], 0)",
+                              45
+                            ]
+                          }
+                        ]
+                      },
+                      "actions": {
+                        "BlockProductionLowMargin": {
+                          "type": "Response",
+                          "inputs": {
+                            "statusCode": 200,
+                            "body": {
+                              "status": "blocked",
+                              "reason": "Deposit received but margin below 45%. Production NOT started. Order flagged for review.",
+                              "orderId": "@{outputs('GetExistingMargin')?['orderId']}",
+                              "margin": "@{outputs('GetExistingMargin')?['currentMargin']}"
+                            }
+                          }
+                        }
+                      },
+                      "else": {
+                        "actions": {
+                          "UpdateOrderDepositPaid": {
+                            "type": "ApiConnection",
+                            "inputs": {
+                              "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                              "method": "patch",
+                              "path": "@{concat('/api/data/v9.2/crb_orderses(', outputs('GetExistingMargin')?['orderId'], ')')}",
+                              "body": {
+                                "crb_depositpaid": true,
+                                "crb_orderstage": 100000002,
+                                "crb_notes": "@{concat('Deposit paid via Square. Invoice: ', triggerBody()?['SquareInvoiceID'], '. Advancing to Deposit Paid stage.')}"
+                              }
+                            },
+                            "runAfter": {}
+                          },
+                          "AdvanceToProductionReady": {
+                            "type": "ApiConnection",
+                            "inputs": {
+                              "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                              "method": "patch",
+                              "path": "@{concat('/api/data/v9.2/crb_orderses(', outputs('GetExistingMargin')?['orderId'], ')')}",
+                              "body": {
+                                "crb_orderstage": 100000003
+                              }
+                            },
+                            "runAfter": {
+                              "UpdateOrderDepositPaid": [ "Succeeded" ]
+                            }
+                          },
+                          "CheckDuplicateProductionJob": {
+                            "type": "ApiConnection",
+                            "inputs": {
+                              "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                              "method": "get",
+                              "path": "/api/data/v9.2/crb_productionjobses",
+                              "queries": {
+                                "$filter": "_crb_orderid_value eq '@{outputs('GetExistingMargin')?['orderId']}'",
+                                "$top": 1
+                              }
+                            },
+                            "runAfter": {
+                              "AdvanceToProductionReady": [ "Succeeded" ]
+                            }
+                          },
+                          "ShouldCreateProductionJob": {
+                            "type": "If",
+                            "expression": {
+                              "and": [
+                                {
+                                  "equals": [
+                                    "@length(body('CheckDuplicateProductionJob')?['value'])",
+                                    0
+                                  ]
+                                }
+                              ]
+                            },
+                            "actions": {
+                              "CreateProductionJob": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                  "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                                  "method": "post",
+                                  "path": "/api/data/v9.2/crb_productionjobses",
+                                  "body": {
+                                    "crb_productionjobname": "@{concat('PJ-', outputs('GetExistingMargin')?['orderName'])}",
+                                    "crb_status": 100000000,
+                                    "crb_quantity": "@coalesce(triggerBody()?['Quantity'], 0)",
+                                    "crb_startdate": "@{utcNow()}",
+                                    "crb_notes": "@{concat('Auto-generated from deposit payment. Invoice: ', triggerBody()?['SquareInvoiceID'])}",
+                                    "crb_OrderId@odata.bind": "@{concat('/crb_orderses(', outputs('GetExistingMargin')?['orderId'], ')')}"
+                                  }
+                                },
+                                "runAfter": {}
+                              },
+                              "CreateTask_ArtPrep": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                  "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                                  "method": "post",
+                                  "path": "/api/data/v9.2/crb_taskses",
+                                  "body": {
+                                    "crb_taskname": "@{concat('Art Prep - ', outputs('GetExistingMargin')?['orderName'])}",
+                                    "crb_tasktype": 100000000,
+                                    "crb_assignedto": "Art Department",
+                                    "crb_status": 100000000,
+                                    "crb_priority": 100000001,
+                                    "crb_taskorder": 1,
+                                    "crb_OrderId@odata.bind": "@{concat('/crb_orderses(', outputs('GetExistingMargin')?['orderId'], ')')}",
+                                    "crb_ProductionJobId@odata.bind": "@{concat('/crb_productionjobses(', body('CreateProductionJob')?['crb_productionjobsid'], ')')}"
+                                  }
+                                },
+                                "runAfter": {
+                                  "CreateProductionJob": [ "Succeeded" ]
+                                }
+                              },
+                              "CreateTask_GarmentOrder": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                  "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                                  "method": "post",
+                                  "path": "/api/data/v9.2/crb_taskses",
+                                  "body": {
+                                    "crb_taskname": "@{concat('Garment Order - ', outputs('GetExistingMargin')?['orderName'])}",
+                                    "crb_tasktype": 100000001,
+                                    "crb_assignedto": "Purchasing",
+                                    "crb_status": 100000000,
+                                    "crb_priority": 100000001,
+                                    "crb_taskorder": 2,
+                                    "crb_OrderId@odata.bind": "@{concat('/crb_orderses(', outputs('GetExistingMargin')?['orderId'], ')')}",
+                                    "crb_ProductionJobId@odata.bind": "@{concat('/crb_productionjobses(', body('CreateProductionJob')?['crb_productionjobsid'], ')')}"
+                                  }
+                                },
+                                "runAfter": {
+                                  "CreateProductionJob": [ "Succeeded" ]
+                                }
+                              },
+                              "CreateTask_Printing": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                  "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                                  "method": "post",
+                                  "path": "/api/data/v9.2/crb_taskses",
+                                  "body": {
+                                    "crb_taskname": "@{concat('Printing - ', outputs('GetExistingMargin')?['orderName'])}",
+                                    "crb_tasktype": 100000002,
+                                    "crb_assignedto": "Production Queue",
+                                    "crb_status": 100000000,
+                                    "crb_priority": 100000001,
+                                    "crb_taskorder": 3,
+                                    "crb_OrderId@odata.bind": "@{concat('/crb_orderses(', outputs('GetExistingMargin')?['orderId'], ')')}",
+                                    "crb_ProductionJobId@odata.bind": "@{concat('/crb_productionjobses(', body('CreateProductionJob')?['crb_productionjobsid'], ')')}"
+                                  }
+                                },
+                                "runAfter": {
+                                  "CreateProductionJob": [ "Succeeded" ]
+                                }
+                              },
+                              "CreateTask_QualityCheck": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                  "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                                  "method": "post",
+                                  "path": "/api/data/v9.2/crb_taskses",
+                                  "body": {
+                                    "crb_taskname": "@{concat('Quality Check - ', outputs('GetExistingMargin')?['orderName'])}",
+                                    "crb_tasktype": 100000003,
+                                    "crb_assignedto": "QC Team",
+                                    "crb_status": 100000000,
+                                    "crb_priority": 100000001,
+                                    "crb_taskorder": 4,
+                                    "crb_OrderId@odata.bind": "@{concat('/crb_orderses(', outputs('GetExistingMargin')?['orderId'], ')')}",
+                                    "crb_ProductionJobId@odata.bind": "@{concat('/crb_productionjobses(', body('CreateProductionJob')?['crb_productionjobsid'], ')')}"
+                                  }
+                                },
+                                "runAfter": {
+                                  "CreateProductionJob": [ "Succeeded" ]
+                                }
+                              },
+                              "CreateTask_CustomerNotification": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                  "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                                  "method": "post",
+                                  "path": "/api/data/v9.2/crb_taskses",
+                                  "body": {
+                                    "crb_taskname": "@{concat('Customer Notification - ', outputs('GetExistingMargin')?['orderName'])}",
+                                    "crb_tasktype": 100000004,
+                                    "crb_assignedto": "Sales",
+                                    "crb_status": 100000000,
+                                    "crb_priority": 100000001,
+                                    "crb_taskorder": 5,
+                                    "crb_OrderId@odata.bind": "@{concat('/crb_orderses(', outputs('GetExistingMargin')?['orderId'], ')')}",
+                                    "crb_ProductionJobId@odata.bind": "@{concat('/crb_productionjobses(', body('CreateProductionJob')?['crb_productionjobsid'], ')')}"
+                                  }
+                                },
+                                "runAfter": {
+                                  "CreateProductionJob": [ "Succeeded" ]
+                                }
+                              },
+                              "LogProgressTracker": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                  "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                                  "method": "post",
+                                  "path": "/api/data/v9.2/crb_progresstrackers",
+                                  "body": {
+                                    "crb_progressname": "@{concat('Production started - ', outputs('GetExistingMargin')?['orderName'])}",
+                                    "crb_action": "Deposit Paid - Production Job Created",
+                                    "crb_previousstatus": "Deposit Paid",
+                                    "crb_newstatus": "Production Ready",
+                                    "crb_changedby": "SquareEstimateConversion Flow",
+                                    "crb_changedate": "@{utcNow()}",
+                                    "crb_notes": "@{concat('5 tasks generated. Invoice: ', triggerBody()?['SquareInvoiceID'])}",
+                                    "crb_OrderId@odata.bind": "@{concat('/crb_orderses(', outputs('GetExistingMargin')?['orderId'], ')')}"
+                                  }
+                                },
+                                "runAfter": {
+                                  "CreateTask_ArtPrep": [ "Succeeded" ],
+                                  "CreateTask_GarmentOrder": [ "Succeeded" ],
+                                  "CreateTask_Printing": [ "Succeeded" ],
+                                  "CreateTask_QualityCheck": [ "Succeeded" ],
+                                  "CreateTask_CustomerNotification": [ "Succeeded" ]
+                                }
+                              }
+                            },
+                            "else": {
+                              "actions": {
+                                "ProductionJobAlreadyExists": {
+                                  "type": "Compose",
+                                  "inputs": {
+                                    "status": "skipped",
+                                    "reason": "Production job already exists for this order"
+                                  }
+                                }
+                              }
+                            },
+                            "runAfter": {
+                              "CheckDuplicateProductionJob": [ "Succeeded" ]
+                            }
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "GetExistingMargin": [ "Succeeded" ]
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {
+                      "NoOrderForPayment": {
+                        "type": "Response",
+                        "inputs": {
+                          "statusCode": 200,
+                          "body": {
+                            "status": "warning",
+                            "reason": "Payment received but no matching order found",
+                            "squareInvoiceId": "@{triggerBody()?['SquareInvoiceID']}"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "FindOrderByInvoiceId": [ "Succeeded" ]
+                  }
+                }
+              }
+            },
+            "Quote_Sent": {
+              "case": "SENT",
+              "actions": {
+                "FindExistingOrderForQuote": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "get",
+                    "path": "/api/data/v9.2/crb_orderses",
+                    "queries": {
+                      "$filter": "crb_squareinvoiceid eq '@{triggerBody()?['SquareInvoiceID']}'",
+                      "$top": 1
+                    }
+                  },
+                  "runAfter": {}
+                },
+                "UpdateOrCreateQuoteOrder": {
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "greater": [
+                          "@length(body('FindExistingOrderForQuote')?['value'])",
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "UpdateToQuoteSent": {
+                      "type": "ApiConnection",
+                      "inputs": {
+                        "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                        "method": "patch",
+                        "path": "@{concat('/api/data/v9.2/crb_orderses(', first(body('FindExistingOrderForQuote')?['value'])?['crb_ordersid'], ')')}",
+                        "body": {
+                          "crb_orderstage": 100000001,
+                          "crb_totalamount": "@triggerBody()?['InvoiceAmount']"
+                        }
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {
+                      "CreateOrderAsQuoteSent": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                          "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                          "method": "post",
+                          "path": "/api/data/v9.2/crb_orderses",
+                          "body": {
+                            "crb_ordername": "@{concat('SQ-', triggerBody()?['SquareInvoiceID'])}",
+                            "crb_ordersource": "Square Invoice",
+                            "crb_orderstage": 100000001,
+                            "crb_totalamount": "@triggerBody()?['InvoiceAmount']",
+                            "crb_squareinvoiceid": "@{triggerBody()?['SquareInvoiceID']}",
+                            "crb_customeremail": "@{coalesce(triggerBody()?['CustomerEmail'], '')}",
+                            "crb_orderdate": "@{utcNow()}",
+                            "crb_status": "Active"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "FindExistingOrderForQuote": [ "Succeeded" ]
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "actions": {
+              "UnknownStatus_Response": {
+                "type": "Response",
+                "inputs": {
+                  "statusCode": 200,
+                  "body": {
+                    "status": "ignored",
+                    "reason": "Invoice status not actionable",
+                    "invoiceStatus": "@{triggerBody()?['InvoiceStatus']}"
+                  }
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Initialize_ProcessingResult": [ "Succeeded" ]
+          }
+        },
+        "FinalResponse": {
+          "type": "Response",
+          "inputs": {
+            "statusCode": 200,
+            "body": {
+              "status": "@{variables('ProcessingResult')}",
+              "processedAt": "@{utcNow()}",
+              "squareInvoiceId": "@{triggerBody()?['SquareInvoiceID']}",
+              "invoiceStatus": "@{triggerBody()?['InvoiceStatus']}"
+            }
+          },
+          "runAfter": {
+            "CheckEventType": [ "Succeeded" ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "connectionReferences": {
+    "shared_commondataverse": {
+      "connectionName": "shared_commondataverse",
+      "id": "@Microsoft.PowerApps/connections/shared_commondataverse",
+      "displayName": "Dataverse",
+      "parameterValues": {}
+    }
+  }
+}

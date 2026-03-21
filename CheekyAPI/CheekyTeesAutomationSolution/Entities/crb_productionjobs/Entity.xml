@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Entity Name="crb_productionjobs" DisplayName="ProductionJobs" SchemaName="crb_productionjobs">
+  <PrimaryKey>
+    <Attribute LogicalName="crb_productionjobid" Type="UniqueIdentifier" IsPrimary="true" DisplayName="JobID" />
+  </PrimaryKey>
+  <AttributesFile>Attributes.xml</AttributesFile>
+  <RelationshipsFile>Relationships.xml</RelationshipsFile>
+  <KeysFile>Keys.xml</KeysFile>
+</Entity>

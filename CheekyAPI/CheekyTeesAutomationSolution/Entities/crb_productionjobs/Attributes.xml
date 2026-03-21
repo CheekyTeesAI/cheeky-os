@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Attributes>
+  <!-- Order lookup -->
+  <Attribute LogicalName="crb_orderid" Type="Lookup" Targets="crb_orders" DisplayName="Order" />
+  <!-- Production Type -->
+  <Attribute LogicalName="crb_productiontype" Type="Choice" DisplayName="Production Type">
+    <ChoiceOptions>
+      <Option>DTG</Option>
+      <Option>Screen Print</Option>
+      <Option>DTF</Option>
+      <Option>Embroidery</Option>
+      <Option>Vendor</Option>
+    </ChoiceOptions>
+  </Attribute>
+  <!-- Assigned To (text for simplicity) -->
+  <Attribute LogicalName="crb_assignedto" Type="String" MaxLength="200" DisplayName="Assigned To" />
+  <!-- Status -->
+  <Attribute LogicalName="crb_status" Type="Choice" DisplayName="Status">
+    <ChoiceOptions>
+      <Option>Production Ready</Option>
+      <Option>Printing</Option>
+      <Option>QC</Option>
+      <Option>Ready for Pickup</Option>
+      <Option>Completed</Option>
+    </ChoiceOptions>
+  </Attribute>
+  <!-- Due Date -->
+  <Attribute LogicalName="crb_duedate" Type="DateTime" DisplayName="Due Date" Behavior="UserLocal" />
+  <!-- Notes -->
+  <Attribute LogicalName="crb_notes" Type="Memo" DisplayName="Notes" />
+</Attributes>

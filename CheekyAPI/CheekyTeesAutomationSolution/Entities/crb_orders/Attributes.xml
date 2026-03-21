@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Attributes>
+  <!-- Order Number (Auto-number) -->
+  <Attribute LogicalName="crb_ordernumber" Type="AutoNumber" DisplayName="Order Number" />
+  <!-- Customer lookup -->
+  <Attribute LogicalName="crb_customerid" Type="Lookup" Targets="crb_customers" DisplayName="Customer" />
+  <!-- Order Date -->
+  <Attribute LogicalName="crb_orderdate" Type="DateTime" DisplayName="Order Date" Behavior="UserLocal" />
+  <!-- Status choice -->
+  <Attribute LogicalName="crb_status" Type="Choice" DisplayName="Status">
+    <ChoiceOptions>
+      <Option>Intake</Option>
+      <Option>Quote Sent</Option>
+      <Option>Deposit Paid</Option>
+      <Option>Production Ready</Option>
+      <Option>Printing</Option>
+      <Option>QC</Option>
+      <Option>Completed</Option>
+    </ChoiceOptions>
+  </Attribute>
+  <!-- Square Invoice ID -->
+  <Attribute LogicalName="crb_squareinvoiceid" Type="String" MaxLength="100" DisplayName="Square Invoice ID" />
+  <!-- Deposit Paid -->
+  <Attribute LogicalName="crb_depositpaid" Type="Boolean" DisplayName="Deposit Paid" />
+  <!-- Production Type -->
+  <Attribute LogicalName="crb_productiontype" Type="Choice" DisplayName="Production Type">
+    <ChoiceOptions>
+      <Option>DTG</Option>
+      <Option>Screen Print</Option>
+      <Option>DTF</Option>
+      <Option>Embroidery</Option>
+      <Option>Vendor</Option>
+    </ChoiceOptions>
+  </Attribute>
+  <!-- Notes -->
+  <Attribute LogicalName="crb_notes" Type="Memo" DisplayName="Notes" />
+</Attributes>

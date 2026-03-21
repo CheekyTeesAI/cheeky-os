@@ -1,0 +1,90 @@
+[
+  {
+    "id": "CB-20250615-a1b2c3",
+    "timestamp": "2025-06-15T14:30:00.000Z",
+    "issuedBy": "Pat",
+    "source": "mobile",
+    "rawCommand": "Build a quote calculator that pulls garment prices from Square and calculates margins",
+    "commandType": "BUILD_FEATURE",
+    "priority": "MEDIUM",
+    "targetArea": "quotes",
+    "requestedAction": "Build a quote calculator that pulls garment prices from Square and calculates margins",
+    "entities": {
+      "tables": [],
+      "flows": [],
+      "screens": [],
+      "fields": [],
+      "integrations": ["square"]
+    },
+    "constraints": [
+      "Do not break existing working files.",
+      "Use Node.js CommonJS (require/module.exports)."
+    ],
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "New feature is fully implemented with working code.",
+      "No existing functionality is broken.",
+      "All changes are confirmed in the completion summary."
+    ],
+    "status": "NEW",
+    "recommendedNextStep": "Execute BUILD_FEATURE targeting quotes."
+  },
+  {
+    "id": "CB-20250615-d4e5f6",
+    "timestamp": "2025-06-15T14:31:00.000Z",
+    "issuedBy": "Chad",
+    "source": "voice",
+    "rawCommand": "URGENT — the Dataverse submission is returning 401, fix it now",
+    "commandType": "FIX_BUG",
+    "priority": "HIGH",
+    "targetArea": "dataverse",
+    "requestedAction": "URGENT — the Dataverse submission is returning 401, fix it now",
+    "entities": {
+      "tables": [],
+      "flows": [],
+      "screens": [],
+      "fields": [],
+      "integrations": []
+    },
+    "constraints": [
+      "Do not break existing working files.",
+      "Use Node.js CommonJS (require/module.exports)."
+    ],
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "The reported issue is resolved.",
+      "Existing tests still pass.",
+      "All changes are confirmed in the completion summary."
+    ],
+    "status": "NEW",
+    "recommendedNextStep": "Execute FIX_BUG targeting dataverse."
+  },
+  {
+    "id": "CB-20250615-g7h8i9",
+    "timestamp": "2025-06-15T14:32:00.000Z",
+    "issuedBy": "Pat",
+    "source": "cli",
+    "rawCommand": "Document the full Cheeky OS architecture including all Dataverse tables and flows",
+    "commandType": "DOCUMENT_SYSTEM",
+    "priority": "MEDIUM",
+    "targetArea": "ops",
+    "requestedAction": "Document the full Cheeky OS architecture including all Dataverse tables and flows",
+    "entities": {
+      "tables": [],
+      "flows": [],
+      "screens": [],
+      "fields": [],
+      "integrations": []
+    },
+    "constraints": [
+      "Do not break existing working files.",
+      "Use Node.js CommonJS (require/module.exports)."
+    ],
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "All changes are confirmed in the completion summary."
+    ],
+    "status": "NEW",
+    "recommendedNextStep": "Execute DOCUMENT_SYSTEM targeting ops."
+  }
+]

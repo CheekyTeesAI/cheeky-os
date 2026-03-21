@@ -1,0 +1,6 @@
+{
+  "name": "Artwork Upload Flow - Workflow Metadata",
+  "id": "a4d5c6e7-1b2c-4123-8c9d-333333333333",
+  "description": "Workflow wrapper for Artwork Upload flow",
+  "definitionFile": "definition.json"
+}

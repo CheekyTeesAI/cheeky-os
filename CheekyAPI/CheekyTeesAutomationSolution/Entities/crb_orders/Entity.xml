@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Entity Name="crb_orders" DisplayName="Orders" SchemaName="crb_orders">
+  <PrimaryKey>
+    <Attribute LogicalName="crb_orderid" Type="UniqueIdentifier" IsPrimary="true" DisplayName="OrderID" />
+  </PrimaryKey>
+  <AttributesFile>Attributes.xml</AttributesFile>
+  <RelationshipsFile>Relationships.xml</RelationshipsFile>
+  <KeysFile>Keys.xml</KeysFile>
+</Entity>

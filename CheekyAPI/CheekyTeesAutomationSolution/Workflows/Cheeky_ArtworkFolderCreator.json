@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "properties": {
+    "displayName": "Cheeky_ArtworkFolderCreator",
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "triggers": {
+        "When_a_row_is_added": {
+          "type": "ApiConnection",
+          "inputs": {
+            "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+            "method": "post",
+            "path": "/datasets/default/tables/crb_orders/oncreateditems"
+          }
+        }
+      },
+      "actions": {
+        "GetOrder": {
+          "type": "ApiConnection",
+          "inputs": {
+            "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+            "method": "get",
+            "path": "/datasets/default/tables/crb_orders/items/@{triggerBody()?['crb_orderid']}"
+          }
+        },
+        "CheckFolderUrl": {
+          "type": "Compose",
+          "inputs": "@body('GetOrder')?['crb_artworkfolderurl']"
+        },
+        "Condition_CreateFolder": {
+          "type": "If",
+          "expression": "@empty(outputs('CheckFolderUrl'))",
+          "actions": {
+            "CreateFolder": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": { "connection": { "name": "@connections['onedriveforbusiness']['connectionId']" } },
+                "method": "post",
+                "path": "/drive/root/children",
+                "body": {
+                  "name": "Cheeky Orders/@{triggerBody()?['crb_ordernumber']}",
+                  "folder": {}
+                }
+              }
+            },
+            "UpdateOrderWithFolderUrl": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                "method": "patch",
+                "path": "/datasets/default/tables/crb_orders/items/@{triggerBody()?['crb_orderid']}",
+                "body": {
+                  "crb_artworkfolderurl": "@outputs('CreateFolder')?['webUrl']"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

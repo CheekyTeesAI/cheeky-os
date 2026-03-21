@@ -1,0 +1,980 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "metadata": {
+    "appName": "Cheeky OS",
+    "appDescription": "Cheeky Tees LLC operational dashboard - Orders, Production Board, Customers, Vendors",
+    "appVersion": "1.0.0",
+    "author": "CheekyTeesAutomation",
+    "dataSource": "Dataverse",
+    "environment": "https://org143bbb56.crm.dynamics.com",
+    "solution": "CheekyTeesAutomation",
+    "publisherPrefix": "crb"
+  },
+  "dataSources": {
+    "Orders": {
+      "type": "Dataverse",
+      "tableName": "crb_orders",
+      "displayName": "Orders",
+      "columns": [
+        "crb_ordername", "crb_ordersource", "crb_orderstage", "crb_totalamount",
+        "crb_marginpercent", "crb_depositpaid", "crb_productiontype",
+        "crb_orderdate", "crb_duedate", "crb_squareinvoiceid",
+        "crb_customeremail", "crb_garmenttype", "crb_quantity", "crb_status", "crb_notes"
+      ]
+    },
+    "LineItems": {
+      "type": "Dataverse",
+      "tableName": "crb_lineitems",
+      "displayName": "Line Items",
+      "columns": [
+        "crb_lineitemname", "crb_product", "crb_quantity", "crb_unitprice",
+        "crb_linetotal", "crb_garmenttype", "crb_color", "crb_size", "crb_printtype", "crb_notes"
+      ],
+      "lookups": [ { "column": "crb_orderid", "target": "crb_orders" } ]
+    },
+    "ProductionJobs": {
+      "type": "Dataverse",
+      "tableName": "crb_productionjobs",
+      "displayName": "Production Jobs",
+      "columns": [
+        "crb_productionjobname", "crb_productiontype", "crb_quantity",
+        "crb_status", "crb_assignedto", "crb_startdate", "crb_completiondate", "crb_notes"
+      ],
+      "lookups": [ { "column": "crb_orderid", "target": "crb_orders" } ]
+    },
+    "Tasks": {
+      "type": "Dataverse",
+      "tableName": "crb_tasks",
+      "displayName": "Tasks",
+      "columns": [
+        "crb_taskname", "crb_tasktype", "crb_assignedto", "crb_status",
+        "crb_priority", "crb_duedate", "crb_taskorder", "crb_notes"
+      ],
+      "lookups": [
+        { "column": "crb_orderid", "target": "crb_orders" },
+        { "column": "crb_productionjobid", "target": "crb_productionjobs" }
+      ]
+    },
+    "Customers": {
+      "type": "Dataverse",
+      "tableName": "crb_customers",
+      "displayName": "Customers",
+      "columns": [
+        "crb_customername", "crb_email", "crb_phone", "crb_company",
+        "crb_squarecustomerid", "crb_notes"
+      ]
+    },
+    "Vendors": {
+      "type": "Dataverse",
+      "tableName": "crb_vendors",
+      "displayName": "Vendors",
+      "columns": [
+        "crb_vendorname", "crb_contactemail", "crb_contactphone",
+        "crb_specialties", "crb_leadtime", "crb_active", "crb_notes"
+      ]
+    },
+    "SubcontractJobs": {
+      "type": "Dataverse",
+      "tableName": "crb_subcontractjobs",
+      "displayName": "Subcontract Jobs",
+      "columns": [
+        "crb_subcontractjobname", "crb_status", "crb_sentdate",
+        "crb_expectedreturn", "crb_actualreturn", "crb_cost", "crb_notes"
+      ],
+      "lookups": [
+        { "column": "crb_orderid", "target": "crb_orders" },
+        { "column": "crb_vendorid", "target": "crb_vendors" }
+      ]
+    },
+    "ProgressTracker": {
+      "type": "Dataverse",
+      "tableName": "crb_progresstracker",
+      "displayName": "Progress Tracker",
+      "columns": [
+        "crb_progressname", "crb_action", "crb_previousstatus",
+        "crb_newstatus", "crb_changedby", "crb_changedate", "crb_notes"
+      ],
+      "lookups": [
+        { "column": "crb_orderid", "target": "crb_orders" },
+        { "column": "crb_taskid", "target": "crb_tasks" }
+      ]
+    }
+  },
+  "screens": {
+    "Dashboard": {
+      "displayName": "Dashboard",
+      "description": "Main operational dashboard with KPIs and summaries",
+      "isDefault": true,
+      "layout": {
+        "type": "Responsive",
+        "breakpoints": { "small": 640, "medium": 1024, "large": 1440 }
+      },
+      "components": {
+        "Header": {
+          "type": "Container",
+          "properties": {
+            "fill": "#1A1A2E",
+            "height": 80
+          },
+          "children": {
+            "AppTitle": {
+              "type": "Label",
+              "properties": {
+                "text": "Cheeky OS",
+                "font": "Font.'Segoe UI'",
+                "fontSize": 28,
+                "fontWeight": "FontWeight.Bold",
+                "color": "#FFFFFF"
+              }
+            },
+            "SubTitle": {
+              "type": "Label",
+              "properties": {
+                "text": "Cheeky Tees Operations Center",
+                "fontSize": 14,
+                "color": "#CCCCCC"
+              }
+            },
+            "RefreshButton": {
+              "type": "Button",
+              "properties": {
+                "text": "Refresh",
+                "onSelect": "Refresh(Orders); Refresh(ProductionJobs); Refresh(Tasks)"
+              }
+            }
+          }
+        },
+        "KPIRow": {
+          "type": "Container",
+          "properties": {
+            "layout": "Horizontal",
+            "gap": 16,
+            "padding": 16
+          },
+          "children": {
+            "KPI_TotalOrders": {
+              "type": "Container",
+              "properties": {
+                "fill": "#16213E",
+                "borderRadius": 12,
+                "padding": 20,
+                "width": "25%"
+              },
+              "children": {
+                "Label": { "type": "Label", "properties": { "text": "Total Active Orders", "color": "#AAAAAA", "fontSize": 12 } },
+                "Value": {
+                  "type": "Label",
+                  "properties": {
+                    "text": "CountRows(Filter(Orders, crb_status <> \"Completed\"))",
+                    "fontSize": 36,
+                    "fontWeight": "FontWeight.Bold",
+                    "color": "#00D4FF"
+                  }
+                }
+              }
+            },
+            "KPI_ProductionQueue": {
+              "type": "Container",
+              "properties": {
+                "fill": "#16213E",
+                "borderRadius": 12,
+                "padding": 20,
+                "width": "25%"
+              },
+              "children": {
+                "Label": { "type": "Label", "properties": { "text": "In Production", "color": "#AAAAAA", "fontSize": 12 } },
+                "Value": {
+                  "type": "Label",
+                  "properties": {
+                    "text": "CountRows(Filter(ProductionJobs, crb_status <> 100000004))",
+                    "fontSize": 36,
+                    "fontWeight": "FontWeight.Bold",
+                    "color": "#FFD700"
+                  }
+                }
+              }
+            },
+            "KPI_Revenue": {
+              "type": "Container",
+              "properties": {
+                "fill": "#16213E",
+                "borderRadius": 12,
+                "padding": 20,
+                "width": "25%"
+              },
+              "children": {
+                "Label": { "type": "Label", "properties": { "text": "Revenue This Month", "color": "#AAAAAA", "fontSize": 12 } },
+                "Value": {
+                  "type": "Label",
+                  "properties": {
+                    "text": "Text(Sum(Filter(Orders, crb_orderstage = 100000005 && Month(crb_orderdate) = Month(Today()) && Year(crb_orderdate) = Year(Today())), crb_totalamount), \"$#,##0.00\")",
+                    "fontSize": 36,
+                    "fontWeight": "FontWeight.Bold",
+                    "color": "#00FF88"
+                  }
+                }
+              }
+            },
+            "KPI_PendingTasks": {
+              "type": "Container",
+              "properties": {
+                "fill": "#16213E",
+                "borderRadius": 12,
+                "padding": 20,
+                "width": "25%"
+              },
+              "children": {
+                "Label": { "type": "Label", "properties": { "text": "Pending Tasks", "color": "#AAAAAA", "fontSize": 12 } },
+                "Value": {
+                  "type": "Label",
+                  "properties": {
+                    "text": "CountRows(Filter(Tasks, crb_status = 100000000))",
+                    "fontSize": 36,
+                    "fontWeight": "FontWeight.Bold",
+                    "color": "#FF6B6B"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "OrdersByStage": {
+          "type": "Container",
+          "properties": {
+            "fill": "#16213E",
+            "borderRadius": 12,
+            "padding": 20,
+            "width": "50%"
+          },
+          "children": {
+            "Title": { "type": "Label", "properties": { "text": "Orders by Stage", "fontSize": 18, "fontWeight": "FontWeight.Bold", "color": "#FFFFFF" } },
+            "StageChart": {
+              "type": "Gallery",
+              "properties": {
+                "items": [
+                  { "stage": "Intake",           "stageValue": 100000000, "color": "#6C757D" },
+                  { "stage": "Quote Sent",       "stageValue": 100000001, "color": "#007BFF" },
+                  { "stage": "Deposit Paid",     "stageValue": 100000002, "color": "#FFC107" },
+                  { "stage": "Production Ready", "stageValue": 100000003, "color": "#17A2B8" },
+                  { "stage": "Printing",         "stageValue": 100000004, "color": "#FF6B35" },
+                  { "stage": "Completed",        "stageValue": 100000005, "color": "#28A745" }
+                ],
+                "templateSize": 40,
+                "layout": "Vertical"
+              },
+              "template": {
+                "StageName": { "type": "Label", "properties": { "text": "ThisItem.stage", "width": 130, "color": "#FFFFFF" } },
+                "StageCount": {
+                  "type": "Label",
+                  "properties": {
+                    "text": "CountRows(Filter(Orders, crb_orderstage = ThisItem.stageValue))",
+                    "fontWeight": "FontWeight.Bold",
+                    "color": "ThisItem.color"
+                  }
+                },
+                "StageBar": {
+                  "type": "Rectangle",
+                  "properties": {
+                    "fill": "ThisItem.color",
+                    "width": "CountRows(Filter(Orders, crb_orderstage = ThisItem.stageValue)) * 20",
+                    "height": 20,
+                    "borderRadius": 4
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ProductionQueueSummary": {
+          "type": "Container",
+          "properties": {
+            "fill": "#16213E",
+            "borderRadius": 12,
+            "padding": 20,
+            "width": "50%"
+          },
+          "children": {
+            "Title": { "type": "Label", "properties": { "text": "Production Queue", "fontSize": 18, "fontWeight": "FontWeight.Bold", "color": "#FFFFFF" } },
+            "QueueGallery": {
+              "type": "Gallery",
+              "properties": {
+                "items": "SortByColumns(Filter(ProductionJobs, crb_status <> 100000004), \"crb_startdate\", SortOrder.Ascending)",
+                "templateSize": 60,
+                "layout": "Vertical"
+              },
+              "template": {
+                "JobName": { "type": "Label", "properties": { "text": "ThisItem.crb_productionjobname", "fontWeight": "FontWeight.Bold", "color": "#FFFFFF" } },
+                "JobStatus": { "type": "Label", "properties": { "text": "ThisItem.crb_status", "color": "#AAAAAA" } },
+                "JobQty": { "type": "Label", "properties": { "text": "\"Qty: \" & ThisItem.crb_quantity", "color": "#CCCCCC" } }
+              }
+            }
+          }
+        },
+        "RecentActivity": {
+          "type": "Container",
+          "properties": {
+            "fill": "#16213E",
+            "borderRadius": 12,
+            "padding": 20,
+            "width": "100%"
+          },
+          "children": {
+            "Title": { "type": "Label", "properties": { "text": "Recent Activity", "fontSize": 18, "fontWeight": "FontWeight.Bold", "color": "#FFFFFF" } },
+            "ActivityGallery": {
+              "type": "Gallery",
+              "properties": {
+                "items": "SortByColumns(ProgressTracker, \"crb_changedate\", SortOrder.Descending)",
+                "templateSize": 50,
+                "layout": "Vertical",
+                "maxItems": 10
+              },
+              "template": {
+                "Action": { "type": "Label", "properties": { "text": "ThisItem.crb_action", "fontWeight": "FontWeight.Bold", "color": "#FFFFFF" } },
+                "Details": { "type": "Label", "properties": { "text": "ThisItem.crb_previousstatus & \" -> \" & ThisItem.crb_newstatus", "color": "#AAAAAA" } },
+                "Timestamp": { "type": "Label", "properties": { "text": "Text(ThisItem.crb_changedate, \"mm/dd/yyyy hh:mm\")", "color": "#666666" } }
+              }
+            }
+          }
+        }
+      },
+      "navigation": {
+        "bottomNav": [
+          { "screen": "Dashboard", "icon": "Icon.Home", "label": "Dashboard" },
+          { "screen": "Orders", "icon": "Icon.DocumentSet", "label": "Orders" },
+          { "screen": "ProductionBoard", "icon": "Icon.Manufacturing", "label": "Production" },
+          { "screen": "Customers", "icon": "Icon.People", "label": "Customers" },
+          { "screen": "Vendors", "icon": "Icon.Truck", "label": "Vendors" }
+        ]
+      }
+    },
+    "Orders": {
+      "displayName": "Orders",
+      "description": "Order management with search, filter, create, and edit capabilities",
+      "layout": { "type": "Responsive" },
+      "components": {
+        "Header": {
+          "type": "Container",
+          "properties": { "fill": "#1A1A2E", "height": 60 },
+          "children": {
+            "Title": { "type": "Label", "properties": { "text": "Orders", "fontSize": 24, "fontWeight": "FontWeight.Bold", "color": "#FFFFFF" } },
+            "NewOrderButton": {
+              "type": "Button",
+              "properties": {
+                "text": "+ New Order",
+                "fill": "#007BFF",
+                "color": "#FFFFFF",
+                "onSelect": "NewForm(OrderForm); Navigate(OrderDetail)"
+              }
+            }
+          }
+        },
+        "SearchBar": {
+          "type": "TextInput",
+          "properties": {
+            "hint": "Search orders by name, customer, or invoice ID...",
+            "onChangeValue": "Set(varOrderSearch, Self.Text)"
+          }
+        },
+        "StageFilter": {
+          "type": "Dropdown",
+          "properties": {
+            "items": [ "All Stages", "Intake", "Quote Sent", "Deposit Paid", "Production Ready", "Printing", "Completed" ],
+            "default": "All Stages",
+            "onChangeValue": "Set(varStageFilter, Self.SelectedText.Value)"
+          }
+        },
+        "OrdersList": {
+          "type": "Gallery",
+          "properties": {
+            "items": "SortByColumns(Filter(Orders, (varOrderSearch = Blank() || varOrderSearch in crb_ordername || varOrderSearch in crb_customeremail || varOrderSearch in crb_squareinvoiceid) && (varStageFilter = \"All Stages\" || crb_orderstage = LookUp([{s:\"Intake\",v:100000000},{s:\"Quote Sent\",v:100000001},{s:\"Deposit Paid\",v:100000002},{s:\"Production Ready\",v:100000003},{s:\"Printing\",v:100000004},{s:\"Completed\",v:100000005}], s=varStageFilter, v))), \"crb_orderdate\", SortOrder.Descending)",
+            "templateSize": 80,
+            "layout": "Vertical"
+          },
+          "template": {
+            "OrderName": {
+              "type": "Label",
+              "properties": { "text": "ThisItem.crb_ordername", "fontWeight": "FontWeight.Bold", "color": "#FFFFFF", "fontSize": 16 }
+            },
+            "CustomerEmail": {
+              "type": "Label",
+              "properties": { "text": "ThisItem.crb_customeremail", "color": "#AAAAAA" }
+            },
+            "OrderStage": {
+              "type": "Label",
+              "properties": {
+                "text": "Switch(ThisItem.crb_orderstage, 100000000, \"Intake\", 100000001, \"Quote Sent\", 100000002, \"Deposit Paid\", 100000003, \"Production Ready\", 100000004, \"Printing\", 100000005, \"Completed\", \"Unknown\")",
+                "color": "Switch(ThisItem.crb_orderstage, 100000000, \"#6C757D\", 100000001, \"#007BFF\", 100000002, \"#FFC107\", 100000003, \"#17A2B8\", 100000004, \"#FF6B35\", 100000005, \"#28A745\", \"#FFFFFF\")",
+                "fontWeight": "FontWeight.Bold"
+              }
+            },
+            "OrderAmount": {
+              "type": "Label",
+              "properties": { "text": "Text(ThisItem.crb_totalamount, \"$#,##0.00\")", "color": "#00FF88" }
+            },
+            "MarginIndicator": {
+              "type": "Label",
+              "properties": {
+                "text": "If(ThisItem.crb_marginpercent < 45, \"LOW MARGIN\", Text(ThisItem.crb_marginpercent, \"#0.0\") & \"%\")",
+                "color": "If(ThisItem.crb_marginpercent < 45, \"#FF0000\", \"#00FF88\")",
+                "fontWeight": "If(ThisItem.crb_marginpercent < 45, FontWeight.Bold, FontWeight.Normal)"
+              }
+            },
+            "DueDate": {
+              "type": "Label",
+              "properties": { "text": "\"Due: \" & Text(ThisItem.crb_duedate, \"mm/dd/yyyy\")", "color": "#CCCCCC" }
+            },
+            "NavigateArrow": {
+              "type": "Icon",
+              "properties": {
+                "icon": "Icon.ChevronRight",
+                "onSelect": "Navigate(OrderDetail, ScreenTransition.None, {selectedOrder: ThisItem})"
+              }
+            }
+          }
+        }
+      }
+    },
+    "OrderDetail": {
+      "displayName": "Order Detail",
+      "description": "Edit form for individual order with line items and related production jobs",
+      "components": {
+        "BackButton": {
+          "type": "Icon",
+          "properties": {
+            "icon": "Icon.Back",
+            "onSelect": "Navigate(Orders, ScreenTransition.None)"
+          }
+        },
+        "OrderForm": {
+          "type": "EditForm",
+          "properties": {
+            "dataSource": "Orders",
+            "item": "selectedOrder",
+            "fields": [
+              { "column": "crb_ordername", "label": "Order Name", "required": true },
+              { "column": "crb_ordersource", "label": "Source" },
+              { "column": "crb_orderstage", "label": "Stage" },
+              { "column": "crb_totalamount", "label": "Total Amount" },
+              { "column": "crb_marginpercent", "label": "Margin %", "readOnly": true },
+              { "column": "crb_depositpaid", "label": "Deposit Paid" },
+              { "column": "crb_productiontype", "label": "Production Type" },
+              { "column": "crb_customeremail", "label": "Customer Email" },
+              { "column": "crb_garmenttype", "label": "Garment Type" },
+              { "column": "crb_quantity", "label": "Quantity" },
+              { "column": "crb_squareinvoiceid", "label": "Square Invoice ID" },
+              { "column": "crb_orderdate", "label": "Order Date" },
+              { "column": "crb_duedate", "label": "Due Date" },
+              { "column": "crb_notes", "label": "Notes", "mode": "MultiLine" }
+            ]
+          }
+        },
+        "SaveButton": {
+          "type": "Button",
+          "properties": {
+            "text": "Save",
+            "fill": "#28A745",
+            "onSelect": "SubmitForm(OrderForm); Navigate(Orders)"
+          }
+        },
+        "LineItemsGallery": {
+          "type": "Gallery",
+          "properties": {
+            "items": "Filter(LineItems, crb_orderid = selectedOrder.crb_ordersid)",
+            "templateSize": 50,
+            "layout": "Vertical"
+          },
+          "template": {
+            "Product": { "type": "Label", "properties": { "text": "ThisItem.crb_product", "fontWeight": "FontWeight.Bold" } },
+            "Details": { "type": "Label", "properties": { "text": "\"Qty: \" & ThisItem.crb_quantity & \" | \" & Text(ThisItem.crb_unitprice, \"$#,##0.00\") & \" | Total: \" & Text(ThisItem.crb_linetotal, \"$#,##0.00\")" } }
+          }
+        },
+        "RelatedJobsGallery": {
+          "type": "Gallery",
+          "properties": {
+            "items": "Filter(ProductionJobs, crb_orderid = selectedOrder.crb_ordersid)",
+            "templateSize": 50
+          },
+          "template": {
+            "JobName": { "type": "Label", "properties": { "text": "ThisItem.crb_productionjobname", "fontWeight": "FontWeight.Bold" } },
+            "JobStatus": { "type": "Label", "properties": { "text": "ThisItem.crb_status" } }
+          }
+        }
+      }
+    },
+    "ProductionBoard": {
+      "displayName": "Production Board",
+      "description": "Kanban-style board with columns: Production Ready, Printing, QC, Ready for Pickup",
+      "layout": { "type": "Horizontal" },
+      "components": {
+        "Header": {
+          "type": "Container",
+          "properties": { "fill": "#1A1A2E", "height": 60 },
+          "children": {
+            "Title": { "type": "Label", "properties": { "text": "Production Board", "fontSize": 24, "fontWeight": "FontWeight.Bold", "color": "#FFFFFF" } }
+          }
+        },
+        "KanbanBoard": {
+          "type": "Container",
+          "properties": {
+            "layout": "Horizontal",
+            "gap": 16,
+            "padding": 16,
+            "height": "Parent.Height - 120"
+          },
+          "children": {
+            "Column_ProductionReady": {
+              "type": "Container",
+              "properties": {
+                "fill": "#1E2A3A",
+                "borderRadius": 12,
+                "width": "25%",
+                "padding": 12
+              },
+              "children": {
+                "ColumnHeader": {
+                  "type": "Container",
+                  "children": {
+                    "Title": { "type": "Label", "properties": { "text": "Production Ready", "fontSize": 16, "fontWeight": "FontWeight.Bold", "color": "#17A2B8" } },
+                    "Count": {
+                      "type": "Label",
+                      "properties": {
+                        "text": "CountRows(Filter(ProductionJobs, crb_status = 100000000))",
+                        "fontSize": 14,
+                        "color": "#AAAAAA"
+                      }
+                    }
+                  }
+                },
+                "Cards": {
+                  "type": "Gallery",
+                  "properties": {
+                    "items": "SortByColumns(Filter(ProductionJobs, crb_status = 100000000), \"crb_startdate\", SortOrder.Ascending)",
+                    "templateSize": 120,
+                    "layout": "Vertical"
+                  },
+                  "template": {
+                    "Card": {
+                      "type": "Container",
+                      "properties": { "fill": "#2A3A4A", "borderRadius": 8, "padding": 12 },
+                      "children": {
+                        "JobName": { "type": "Label", "properties": { "text": "ThisItem.crb_productionjobname", "fontWeight": "FontWeight.Bold", "color": "#FFFFFF", "fontSize": 14 } },
+                        "ProductionType": { "type": "Label", "properties": { "text": "ThisItem.crb_productiontype", "color": "#17A2B8" } },
+                        "Quantity": { "type": "Label", "properties": { "text": "\"Qty: \" & ThisItem.crb_quantity", "color": "#CCCCCC" } },
+                        "AssignedTo": { "type": "Label", "properties": { "text": "ThisItem.crb_assignedto", "color": "#AAAAAA", "fontSize": 11 } },
+                        "MoveButton": {
+                          "type": "Button",
+                          "properties": {
+                            "text": "Start Printing ->",
+                            "fill": "#FF6B35",
+                            "size": "Small",
+                            "onSelect": "Patch(ProductionJobs, ThisItem, {crb_status: 100000001}); Patch(ProgressTracker, Defaults(ProgressTracker), {crb_progressname: \"Moved to Printing - \" & ThisItem.crb_productionjobname, crb_action: \"Stage Change\", crb_previousstatus: \"Production Ready\", crb_newstatus: \"Printing\", crb_changedby: User().FullName, crb_changedate: Now()})"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "Column_Printing": {
+              "type": "Container",
+              "properties": {
+                "fill": "#1E2A3A",
+                "borderRadius": 12,
+                "width": "25%",
+                "padding": 12
+              },
+              "children": {
+                "ColumnHeader": {
+                  "type": "Container",
+                  "children": {
+                    "Title": { "type": "Label", "properties": { "text": "Printing", "fontSize": 16, "fontWeight": "FontWeight.Bold", "color": "#FF6B35" } },
+                    "Count": {
+                      "type": "Label",
+                      "properties": {
+                        "text": "CountRows(Filter(ProductionJobs, crb_status = 100000001))",
+                        "fontSize": 14,
+                        "color": "#AAAAAA"
+                      }
+                    }
+                  }
+                },
+                "Cards": {
+                  "type": "Gallery",
+                  "properties": {
+                    "items": "SortByColumns(Filter(ProductionJobs, crb_status = 100000001), \"crb_startdate\", SortOrder.Ascending)",
+                    "templateSize": 120,
+                    "layout": "Vertical"
+                  },
+                  "template": {
+                    "Card": {
+                      "type": "Container",
+                      "properties": { "fill": "#2A3A4A", "borderRadius": 8, "padding": 12 },
+                      "children": {
+                        "JobName": { "type": "Label", "properties": { "text": "ThisItem.crb_productionjobname", "fontWeight": "FontWeight.Bold", "color": "#FFFFFF", "fontSize": 14 } },
+                        "ProductionType": { "type": "Label", "properties": { "text": "ThisItem.crb_productiontype", "color": "#FF6B35" } },
+                        "Quantity": { "type": "Label", "properties": { "text": "\"Qty: \" & ThisItem.crb_quantity", "color": "#CCCCCC" } },
+                        "AssignedTo": { "type": "Label", "properties": { "text": "ThisItem.crb_assignedto", "color": "#AAAAAA", "fontSize": 11 } },
+                        "MoveButton": {
+                          "type": "Button",
+                          "properties": {
+                            "text": "Send to QC ->",
+                            "fill": "#FFC107",
+                            "size": "Small",
+                            "onSelect": "Patch(ProductionJobs, ThisItem, {crb_status: 100000002}); Patch(ProgressTracker, Defaults(ProgressTracker), {crb_progressname: \"Moved to QC - \" & ThisItem.crb_productionjobname, crb_action: \"Stage Change\", crb_previousstatus: \"Printing\", crb_newstatus: \"QC\", crb_changedby: User().FullName, crb_changedate: Now()})"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "Column_QC": {
+              "type": "Container",
+              "properties": {
+                "fill": "#1E2A3A",
+                "borderRadius": 12,
+                "width": "25%",
+                "padding": 12
+              },
+              "children": {
+                "ColumnHeader": {
+                  "type": "Container",
+                  "children": {
+                    "Title": { "type": "Label", "properties": { "text": "QC", "fontSize": 16, "fontWeight": "FontWeight.Bold", "color": "#FFC107" } },
+                    "Count": {
+                      "type": "Label",
+                      "properties": {
+                        "text": "CountRows(Filter(ProductionJobs, crb_status = 100000002))",
+                        "fontSize": 14,
+                        "color": "#AAAAAA"
+                      }
+                    }
+                  }
+                },
+                "Cards": {
+                  "type": "Gallery",
+                  "properties": {
+                    "items": "SortByColumns(Filter(ProductionJobs, crb_status = 100000002), \"crb_startdate\", SortOrder.Ascending)",
+                    "templateSize": 120,
+                    "layout": "Vertical"
+                  },
+                  "template": {
+                    "Card": {
+                      "type": "Container",
+                      "properties": { "fill": "#2A3A4A", "borderRadius": 8, "padding": 12 },
+                      "children": {
+                        "JobName": { "type": "Label", "properties": { "text": "ThisItem.crb_productionjobname", "fontWeight": "FontWeight.Bold", "color": "#FFFFFF", "fontSize": 14 } },
+                        "ProductionType": { "type": "Label", "properties": { "text": "ThisItem.crb_productiontype", "color": "#FFC107" } },
+                        "Quantity": { "type": "Label", "properties": { "text": "\"Qty: \" & ThisItem.crb_quantity", "color": "#CCCCCC" } },
+                        "QCPassButton": {
+                          "type": "Button",
+                          "properties": {
+                            "text": "QC Pass ->",
+                            "fill": "#28A745",
+                            "size": "Small",
+                            "onSelect": "Patch(ProductionJobs, ThisItem, {crb_status: 100000003}); Patch(ProgressTracker, Defaults(ProgressTracker), {crb_progressname: \"QC Passed - \" & ThisItem.crb_productionjobname, crb_action: \"QC Pass\", crb_previousstatus: \"QC\", crb_newstatus: \"Ready for Pickup\", crb_changedby: User().FullName, crb_changedate: Now()})"
+                          }
+                        },
+                        "QCFailButton": {
+                          "type": "Button",
+                          "properties": {
+                            "text": "QC Fail <- Reprint",
+                            "fill": "#DC3545",
+                            "size": "Small",
+                            "onSelect": "Patch(ProductionJobs, ThisItem, {crb_status: 100000001}); Patch(ProgressTracker, Defaults(ProgressTracker), {crb_progressname: \"QC Failed - \" & ThisItem.crb_productionjobname, crb_action: \"QC Fail - Sent back to Printing\", crb_previousstatus: \"QC\", crb_newstatus: \"Printing\", crb_changedby: User().FullName, crb_changedate: Now()})"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "Column_ReadyForPickup": {
+              "type": "Container",
+              "properties": {
+                "fill": "#1E2A3A",
+                "borderRadius": 12,
+                "width": "25%",
+                "padding": 12
+              },
+              "children": {
+                "ColumnHeader": {
+                  "type": "Container",
+                  "children": {
+                    "Title": { "type": "Label", "properties": { "text": "Ready for Pickup", "fontSize": 16, "fontWeight": "FontWeight.Bold", "color": "#28A745" } },
+                    "Count": {
+                      "type": "Label",
+                      "properties": {
+                        "text": "CountRows(Filter(ProductionJobs, crb_status = 100000003))",
+                        "fontSize": 14,
+                        "color": "#AAAAAA"
+                      }
+                    }
+                  }
+                },
+                "Cards": {
+                  "type": "Gallery",
+                  "properties": {
+                    "items": "SortByColumns(Filter(ProductionJobs, crb_status = 100000003), \"crb_startdate\", SortOrder.Ascending)",
+                    "templateSize": 120,
+                    "layout": "Vertical"
+                  },
+                  "template": {
+                    "Card": {
+                      "type": "Container",
+                      "properties": { "fill": "#2A3A4A", "borderRadius": 8, "padding": 12 },
+                      "children": {
+                        "JobName": { "type": "Label", "properties": { "text": "ThisItem.crb_productionjobname", "fontWeight": "FontWeight.Bold", "color": "#FFFFFF", "fontSize": 14 } },
+                        "ProductionType": { "type": "Label", "properties": { "text": "ThisItem.crb_productiontype", "color": "#28A745" } },
+                        "Quantity": { "type": "Label", "properties": { "text": "\"Qty: \" & ThisItem.crb_quantity", "color": "#CCCCCC" } },
+                        "CompleteButton": {
+                          "type": "Button",
+                          "properties": {
+                            "text": "Mark Complete",
+                            "fill": "#28A745",
+                            "size": "Small",
+                            "onSelect": "Patch(ProductionJobs, ThisItem, {crb_status: 100000004, crb_completiondate: Now()}); Patch(ProgressTracker, Defaults(ProgressTracker), {crb_progressname: \"Completed - \" & ThisItem.crb_productionjobname, crb_action: \"Order Complete\", crb_previousstatus: \"Ready for Pickup\", crb_newstatus: \"Completed\", crb_changedby: User().FullName, crb_changedate: Now()})"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Customers": {
+      "displayName": "Customers",
+      "description": "Customer management with search and order history",
+      "components": {
+        "Header": {
+          "type": "Container",
+          "properties": { "fill": "#1A1A2E", "height": 60 },
+          "children": {
+            "Title": { "type": "Label", "properties": { "text": "Customers", "fontSize": 24, "fontWeight": "FontWeight.Bold", "color": "#FFFFFF" } },
+            "NewCustomerButton": {
+              "type": "Button",
+              "properties": {
+                "text": "+ New Customer",
+                "fill": "#007BFF",
+                "onSelect": "NewForm(CustomerForm); Navigate(CustomerDetail)"
+              }
+            }
+          }
+        },
+        "SearchBar": {
+          "type": "TextInput",
+          "properties": {
+            "hint": "Search customers by name, email, or company...",
+            "onChangeValue": "Set(varCustSearch, Self.Text)"
+          }
+        },
+        "CustomerList": {
+          "type": "Gallery",
+          "properties": {
+            "items": "SortByColumns(Filter(Customers, varCustSearch = Blank() || varCustSearch in crb_customername || varCustSearch in crb_email || varCustSearch in crb_company), \"crb_customername\", SortOrder.Ascending)",
+            "templateSize": 70,
+            "layout": "Vertical"
+          },
+          "template": {
+            "CustomerName": { "type": "Label", "properties": { "text": "ThisItem.crb_customername", "fontWeight": "FontWeight.Bold", "color": "#FFFFFF", "fontSize": 16 } },
+            "Email": { "type": "Label", "properties": { "text": "ThisItem.crb_email", "color": "#AAAAAA" } },
+            "Company": { "type": "Label", "properties": { "text": "ThisItem.crb_company", "color": "#CCCCCC" } },
+            "OrderCount": {
+              "type": "Label",
+              "properties": {
+                "text": "CountRows(Filter(Orders, crb_customeremail = ThisItem.crb_email)) & \" orders\"",
+                "color": "#00D4FF"
+              }
+            },
+            "NavigateArrow": {
+              "type": "Icon",
+              "properties": {
+                "icon": "Icon.ChevronRight",
+                "onSelect": "Navigate(CustomerDetail, ScreenTransition.None, {selectedCustomer: ThisItem})"
+              }
+            }
+          }
+        }
+      }
+    },
+    "CustomerDetail": {
+      "displayName": "Customer Detail",
+      "description": "Edit customer info with related order history",
+      "components": {
+        "BackButton": {
+          "type": "Icon",
+          "properties": { "icon": "Icon.Back", "onSelect": "Navigate(Customers)" }
+        },
+        "CustomerForm": {
+          "type": "EditForm",
+          "properties": {
+            "dataSource": "Customers",
+            "item": "selectedCustomer",
+            "fields": [
+              { "column": "crb_customername", "label": "Name", "required": true },
+              { "column": "crb_email", "label": "Email" },
+              { "column": "crb_phone", "label": "Phone" },
+              { "column": "crb_company", "label": "Company" },
+              { "column": "crb_squarecustomerid", "label": "Square ID", "readOnly": true },
+              { "column": "crb_notes", "label": "Notes", "mode": "MultiLine" }
+            ]
+          }
+        },
+        "SaveButton": {
+          "type": "Button",
+          "properties": { "text": "Save", "fill": "#28A745", "onSelect": "SubmitForm(CustomerForm); Navigate(Customers)" }
+        },
+        "OrderHistory": {
+          "type": "Gallery",
+          "properties": {
+            "items": "SortByColumns(Filter(Orders, crb_customeremail = selectedCustomer.crb_email), \"crb_orderdate\", SortOrder.Descending)",
+            "templateSize": 60
+          },
+          "template": {
+            "OrderName": { "type": "Label", "properties": { "text": "ThisItem.crb_ordername", "fontWeight": "FontWeight.Bold" } },
+            "Amount": { "type": "Label", "properties": { "text": "Text(ThisItem.crb_totalamount, \"$#,##0.00\")" } },
+            "Stage": { "type": "Label", "properties": { "text": "ThisItem.crb_orderstage" } }
+          }
+        }
+      }
+    },
+    "Vendors": {
+      "displayName": "Vendors",
+      "description": "Vendor management with subcontract job tracking",
+      "components": {
+        "Header": {
+          "type": "Container",
+          "properties": { "fill": "#1A1A2E", "height": 60 },
+          "children": {
+            "Title": { "type": "Label", "properties": { "text": "Vendors", "fontSize": 24, "fontWeight": "FontWeight.Bold", "color": "#FFFFFF" } },
+            "NewVendorButton": {
+              "type": "Button",
+              "properties": {
+                "text": "+ New Vendor",
+                "fill": "#007BFF",
+                "onSelect": "NewForm(VendorForm); Navigate(VendorDetail)"
+              }
+            }
+          }
+        },
+        "SearchBar": {
+          "type": "TextInput",
+          "properties": {
+            "hint": "Search vendors by name or specialty...",
+            "onChangeValue": "Set(varVendorSearch, Self.Text)"
+          }
+        },
+        "VendorList": {
+          "type": "Gallery",
+          "properties": {
+            "items": "SortByColumns(Filter(Vendors, (varVendorSearch = Blank() || varVendorSearch in crb_vendorname || varVendorSearch in crb_specialties) && crb_active = true), \"crb_vendorname\", SortOrder.Ascending)",
+            "templateSize": 80,
+            "layout": "Vertical"
+          },
+          "template": {
+            "VendorName": { "type": "Label", "properties": { "text": "ThisItem.crb_vendorname", "fontWeight": "FontWeight.Bold", "color": "#FFFFFF", "fontSize": 16 } },
+            "Specialties": { "type": "Label", "properties": { "text": "ThisItem.crb_specialties", "color": "#AAAAAA" } },
+            "LeadTime": { "type": "Label", "properties": { "text": "\"Lead time: \" & ThisItem.crb_leadtime & \" days\"", "color": "#CCCCCC" } },
+            "ContactEmail": { "type": "Label", "properties": { "text": "ThisItem.crb_contactemail", "color": "#00D4FF" } },
+            "ActiveJobs": {
+              "type": "Label",
+              "properties": {
+                "text": "CountRows(Filter(SubcontractJobs, crb_vendorid = ThisItem.crb_vendorsid && crb_status <> 100000002)) & \" active jobs\"",
+                "color": "#FFD700"
+              }
+            },
+            "NavigateArrow": {
+              "type": "Icon",
+              "properties": {
+                "icon": "Icon.ChevronRight",
+                "onSelect": "Navigate(VendorDetail, ScreenTransition.None, {selectedVendor: ThisItem})"
+              }
+            }
+          }
+        }
+      }
+    },
+    "VendorDetail": {
+      "displayName": "Vendor Detail",
+      "description": "Edit vendor info with subcontract job list",
+      "components": {
+        "BackButton": {
+          "type": "Icon",
+          "properties": { "icon": "Icon.Back", "onSelect": "Navigate(Vendors)" }
+        },
+        "VendorForm": {
+          "type": "EditForm",
+          "properties": {
+            "dataSource": "Vendors",
+            "item": "selectedVendor",
+            "fields": [
+              { "column": "crb_vendorname", "label": "Name", "required": true },
+              { "column": "crb_contactemail", "label": "Contact Email" },
+              { "column": "crb_contactphone", "label": "Contact Phone" },
+              { "column": "crb_specialties", "label": "Specialties" },
+              { "column": "crb_leadtime", "label": "Lead Time (Days)" },
+              { "column": "crb_active", "label": "Active" },
+              { "column": "crb_notes", "label": "Notes", "mode": "MultiLine" }
+            ]
+          }
+        },
+        "SaveButton": {
+          "type": "Button",
+          "properties": { "text": "Save", "fill": "#28A745", "onSelect": "SubmitForm(VendorForm); Navigate(Vendors)" }
+        },
+        "SubcontractJobs": {
+          "type": "Gallery",
+          "properties": {
+            "items": "SortByColumns(Filter(SubcontractJobs, crb_vendorid = selectedVendor.crb_vendorsid), \"crb_sentdate\", SortOrder.Descending)",
+            "templateSize": 70
+          },
+          "template": {
+            "JobName": { "type": "Label", "properties": { "text": "ThisItem.crb_subcontractjobname", "fontWeight": "FontWeight.Bold" } },
+            "Status": { "type": "Label", "properties": { "text": "ThisItem.crb_status" } },
+            "Cost": { "type": "Label", "properties": { "text": "Text(ThisItem.crb_cost, \"$#,##0.00\")" } },
+            "ExpectedReturn": { "type": "Label", "properties": { "text": "\"Expected: \" & Text(ThisItem.crb_expectedreturn, \"mm/dd/yyyy\")" } }
+          }
+        }
+      }
+    }
+  },
+  "theme": {
+    "name": "CheekyOS Dark",
+    "colors": {
+      "primary": "#007BFF",
+      "secondary": "#17A2B8",
+      "success": "#28A745",
+      "warning": "#FFC107",
+      "danger": "#DC3545",
+      "background": "#0F0F23",
+      "surface": "#16213E",
+      "cardBackground": "#1E2A3A",
+      "text": "#FFFFFF",
+      "textSecondary": "#AAAAAA",
+      "accent": "#00D4FF"
+    },
+    "fonts": {
+      "primary": "Segoe UI",
+      "headingSize": 24,
+      "bodySize": 14,
+      "captionSize": 12
+    },
+    "borders": {
+      "radius": 12,
+      "cardRadius": 8
+    }
+  },
+  "globalVariables": {
+    "varOrderSearch": { "type": "string", "default": "" },
+    "varStageFilter": { "type": "string", "default": "All Stages" },
+    "varCustSearch": { "type": "string", "default": "" },
+    "varVendorSearch": { "type": "string", "default": "" }
+  }
+}

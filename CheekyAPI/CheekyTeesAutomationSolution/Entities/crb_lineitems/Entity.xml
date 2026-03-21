@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Entity Name="crb_lineitems" DisplayName="LineItems" SchemaName="crb_lineitems">
+  <PrimaryKey>
+    <Attribute LogicalName="crb_lineitemid" Type="UniqueIdentifier" IsPrimary="true" DisplayName="LineItemID" />
+  </PrimaryKey>
+  <AttributesFile>Attributes.xml</AttributesFile>
+  <RelationshipsFile>Relationships.xml</RelationshipsFile>
+  <KeysFile>Keys.xml</KeysFile>
+</Entity>

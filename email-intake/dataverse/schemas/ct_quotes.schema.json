@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ct_quotes",
+  "description": "Quote records for Cheeky Tees. Tracks pricing estimates sent to customers before an order is confirmed. Linked to ct_customers via ct_customerid lookup.",
+  "tableName": "ct_quotes",
+  "tableDisplayName": "Quotes",
+  "tableSetName": "ct_quoteses",
+  "primaryKey": "ct_quotesid",
+  "primaryNameColumn": "ct_quoteid",
+  "fields": [
+    {
+      "fieldName": "ct_quotesid",
+      "displayName": "Quote Record ID",
+      "dataverseType": "uniqueidentifier",
+      "required": true,
+      "description": "Auto-generated primary key (GUID)."
+    },
+    {
+      "fieldName": "ct_quoteid",
+      "displayName": "Quote Number",
+      "dataverseType": "string",
+      "maxLength": 50,
+      "required": true,
+      "description": "Human-readable quote identifier (e.g. QT-2025-0042)."
+    },
+    {
+      "fieldName": "ct_customerid",
+      "displayName": "Customer",
+      "dataverseType": "lookup",
+      "required": true,
+      "description": "Lookup to ct_customers. Links this quote to a customer record.",
+      "lookupTarget": "ct_customers"
+    },
+    {
+      "fieldName": "ct_product",
+      "displayName": "Product",
+      "dataverseType": "string",
+      "maxLength": 200,
+      "required": true,
+      "description": "Product type being quoted (e.g. T-Shirts, Hoodies, Jerseys)."
+    },
+    {
+      "fieldName": "ct_quantity",
+      "displayName": "Quantity",
+      "dataverseType": "integer",
+      "required": true,
+      "description": "Number of garments in the quote."
+    },
+    {
+      "fieldName": "ct_sizes",
+      "displayName": "Sizes",
+      "dataverseType": "string",
+      "maxLength": 500,
+      "required": false,
+      "description": "Size breakdown (e.g. '25 S, 50 M, 25 L')."
+    },
+    {
+      "fieldName": "ct_printtype",
+      "displayName": "Print Type",
+      "dataverseType": "string",
+      "maxLength": 100,
+      "required": false,
+      "description": "Print method (e.g. screen print, DTG, sublimation, embroidery, vinyl)."
+    },
+    {
+      "fieldName": "ct_unitprice",
+      "displayName": "Unit Price",
+      "dataverseType": "decimal",
+      "precision": 2,
+      "required": false,
+      "description": "Price per garment in USD."
+    },
+    {
+      "fieldName": "ct_totalprice",
+      "displayName": "Total Price",
+      "dataverseType": "decimal",
+      "precision": 2,
+      "required": false,
+      "description": "Total quoted price (quantity × unit price + any setup fees)."
+    },
+    {
+      "fieldName": "ct_validuntil",
+      "displayName": "Valid Until",
+      "dataverseType": "datetime",
+      "required": false,
+      "description": "Expiration date of the quote. Typically 30 days from creation."
+    },
+    {
+      "fieldName": "ct_status",
+      "displayName": "Status",
+      "dataverseType": "string",
+      "maxLength": 50,
+      "required": false,
+      "description": "Quote status: draft, sent, accepted, rejected, expired.",
+      "allowedValues": ["draft", "sent", "accepted", "rejected", "expired"]
+    },
+    {
+      "fieldName": "ct_notes",
+      "displayName": "Notes",
+      "dataverseType": "string",
+      "maxLength": 4000,
+      "required": false,
+      "description": "Free-text notes (setup fees, art requirements, special terms, etc.)."
+    },
+    {
+      "fieldName": "ct_createdon",
+      "displayName": "Created On",
+      "dataverseType": "datetime",
+      "required": false,
+      "description": "Date the quote was created. Auto-populated by Dataverse."
+    }
+  ],
+  "relationships": [
+    {
+      "type": "many-to-one",
+      "relatedTable": "ct_customers",
+      "relatedField": "ct_customersid",
+      "thisField": "ct_customerid",
+      "description": "Each quote belongs to one customer. Lookup field references ct_customers primary key."
+    }
+  ]
+}

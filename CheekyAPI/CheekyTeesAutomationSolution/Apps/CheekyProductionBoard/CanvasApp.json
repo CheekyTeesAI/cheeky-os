@@ -1,0 +1,91 @@
+{
+  "app": {
+    "name": "Cheeky Production Board",
+    "id": "{f7e8d9c0-6b5a-4123-8f0e-666666666666}",
+    "type": "Canvas",
+    "shared": false
+  },
+  "dataSources": [
+    { "name": "crb_orders", "type": "Dataverse", "table": "crb_orders" },
+    { "name": "crb_lineitems", "type": "Dataverse", "table": "crb_lineitems" },
+    { "name": "crb_customers", "type": "Dataverse", "table": "crb_customers" },
+    { "name": "crb_productionjobs", "type": "Dataverse", "table": "crb_productionjobs" }
+  ],
+  "screens": [
+    {
+      "name": "BoardScreen",
+      "type": "Main",
+      "controls": [
+        {
+          "controlType": "Header",
+          "text": "Cheeky Production Board",
+          "props": { "Height": 60 }
+        },
+        {
+          "controlType": "FilterBar",
+          "controls": [
+            {
+              "controlType": "Dropdown",
+              "name": "drpProductionType",
+              "items": ["All","DTG","Screen Print","DTF","Embroidery","Vendor"],
+              "default": "All",
+              "onChangeFormula": "Set(varProductionType, drpProductionType.Selected.Value)"
+            },
+            {
+              "controlType": "SearchBox",
+              "name": "txtSearch",
+              "placeholder": "Search Order Number, Customer, Company",
+              "onChangeFormula": "Set(varSearchText, txtSearch.Text)"
+            }
+          ]
+        },
+        {
+          "controlType": "Columns",
+          "columns": [
+            { "name": "ProductionReady", "statusValue": "Production Ready" },
+            { "name": "Printing", "statusValue": "Printing" },
+            { "name": "QC", "statusValue": "QC" },
+            { "name": "ReadyForPickup", "statusValue": "Ready for Pickup" },
+            { "name": "Completed", "statusValue": "Completed" }
+          ],
+          "columnTemplate": {
+            "controlType": "Gallery",
+            "itemsFormula": "Filter(crb_orders, (varProductionType = \"All\" || crb_productiontype = varProductionType) && (IsBlank(varSearchText) || StartsWith(crb_ordernumber, varSearchText) || StartsWith(crb_customerid._crb_customername_value, varSearchText) || StartsWith(crb_customerid._crb_company_value, varSearchText)) && crb_status = ThisColumnStatus)",
+            "cardTemplate": {
+              "controls": [
+                { "controlType": "Label", "textFormula": "ThisItem.crb_ordernumber", "labelType": "OrderNumber" },
+                { "controlType": "Label", "textFormula": "ThisItem._crb_customername_value", "labelType": "CustomerName" },
+                { "controlType": "Label", "textFormula": "ThisItem.crb_productiontype", "labelType": "ProductionType" },
+                { "controlType": "Label", "textFormula": "Text(ThisItem.crb_duedate, \"[$-en-US]yyyy-mm-dd\")", "labelType": "DueDate" },
+                { "controlType": "Label", "textFormula": "ThisItem.crb_totalquantity", "labelType": "TotalQuantity" },
+                { "controlType": "Button", "text": "Open Order", "onSelectFormula": "Set(varSelectedOrder, ThisItem); Navigate(OrderDetailsScreen, ScreenTransition.None)" }
+              ],
+              "dragDrop": {
+                "draggable": true,
+                "onDropFormula": "If(TargetColumnStatus <> ThisItem.crb_status, Patch(crb_orders, ThisItem, { crb_status: TargetColumnStatus }))"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "OrderDetailsScreen",
+      "type": "Detail",
+      "controls": [
+        { "controlType": "Header", "text": "Order Details" },
+        { "controlType": "Form", "dataSource": "crb_orders", "itemFormula": "Lookup(crb_orders, crb_ordernumber = varSelectedOrder.crb_ordernumber)", "fields": [
+          "crb_ordernumber", "crb_customerid", "crb_productiontype", "crb_duedate", "crb_totalvalue", "crb_notes"
+        ] },
+        { "controlType": "SubGrid", "dataSource": "crb_lineitems", "filterFormula": "crb_orderid = LookUp(crb_orders, crb_ordernumber = varSelectedOrder.crb_ordernumber).crb_orderid", "columns": ["crb_productname","crb_garmentcolor","crb_quantity","crb_artworkurl"] },
+        { "controlType": "SubGrid", "dataSource": "crb_productionjobs", "filterFormula": "crb_orderid = LookUp(crb_orders, crb_ordernumber = varSelectedOrder.crb_ordernumber).crb_orderid", "columns": ["crb_productiontype","crb_status","crb_duedate","crb_assignedto"] },
+        { "controlType": "Button", "text": "Back to Board", "onSelectFormula": "Navigate(BoardScreen, ScreenTransition.None)" }
+      ]
+    }
+  ],
+  "formulas": {
+    "OnVisible_BoardScreen": "ClearCollect(colOrders, crb_orders); Set(varProductionType, \"All\"); Set(varSearchText, \"\");",
+    "DragStart": "Set(varDragItem, ThisItem);",
+    "DropOnColumn": "Set(TargetColumnStatus, ThisColumnStatus); If(varDragItem.crb_status <> TargetColumnStatus, Patch(crb_orders, varDragItem, { crb_status: TargetColumnStatus }))"
+  }
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Publisher>
+  <UniqueName>cheeky</UniqueName>
+  <FriendlyName>Cheeky Tees</FriendlyName>
+  <CustomizationsPrefix>cheeky</CustomizationsPrefix>
+  <PublisherId>{d8e7f6a1-9b2c-4e3f-8123-abcdef123456}</PublisherId>
+  <Description>Publisher for CheekyTeesAutomation solution</Description>
+</Publisher>

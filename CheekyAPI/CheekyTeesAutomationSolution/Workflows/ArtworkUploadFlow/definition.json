@@ -1,0 +1,35 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "properties": {
+    "displayName": "Artwork Upload Flow",
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "triggers": {
+        "When_a_file_is_created_(properties_only)": {
+          "type": "ApiConnection",
+          "inputs": {
+            "host": { "connection": { "name": "@connections['onedriveforbusiness']['connectionId']" } },
+            "method": "get",
+            "path": "/drive/root:/CheekyAI/ArtworkUploads:/children"
+          }
+        }
+      },
+      "actions": {
+        "ParseFilename": {
+          "type": "Compose",
+          "inputs": "Extract order number from filename (e.g., Order_12345_...)"
+        },
+        "FindOrderByNumber": {
+          "type": "ApiConnection",
+          "inputs": {
+            "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+            "method": "get",
+            "path": "/datasets/default/tables/crb_orders/items",
+            "queries": { "$filter": "crb_ordernumber eq @{outputs('ParseFilename')}", "$top": 1 }
+          }
+        }
+      }
+    }
+  }
+}

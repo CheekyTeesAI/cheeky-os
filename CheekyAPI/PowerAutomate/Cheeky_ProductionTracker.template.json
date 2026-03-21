@@ -1,0 +1,142 @@
+{
+  "name": "Cheeky_ProductionTracker",
+  "type": "childFlowTemplate",
+  "version": "1.0",
+  "description": "Child flow template: log production progress events into ProgressTracker Dataverse table. Meant to be imported into the CheekyTeesAutomation solution and turned into a solution-aware child flow.",
+  "trigger": {
+    "type": "Request",
+    "displayName": "Child flow trigger: production tracker",
+    "inputsSchema": {
+      "type": "object",
+      "properties": {
+        "OrderId": { "type": "string", "description": "Dataverse Order row GUID" },
+        "TaskId": { "type": "string", "description": "Dataverse Task row GUID" },
+        "TaskName": { "type": "string" },
+        "TaskOrder": { "type": "integer" },
+        "Status": { "type": "string" },
+        "Timestamp": { "type": "string", "format": "date-time", "description": "UTC timestamp. If omitted, flow will use utcNow()" },
+        "User": { "type": "string", "description": "User display name or email who caused the event" },
+        "Notes": { "type": "string" }
+      },
+      "required": [ "OrderId", "TaskId", "TaskName", "TaskOrder", "Status" ]
+    }
+  },
+  "actions": [
+    {
+      "name": "Condition_Is_Completed",
+      "type": "Condition",
+      "description": "Only proceed when the incoming task status is Completed",
+      "inputs": {
+        "condition": "@equals(triggerBody()?['Status'], 'Completed')",
+        "ifTrue": [
+          {
+            "name": "Prepare_Timestamp",
+            "type": "Compose",
+            "description": "Ensure a timestamp exists; default to utcNow() if none provided",
+            "inputs": "@coalesce(triggerBody()?['Timestamp'], utcNow())"
+          },
+          {
+            "name": "Create_ProgressTracker_Row",
+            "type": "Dataverse.AddRow",
+            "description": "Add a progress tracker row recording the completion",
+            "inputs": {
+              "table": "ProgressTracker",
+              "fields": {
+                "new_order@odata.bind": "@concat('/orders(', triggerBody()?['OrderId'], ')')",
+                "new_taskname": "@triggerBody()?['TaskName']",
+                "new_status": "@triggerBody()?['Status']",
+                "new_timestamp": "@outputs('Prepare_Timestamp')",
+                "new_user": "@triggerBody()?['User']",
+                "new_notes": "@triggerBody()?['Notes']"
+              }
+            }
+          },
+          {
+            "name": "List_Next_Task",
+            "type": "Dataverse.ListRows",
+            "description": "Find the next task for the order with TaskOrder greater than current and not Completed",
+            "inputs": {
+              "table": "Tasks",
+              "filter": "_new_order_value eq '@{triggerBody()?['OrderId']}' and taskorder gt @{triggerBody()?['TaskOrder']} and status ne 'Completed'",
+              "orderby": "taskorder asc",
+              "top": 1
+            }
+          },
+          {
+            "name": "Condition_Has_Next_Task",
+            "type": "Condition",
+            "description": "If a next task exists, set it Ready; otherwise close the order",
+            "inputs": {
+              "condition": "@greater(length(body('List_Next_Task')?['value']), 0)",
+              "ifTrue": [
+                {
+                  "name": "Update_Next_Task_To_Ready",
+                  "type": "Dataverse.UpdateRow",
+                  "inputs": {
+                    "table": "Tasks",
+                    "rowId": "@first(body('List_Next_Task')?['value'])?['taskid']",
+                    "fields": {
+                      "status": "Ready"
+                    }
+                  }
+                },
+                {
+                  "name": "Create_ProgressTracker_For_Next",
+                  "type": "Dataverse.AddRow",
+                  "inputs": {
+                    "table": "ProgressTracker",
+                    "fields": {
+                      "new_order@odata.bind": "@concat('/orders(', triggerBody()?['OrderId'], ')')",
+                      "new_taskname": "@first(body('List_Next_Task')?['value'])?['taskname']",
+                      "new_status": "Ready",
+                      "new_timestamp": "@utcNow()",
+                      "new_user": "System",
+                      "new_notes": "Automatically moved to Ready"
+                    }
+                  }
+                }
+              ],
+              "ifFalse": [
+                {
+                  "name": "Update_Order_To_ProductionComplete",
+                  "type": "Dataverse.UpdateRow",
+                  "inputs": {
+                    "table": "Orders",
+                    "rowId": "@triggerBody()?['OrderId']",
+                    "fields": {
+                      "statuscode": "Production Complete"
+                    }
+                  }
+                },
+                {
+                  "name": "Create_ProgressTracker_Order_Complete",
+                  "type": "Dataverse.AddRow",
+                  "inputs": {
+                    "table": "ProgressTracker",
+                    "fields": {
+                      "new_order@odata.bind": "@concat('/orders(', triggerBody()?['OrderId'], ')')",
+                      "new_taskname": "Order",
+                      "new_status": "Production Complete",
+                      "new_timestamp": "@utcNow()",
+                      "new_user": "System",
+                      "new_notes": "All tasks completed"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "ifFalse": []
+      }
+    }
+  ],
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "createdRowId": { "type": "string" },
+      "message": { "type": "string" }
+    }
+  },
+  "notes": "Replace table and field logical names with your environment's logical names and use connection references when converting into a solution-aware child flow."
+}

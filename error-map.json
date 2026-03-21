@@ -1,0 +1,106 @@
+{
+  "patterns": [
+    {
+      "category": "execution-policy",
+      "match": "running scripts is disabled|ExecutionPolicy|PSSecurityException",
+      "fix": "Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force",
+      "description": "PowerShell execution policy blocks script execution."
+    },
+    {
+      "category": "pac-auth",
+      "match": "pac auth failed|Unable to authenticate|auth login failed|Not authenticated",
+      "fix": "pac auth create --name cheeky-auto --url $env:ENV_URL --interactive",
+      "description": "PAC CLI is not authenticated to Dataverse."
+    },
+    {
+      "category": "missing-zip",
+      "match": "Solution zip missing|Solution zip does not exist|SolutionZip path missing",
+      "fix": "pac solution export --name CheekyTeesAutomation --path $targetZip --environment $env:ENV_URL",
+      "description": "Solution zip file does not exist and must be exported."
+    },
+    {
+      "category": "connection-reference-permission",
+      "match": "does not have ReadAccess right.*Connection Reference|connectionreference",
+      "fix": "Assign System Customizer role to authenticated user in Power Platform Admin Center.",
+      "description": "User lacks ReadAccess on Connection Reference entity."
+    },
+    {
+      "category": "invalid-pac-command",
+      "match": "unknown argument --name|Invalid value for argument|Not a valid command",
+      "fix": "Remove unsupported arguments from pac command invocation.",
+      "description": "PAC CLI command uses invalid or unsupported arguments."
+    },
+    {
+      "category": "import-failure",
+      "match": "solution import failed|Import failed|import returned non-zero",
+      "fix": "Retry pac solution import after verifying auth and zip integrity.",
+      "description": "Solution import to Dataverse failed."
+    },
+    {
+      "category": "missing-pac",
+      "match": "pac CLI not found|pac.*not recognized|CommandNotFoundException.*pac",
+      "fix": "dotnet tool install --global Microsoft.PowerApps.CLI.Tool",
+      "description": "PAC CLI is not installed."
+    },
+    {
+      "category": "env-url-missing",
+      "match": "ENV_URL not set|ENV_URL not present|Cannot export without ENV_URL",
+      "fix": "Prompt user for ENV_URL and persist with setx.",
+      "description": "ENV_URL environment variable is not configured."
+    },
+    {
+      "category": "log-file-locked",
+      "match": "Could not write to log file|being used by another process",
+      "fix": "Create a new timestamped log file.",
+      "description": "Log file is locked by another process."
+    },
+    {
+      "category": "publish-failure",
+      "match": "pac solution publish returned non-zero|Publish failed",
+      "fix": "Retry publish or publish manually via Power Platform admin center.",
+      "description": "Publishing customizations failed."
+    },
+    {
+      "category": "missing-square-credentials",
+      "match": "Square access token not configured|squareAccessToken.*empty|square-config.json not found",
+      "fix": "Add Square credentials to square-config.json (squareAccessToken, locationId).",
+      "description": "Square API credentials are missing or empty."
+    },
+    {
+      "category": "duplicate-webhook-event",
+      "match": "Already processed event|Duplicate event|event_id already exists",
+      "fix": "Event already handled. No action needed.",
+      "description": "Webhook event was already processed (duplicate delivery)."
+    },
+    {
+      "category": "missing-inbox-config",
+      "match": "email-config.json not found|Email not configured|imapServer.*empty|IMAP scan requires",
+      "fix": "Configure email-config.json with IMAP server, username, and password.",
+      "description": "Email inbox is not configured for the email intake agent."
+    },
+    {
+      "category": "invoice-send-failure",
+      "match": "Invoice send failed|Invoice creation failed|Failed to send reminder",
+      "fix": "Verify Square credentials and invoice ID. Retry or check Square Dashboard.",
+      "description": "Failed to create or send an invoice via Square API."
+    },
+    {
+      "category": "payment-lookup-failure",
+      "match": "No payments found|Payment lookup failed|Square API error.*payments",
+      "fix": "Verify Square credentials and date range. Check Square Dashboard for payment status.",
+      "description": "Failed to retrieve payment information from Square."
+    },
+    {
+      "category": "missing-dataverse-table",
+      "match": "entity.*does not exist|table.*not found|cr4b4_cheekyorders.*404|Resource not found.*cheekyorders",
+      "fix": "Ensure CheekyOrders table exists in Dataverse. Re-import the solution or create the table manually.",
+      "description": "Required Dataverse table is missing."
+    },
+    {
+      "category": "dataverse-token-failure",
+      "match": "Failed to get Dataverse token|pac auth token.*failed|Bearer token.*empty",
+      "fix": "Run pac auth create to re-authenticate, or verify ENV_URL is correct.",
+      "description": "Could not obtain a Dataverse access token."
+    }
+  ]
+}

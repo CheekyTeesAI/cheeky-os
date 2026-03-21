@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keys>
+  <Key Name="pk_crb_customerid">
+    <Attribute>crb_customerid</Attribute>
+  </Key>
+  <Index Name="idx_crb_customers_email">
+    <Column>crb_email</Column>
+  </Index>
+</Keys>

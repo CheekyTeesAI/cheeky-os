@@ -1,0 +1,177 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "properties": {
+    "displayName": "Cheeky_TaskGenerator",
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "triggers": {
+        "When_a_row_is_added": {
+          "type": "ApiConnection",
+          "inputs": {
+            "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+            "method": "post",
+            "path": "/datasets/default/tables/crb_orders/oncreateditems"
+          }
+        }
+      },
+      "actions": {
+        "ListExistingTasks": {
+          "type": "ApiConnection",
+          "inputs": {
+            "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+            "method": "get",
+            "path": "/datasets/default/tables/crb_productionjobs/items",
+            "queries": {
+              "$filter": "crb_orderid eq @{triggerBody()?['crb_orderid']}"
+            }
+          }
+        },
+        "ParseExistingTaskTypes": {
+          "type": "Compose",
+          "inputs": "@body('ListExistingTasks')?['value']"
+        },
+        "EnsureTask_OrderBlanks": {
+          "type": "Scope",
+          "actions": {
+            "Condition_OrderBlanksMissing": {
+              "type": "If",
+              "expression": "@equals(length(filter(body('ListExistingTasks')?['value'], lambda('t', equals(t?['crb_tasktype'], 'Order Blanks')))), 0)",
+              "actions": {
+                "Create_OrderBlanks": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "post",
+                    "path": "/datasets/default/tables/crb_productionjobs/items",
+                    "body": {
+                      "crb_orderid@odata.bind": "@concat('/crb_orders(', triggerBody()?['crb_orderid'], ')')",
+                      "crb_tasktype": "Order Blanks",
+                      "crb_status": "Pending",
+                      "crb_assignedto": "Production Queue",
+                      "crb_duedate": "@triggerBody()?['crb_duedate']",
+                      "crb_notes": "Auto-created by Cheeky_TaskGenerator"
+                    }
+                  }
+                }
+              },
+              "ifFalse": {}
+            }
+          }
+        },
+        "EnsureTask_PrepArt": {
+          "type": "Scope",
+          "actions": {
+            "Condition_PrepArtMissing": {
+              "type": "If",
+              "expression": "@equals(length(filter(body('ListExistingTasks')?['value'], lambda('t', equals(t?['crb_tasktype'], 'Prep Art')))), 0)",
+              "actions": {
+                "Create_PrepArt": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "post",
+                    "path": "/datasets/default/tables/crb_productionjobs/items",
+                    "body": {
+                      "crb_orderid@odata.bind": "@concat('/crb_orders(', triggerBody()?['crb_orderid'], ')')",
+                      "crb_tasktype": "Prep Art",
+                      "crb_status": "Pending",
+                      "crb_assignedto": "Production Queue",
+                      "crb_duedate": "@triggerBody()?['crb_duedate']",
+                      "crb_notes": "Auto-created by Cheeky_TaskGenerator"
+                    }
+                  }
+                }
+              },
+              "ifFalse": {}
+            }
+          }
+        },
+        "EnsureTask_Print": {
+          "type": "Scope",
+          "actions": {
+            "Condition_PrintMissing": {
+              "type": "If",
+              "expression": "@equals(length(filter(body('ListExistingTasks')?['value'], lambda('t', equals(t?['crb_tasktype'], 'Print')))), 0)",
+              "actions": {
+                "Create_Print": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "post",
+                    "path": "/datasets/default/tables/crb_productionjobs/items",
+                    "body": {
+                      "crb_orderid@odata.bind": "@concat('/crb_orders(', triggerBody()?['crb_orderid'], ')')",
+                      "crb_tasktype": "Print",
+                      "crb_status": "Pending",
+                      "crb_assignedto": "Production Queue",
+                      "crb_duedate": "@triggerBody()?['crb_duedate']",
+                      "crb_notes": "Auto-created by Cheeky_TaskGenerator"
+                    }
+                  }
+                }
+              },
+              "ifFalse": {}
+            }
+          }
+        },
+        "EnsureTask_QC": {
+          "type": "Scope",
+          "actions": {
+            "Condition_QCMissing": {
+              "type": "If",
+              "expression": "@equals(length(filter(body('ListExistingTasks')?['value'], lambda('t', equals(t?['crb_tasktype'], 'QC')))), 0)",
+              "actions": {
+                "Create_QC": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "post",
+                    "path": "/datasets/default/tables/crb_productionjobs/items",
+                    "body": {
+                      "crb_orderid@odata.bind": "@concat('/crb_orders(', triggerBody()?['crb_orderid'], ')')",
+                      "crb_tasktype": "QC",
+                      "crb_status": "Pending",
+                      "crb_assignedto": "Production Queue",
+                      "crb_duedate": "@triggerBody()?['crb_duedate']",
+                      "crb_notes": "Auto-created by Cheeky_TaskGenerator"
+                    }
+                  }
+                }
+              },
+              "ifFalse": {}
+            }
+          }
+        },
+        "EnsureTask_NotifyCustomer": {
+          "type": "Scope",
+          "actions": {
+            "Condition_NotifyCustomerMissing": {
+              "type": "If",
+              "expression": "@equals(length(filter(body('ListExistingTasks')?['value'], lambda('t', equals(t?['crb_tasktype'], 'Notify Customer')))), 0)",
+              "actions": {
+                "Create_NotifyCustomer": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "post",
+                    "path": "/datasets/default/tables/crb_productionjobs/items",
+                    "body": {
+                      "crb_orderid@odata.bind": "@concat('/crb_orders(', triggerBody()?['crb_orderid'], ')')",
+                      "crb_tasktype": "Notify Customer",
+                      "crb_status": "Pending",
+                      "crb_assignedto": "Production Queue",
+                      "crb_duedate": "@triggerBody()?['crb_duedate']",
+                      "crb_notes": "Auto-created by Cheeky_TaskGenerator"
+                    }
+                  }
+                }
+              },
+              "ifFalse": {}
+            }
+          }
+        }
+      }
+    }
+  }
+}

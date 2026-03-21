@@ -1,0 +1,10 @@
+{"module":"email-intake","notes":"No email config","timestamp":"2026-03-17T20:20:32.1936046-04:00","result":"skipped","command":"email-scan"}
+{"module":"email-intake","notes":"","timestamp":"2026-03-17T20:20:32.2220385-04:00","result":"completed","command":"email-scan"}
+{"module":"sales-assistant","notes":"cd C:\\Users\\PatCo\\source\\repos\\CheekyAPI; powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\cheeky-orchestrator.ps1 unpaid 2\u003e\u00261 | Select-Object -Last 15 | $0","timestamp":"2026-03-17T20:26:53.3790172-04:00","result":"success","command":"quote-create"}
+{"module":"sales","notes":"","timestamp":"2026-03-17T20:26:53.3879929-04:00","result":"success","command":"quote create"}
+{"module":"orders+production","notes":"","timestamp":"2026-03-17T20:33:43.2699624-04:00","result":"success","command":"jobs-tomorrow"}
+{"module":"orders+production","notes":"","timestamp":"2026-03-17T20:34:28.2327559-04:00","result":"success","command":"jobs-tomorrow"}
+{"module":"sales","notes":"","timestamp":"2026-03-17T20:34:47.8301848-04:00","result":"success","command":"unpaid"}
+{"module":"production","notes":"","timestamp":"2026-03-17T20:34:54.8402645-04:00","result":"success","command":"production-today"}
+{"module":"dispatcher","notes":"show today\u0027s payments","timestamp":"2026-03-17T20:35:02.5757721-04:00","result":"completed","command":"ask"}
+{"module":"dispatcher","notes":"banana smoothie","timestamp":"2026-03-17T20:35:09.3490899-04:00","result":"no-match","command":"unknown"}

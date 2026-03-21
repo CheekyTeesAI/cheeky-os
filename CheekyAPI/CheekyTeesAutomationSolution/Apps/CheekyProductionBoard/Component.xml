@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AppComponent>
+  <UniqueName>Cheeky Production Board</UniqueName>
+  <DisplayName>Cheeky Production Board</DisplayName>
+  <Description>Canvas app for managing production workflow. Uses Dataverse crb_orders, crb_lineitems, crb_customers, crb_productionjobs.</Description>
+  <AppType>Canvas</AppType>
+  <AppId>{f7e8d9c0-6b5a-4123-8f0e-666666666666}</AppId>
+  <AppFile>CanvasApp.json</AppFile>
+  <ConnectionReferencesFile>connectionReferences.json</ConnectionReferencesFile>
+</AppComponent>

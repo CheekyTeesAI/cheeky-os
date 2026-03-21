@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WorkflowComponent>
+  <UniqueName>Cheeky_ArtworkFolderCreator</UniqueName>
+  <DisplayName>Cheeky Artwork Folder Creator</DisplayName>
+  <Description>SolutionPackager component: creates OneDrive folder for orders and updates crb_artworkfolderurl (idempotent).</Description>
+  <WorkflowType>Microsoft.Flow</WorkflowType>
+  <WorkflowId>{e2f9b1c3-8d4e-4b2a-9f1a-888888888888}</WorkflowId>
+  <DefinitionFile>definition.json</DefinitionFile>
+  <ConnectionReferencesFile>connectionReferences.json</ConnectionReferencesFile>
+</WorkflowComponent>

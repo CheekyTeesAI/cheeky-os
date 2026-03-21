@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SolutionManifest>
+  <UniqueName>CheekyTeesAutomation</UniqueName>
+  <Version>1.0.0.0</Version>
+  <Managed>false</Managed>
+  <PublisherUniqueName>cheeky</PublisherUniqueName>
+  <PublisherId>{d8e7f6a1-9b2c-4e3f-8123-abcdef123456}</PublisherId>
+  <FriendlyName>Cheeky Tees Automation</FriendlyName>
+  <Description>Solution package for CheekyTeesAutomation</Description>
+  <Components>
+    <!-- No entity components included in this minimal package. -->
+  </Components>
+</SolutionManifest>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keys>
+  <Key Name="pk_crb_lineitemid">
+    <Attribute>crb_lineitemid</Attribute>
+  </Key>
+  <Index Name="idx_crb_lineitems_orderid">
+    <Column>crb_orderid</Column>
+  </Index>
+</Keys>

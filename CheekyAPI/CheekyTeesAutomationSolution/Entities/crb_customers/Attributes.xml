@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Attributes>
+  <!-- Customer Name -->
+  <Attribute LogicalName="crb_customername" Type="String" MaxLength="200" DisplayName="Customer Name" />
+  <!-- Company -->
+  <Attribute LogicalName="crb_company" Type="String" MaxLength="200" DisplayName="Company" />
+  <!-- Email -->
+  <Attribute LogicalName="crb_email" Type="Email" MaxLength="200" DisplayName="Email" />
+  <!-- Phone -->
+  <Attribute LogicalName="crb_phone" Type="Phone" MaxLength="50" DisplayName="Phone" />
+  <!-- Square Customer ID -->
+  <Attribute LogicalName="crb_squarecustomerid" Type="String" MaxLength="100" DisplayName="Square Customer ID" />
+  <!-- Notes -->
+  <Attribute LogicalName="crb_notes" Type="Memo" DisplayName="Notes" />
+</Attributes>

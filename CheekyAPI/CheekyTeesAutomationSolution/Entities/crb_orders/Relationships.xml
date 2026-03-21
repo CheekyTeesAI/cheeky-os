@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Relationships>
+  <Relationship Name="rel_orders_lineitems" Type="1:N" ReferencedEntity="crb_orders" ReferencingEntity="crb_lineitems">
+    <ReferencedAttribute>crb_orderid</ReferencedAttribute>
+    <ReferencingAttribute>crb_orderid</ReferencingAttribute>
+    <Behavior>Parental</Behavior>
+  </Relationship>
+  <Relationship Name="rel_orders_productionjobs" Type="1:N" ReferencedEntity="crb_orders" ReferencingEntity="crb_productionjobs">
+    <ReferencedAttribute>crb_orderid</ReferencedAttribute>
+    <ReferencingAttribute>crb_orderid</ReferencingAttribute>
+    <Behavior>Parental</Behavior>
+  </Relationship>
+</Relationships>

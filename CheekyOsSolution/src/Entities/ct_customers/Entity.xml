@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Entity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name LocalizedName="Customers" OriginalName="Customers">ct_customers</Name>
+  <ObjectTypeCode>0</ObjectTypeCode>
+  <EntityInfo>
+    <entity Name="ct_customers">
+      <LocalizedNames><LocalizedName description="Customers" languagecode="1033" /></LocalizedNames>
+      <LocalizedCollectionNames><LocalizedCollectionName description="Customers" languagecode="1033" /></LocalizedCollectionNames>
+      <Descriptions><Description description="Cheeky OS Customers" languagecode="1033" /></Descriptions>
+      <attributes>
+        <attribute PhysicalName="ct_customersid">
+          <Type>primarykey</Type><Name>ct_customersid</Name><LogicalName>ct_customersid</LogicalName>
+          <RequiredLevel>systemrequired</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind</DisplayMask>
+          <ValidForUpdateApi>0</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>0</IsCustomField><IsAuditEnabled>0</IsAuditEnabled>
+          <IsSecured>0</IsSecured><IsCustomizable>0</IsCustomizable><IsRenameable>0</IsRenameable>
+          <displaynames><displayname description="ct_customers" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_name">
+          <Type>nvarchar</Type><Name>ct_name</Name><LogicalName>ct_name</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel><DisplayMask>PrimaryName|ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><MaxLength>200</MaxLength><Length>200</Length>
+          <displaynames><displayname description="Customer Name" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_email">
+          <Type>nvarchar</Type><Name>ct_email</Name><LogicalName>ct_email</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><Format>email</Format><MaxLength>200</MaxLength><Length>200</Length>
+          <displaynames><displayname description="Email" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_phone">
+          <Type>nvarchar</Type><Name>ct_phone</Name><LogicalName>ct_phone</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><Format>phone</Format><MaxLength>50</MaxLength><Length>50</Length>
+          <displaynames><displayname description="Phone" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_company">
+          <Type>nvarchar</Type><Name>ct_company</Name><LogicalName>ct_company</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><MaxLength>200</MaxLength><Length>200</Length>
+          <displaynames><displayname description="Company" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_clienttier">
+          <Type>picklist</Type><Name>ct_clienttier</Name><LogicalName>ct_clienttier</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="ct_clienttier"><OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="Client Tier" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="Standard" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="LRCS" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="PPH" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="Client Tier" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_firsttimecustomer">
+          <Type>bit</Type><Name>ct_firsttimecustomer</Name><LogicalName>ct_firsttimecustomer</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><DefaultValue>1</DefaultValue>
+          <displaynames><displayname description="First Time Customer" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_address">
+          <Type>ntext</Type><Name>ct_address</Name><LogicalName>ct_address</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><MaxLength>2000</MaxLength><Length>2000</Length>
+          <displaynames><displayname description="Address" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="ct_notes">
+          <Type>ntext</Type><Name>ct_notes</Name><LogicalName>ct_notes</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForReadApi>1</ValidForReadApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><MaxLength>10000</MaxLength><Length>10000</Length>
+          <displaynames><displayname description="Notes" languagecode="1033" /></displaynames>
+        </attribute>
+      </attributes>
+      <EntitySetName>ct_customerses</EntitySetName>
+      <PrimaryIdAttribute>ct_customersid</PrimaryIdAttribute>
+      <PrimaryNameAttribute>ct_name</PrimaryNameAttribute>
+      <IsBPFEntity>0</IsBPFEntity><IsCustomEntity>1</IsCustomEntity><IsActivity>0</IsActivity>
+      <IsAvailableOffline>1</IsAvailableOffline><IsDocumentManagementEnabled>0</IsDocumentManagementEnabled>
+      <AutoRouteToOwnerQueue>0</AutoRouteToOwnerQueue><IsConnectionsEnabled>0</IsConnectionsEnabled>
+      <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><IsMappable>1</IsMappable>
+      <IsDuplicateDetectionEnabled>0</IsDuplicateDetectionEnabled>
+      <CanCreateAttributes>1</CanCreateAttributes><CanCreateForms>1</CanCreateForms>
+      <CanCreateViews>1</CanCreateViews><CanCreateCharts>1</CanCreateCharts>
+      <CanModifyAdditionalSettings>1</CanModifyAdditionalSettings>
+      <IsAuditEnabled>1</IsAuditEnabled><OwnershipTypeMask>UserOwned</OwnershipTypeMask>
+      <IntroducedVersion>1.0</IntroducedVersion>
+      <IsVisibleInMobile>1</IsVisibleInMobile><IsVisibleInMobileClient>1</IsVisibleInMobileClient>
+      <IsReadOnlyInMobileClient>0</IsReadOnlyInMobileClient>
+      <HasNotes>1</HasNotes><HasActivities>0</HasActivities><PrimaryFieldName>ct_name</PrimaryFieldName>
+    </entity>
+  </EntityInfo>
+</Entity>

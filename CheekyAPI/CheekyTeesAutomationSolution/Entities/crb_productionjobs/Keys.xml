@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keys>
+  <Key Name="pk_crb_productionjobid">
+    <Attribute>crb_productionjobid</Attribute>
+  </Key>
+  <Index Name="idx_crb_productionjobs_orderid">
+    <Column>crb_orderid</Column>
+  </Index>
+  <Index Name="idx_crb_productionjobs_status">
+    <Column>crb_status</Column>
+  </Index>
+  <Index Name="idx_crb_productionjobs_priority">
+    <Column>crb_priorityscore</Column>
+  </Index>
+</Keys>

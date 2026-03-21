@@ -1,0 +1,16 @@
+{
+  "connectionReferences": {
+    "shared_commondataverse": {
+      "connectionName": "shared_commondataverse",
+      "id": "@Microsoft.PowerApps/connections/shared_commondataverse",
+      "displayName": "Dataverse",
+      "parameterValues": {}
+    },
+    "onedriveforbusiness": {
+      "connectionName": "onedriveforbusiness",
+      "id": "@Microsoft.PowerApps/connections/onedriveforbusiness",
+      "displayName": "OneDrive for Business",
+      "parameterValues": {}
+    }
+  }
+}

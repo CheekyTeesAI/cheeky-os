@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ct_production",
+  "description": "Production tracking records for Cheeky Tees. Each record tracks one order through the production pipeline from received to shipped. Linked to ct_orderses via ct_orderid lookup.",
+  "tableName": "ct_production",
+  "tableDisplayName": "Production",
+  "tableSetName": "ct_productions",
+  "primaryKey": "ct_productionid",
+  "primaryNameColumn": "ct_productionid",
+  "fields": [
+    {
+      "fieldName": "ct_productionid",
+      "displayName": "Production Record ID",
+      "dataverseType": "uniqueidentifier",
+      "required": true,
+      "description": "Auto-generated primary key (GUID)."
+    },
+    {
+      "fieldName": "ct_orderid",
+      "displayName": "Order",
+      "dataverseType": "lookup",
+      "required": true,
+      "description": "Lookup to ct_orderses. Links this production record to the originating order.",
+      "lookupTarget": "ct_orderses"
+    },
+    {
+      "fieldName": "ct_stage",
+      "displayName": "Production Stage",
+      "dataverseType": "string",
+      "maxLength": 50,
+      "required": true,
+      "description": "Current production stage. Valid values: received, art, printing, finished, shipped.",
+      "allowedValues": ["received", "art", "printing", "finished", "shipped"]
+    },
+    {
+      "fieldName": "ct_assignedto",
+      "displayName": "Assigned To",
+      "dataverseType": "string",
+      "maxLength": 200,
+      "required": false,
+      "description": "Name of the person or team assigned to this production run (e.g. Chad, Pat)."
+    },
+    {
+      "fieldName": "ct_startdate",
+      "displayName": "Start Date",
+      "dataverseType": "datetime",
+      "required": false,
+      "description": "Date production started on this order."
+    },
+    {
+      "fieldName": "ct_completeddate",
+      "displayName": "Completed Date",
+      "dataverseType": "datetime",
+      "required": false,
+      "description": "Date production was completed (stage = finished or shipped)."
+    },
+    {
+      "fieldName": "ct_printtype",
+      "displayName": "Print Type",
+      "dataverseType": "string",
+      "maxLength": 100,
+      "required": false,
+      "description": "Print method for this run (e.g. screen print, DTG, sublimation). Copied from order."
+    },
+    {
+      "fieldName": "ct_garmentstatus",
+      "displayName": "Garment Status",
+      "dataverseType": "string",
+      "maxLength": 100,
+      "required": false,
+      "description": "Status of blank garment procurement (e.g. ordered, received, in stock)."
+    },
+    {
+      "fieldName": "ct_artstatus",
+      "displayName": "Art Status",
+      "dataverseType": "string",
+      "maxLength": 100,
+      "required": false,
+      "description": "Status of artwork/proof (e.g. pending, proofed, approved, revision needed)."
+    },
+    {
+      "fieldName": "ct_notes",
+      "displayName": "Notes",
+      "dataverseType": "string",
+      "maxLength": 4000,
+      "required": false,
+      "description": "Free-text production notes (color issues, reprints, delays, etc.)."
+    }
+  ],
+  "relationships": [
+    {
+      "type": "many-to-one",
+      "relatedTable": "ct_orderses",
+      "relatedField": "ct_ordersesid",
+      "thisField": "ct_orderid",
+      "description": "Each production record belongs to one order. Lookup field references ct_orderses primary key."
+    }
+  ]
+}

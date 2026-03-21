@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ct_customers",
+  "description": "Customer records for Cheeky Tees. Tracks contact info, address, and order history. Linked to ct_orderses via customer name/email lookup.",
+  "tableName": "ct_customers",
+  "tableDisplayName": "Customers",
+  "tableSetName": "ct_customerses",
+  "primaryKey": "ct_customersid",
+  "primaryNameColumn": "ct_name",
+  "fields": [
+    {
+      "fieldName": "ct_customersid",
+      "displayName": "Customer ID",
+      "dataverseType": "uniqueidentifier",
+      "required": true,
+      "description": "Auto-generated primary key (GUID)."
+    },
+    {
+      "fieldName": "ct_name",
+      "displayName": "Customer Name",
+      "dataverseType": "string",
+      "maxLength": 200,
+      "required": true,
+      "description": "Full name of the customer or organization."
+    },
+    {
+      "fieldName": "ct_email",
+      "displayName": "Email",
+      "dataverseType": "string",
+      "maxLength": 200,
+      "required": false,
+      "description": "Customer email address."
+    },
+    {
+      "fieldName": "ct_phone",
+      "displayName": "Phone",
+      "dataverseType": "string",
+      "maxLength": 50,
+      "required": false,
+      "description": "Customer phone number."
+    },
+    {
+      "fieldName": "ct_address",
+      "displayName": "Street Address",
+      "dataverseType": "string",
+      "maxLength": 500,
+      "required": false,
+      "description": "Street address line."
+    },
+    {
+      "fieldName": "ct_city",
+      "displayName": "City",
+      "dataverseType": "string",
+      "maxLength": 100,
+      "required": false,
+      "description": "City name."
+    },
+    {
+      "fieldName": "ct_state",
+      "displayName": "State",
+      "dataverseType": "string",
+      "maxLength": 50,
+      "required": false,
+      "description": "State or province abbreviation (e.g. SC, GA)."
+    },
+    {
+      "fieldName": "ct_zip",
+      "displayName": "ZIP Code",
+      "dataverseType": "string",
+      "maxLength": 20,
+      "required": false,
+      "description": "Postal / ZIP code."
+    },
+    {
+      "fieldName": "ct_createdon",
+      "displayName": "Created On",
+      "dataverseType": "datetime",
+      "required": false,
+      "description": "Date the customer record was created. Auto-populated by Dataverse."
+    },
+    {
+      "fieldName": "ct_totalorders",
+      "displayName": "Total Orders",
+      "dataverseType": "integer",
+      "required": false,
+      "description": "Running count of orders placed by this customer. Updated by pipeline or rollup."
+    },
+    {
+      "fieldName": "ct_notes",
+      "displayName": "Notes",
+      "dataverseType": "string",
+      "maxLength": 4000,
+      "required": false,
+      "description": "Free-text notes about the customer (preferences, special handling, etc.)."
+    }
+  ],
+  "relationships": [
+    {
+      "type": "one-to-many",
+      "relatedTable": "ct_orderses",
+      "relatedField": "ct_customerid",
+      "thisField": "ct_customersid",
+      "description": "One customer can have many orders. Orders reference this customer via ct_customerid lookup."
+    }
+  ]
+}

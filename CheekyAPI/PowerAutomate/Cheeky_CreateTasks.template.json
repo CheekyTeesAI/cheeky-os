@@ -1,0 +1,150 @@
+{
+  "name": "Cheeky_CreateTasks",
+  "type": "childFlowTemplate",
+  "version": "1.1",
+  "description": "Child flow template to create Tasks for an Order. Triggered by parent flow when an Order is created. Uses Dataverse tables: Orders, OrderItems, Tasks.",
+  "trigger": {
+    "type": "Request",
+    "displayName": "Child flow trigger: create tasks for order",
+    "inputsSchema": {
+      "type": "object",
+      "properties": {
+        "OrderId": { "type": "string", "description": "Dataverse Order row GUID (string)" }
+      },
+      "required": [ "OrderId" ]
+    }
+  },
+  "actions": [
+    {
+      "name": "List_OrderItems",
+      "type": "Dataverse.ListRows",
+      "description": "List OrderItems related to the Order",
+      "inputs": {
+        "table": "OrderItems",
+        "filter": "_orderid_value eq '@{triggerBody()?['OrderId']}'",
+        "top": 5000
+      }
+    },
+    {
+      "name": "Determine_ProductionType",
+      "type": "Compose",
+      "description": "Decide production type to use. If multiple, choose the first item's ProductionType. Modify business rule as needed.",
+      "inputs": "@first(body('List_OrderItems')?['value'])?['new_productiontype']"
+    },
+    {
+      "name": "Compose_Tasks_Array",
+      "type": "Switch",
+      "description": "Create an array of tasks based on ProductionType",
+      "inputs": "@outputs('Determine_ProductionType')",
+      "cases": {
+        "DTF": {
+          "tasks": [
+            { "TaskName": "Artwork Prep", "TaskOrder": 1, "Department": "Artwork", "DueInDays": 1 },
+            { "TaskName": "Print Transfers", "TaskOrder": 2, "Department": "Print", "DueInDays": 2 },
+            { "TaskName": "Heat Press", "TaskOrder": 3, "Department": "Production", "DueInDays": 3 },
+            { "TaskName": "Quality Check", "TaskOrder": 4, "Department": "QA", "DueInDays": 4 },
+            { "TaskName": "Package Order", "TaskOrder": 5, "Department": "Fulfillment", "DueInDays": 5 },
+            { "TaskName": "Ship Order", "TaskOrder": 6, "Department": "Shipping", "DueInDays": 6 }
+          ]
+        },
+        "Screen Print": {
+          "tasks": [
+            { "TaskName": "Artwork Prep", "TaskOrder": 1, "Department": "Artwork", "DueInDays": 1 },
+            { "TaskName": "Separate Colors", "TaskOrder": 2, "Department": "Artwork", "DueInDays": 1 },
+            { "TaskName": "Burn Screens", "TaskOrder": 3, "Department": "Prep", "DueInDays": 2 },
+            { "TaskName": "Print Shirts", "TaskOrder": 4, "Department": "Print", "DueInDays": 3 },
+            { "TaskName": "Cure", "TaskOrder": 5, "Department": "Print", "DueInDays": 3 },
+            { "TaskName": "Quality Check", "TaskOrder": 6, "Department": "QA", "DueInDays": 4 },
+            { "TaskName": "Package Order", "TaskOrder": 7, "Department": "Fulfillment", "DueInDays": 5 },
+            { "TaskName": "Ship Order", "TaskOrder": 8, "Department": "Shipping", "DueInDays": 6 }
+          ]
+        },
+        "Embroidery": {
+          "tasks": [
+            { "TaskName": "Digitize Artwork", "TaskOrder": 1, "Department": "Artwork", "DueInDays": 1 },
+            { "TaskName": "Load Machine", "TaskOrder": 2, "Department": "Production", "DueInDays": 2 },
+            { "TaskName": "Run Embroidery", "TaskOrder": 3, "Department": "Production", "DueInDays": 3 },
+            { "TaskName": "Quality Check", "TaskOrder": 4, "Department": "QA", "DueInDays": 4 },
+            { "TaskName": "Package Order", "TaskOrder": 5, "Department": "Fulfillment", "DueInDays": 5 },
+            { "TaskName": "Ship Order", "TaskOrder": 6, "Department": "Shipping", "DueInDays": 6 }
+          ]
+        },
+        "Vinyl": {
+          "tasks": [
+            { "TaskName": "Artwork Prep", "TaskOrder": 1, "Department": "Artwork", "DueInDays": 1 },
+            { "TaskName": "Cut Vinyl", "TaskOrder": 2, "Department": "Production", "DueInDays": 2 },
+            { "TaskName": "Apply Vinyl", "TaskOrder": 3, "Department": "Production", "DueInDays": 3 },
+            { "TaskName": "Quality Check", "TaskOrder": 4, "Department": "QA", "DueInDays": 4 },
+            { "TaskName": "Package Order", "TaskOrder": 5, "Department": "Fulfillment", "DueInDays": 5 },
+            { "TaskName": "Ship Order", "TaskOrder": 6, "Department": "Shipping", "DueInDays": 6 }
+          ]
+        }
+      },
+      "default": {
+        "tasks": [
+          { "TaskName": "Artwork Prep", "TaskOrder": 1, "Department": "Artwork", "DueInDays": 1 },
+          { "TaskName": "Quality Check", "TaskOrder": 2, "Department": "QA", "DueInDays": 2 },
+          { "TaskName": "Package Order", "TaskOrder": 3, "Department": "Fulfillment", "DueInDays": 3 },
+          { "TaskName": "Ship Order", "TaskOrder": 4, "Department": "Shipping", "DueInDays": 4 }
+        ]
+      }
+    },
+    {
+      "name": "Create_Tasks_Loop",
+      "type": "ForEach",
+      "description": "Create a Tasks row for each task in the composed tasks array",
+      "inputs": {
+        "from": "@coalesce(outputs('Compose_Tasks_Array')?['tasks'], outputs('Compose_Tasks_Array') )",
+        "actions": [
+          {
+            "name": "Add_Task_Row",
+            "type": "Dataverse.AddRow",
+            "description": "Add Task row to Tasks table",
+            "inputs": {
+              "table": "Tasks",
+              "fields": {
+                "taskname": "@items('Create_Tasks_Loop')?['TaskName']",
+                "taskorder": "@items('Create_Tasks_Loop')?['TaskOrder']",
+                "new_order@odata.bind": "@concat('/orders(', triggerBody()?['OrderId'], ')')",
+                "status": "New",
+                "department": "@items('Create_Tasks_Loop')?['Department']",
+                "scheduledend": "@addDays(utcNow(), int(items('Create_Tasks_Loop')?['DueInDays']))"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Set_First_Task_Ready",
+      "type": "Dataverse.ListRows",
+      "description": "Find the first Task for the Order and mark it Ready",
+      "inputs": {
+        "table": "Tasks",
+        "filter": "_new_order_value eq '@{triggerBody()?['OrderId']}'",
+        "orderby": "taskorder asc",
+        "top": 1
+      }
+    },
+    {
+      "name": "Update_First_To_Ready",
+      "type": "Dataverse.UpdateRow",
+      "description": "Update the first task status to Ready if present",
+      "inputs": {
+        "table": "Tasks",
+        "rowId": "@first(body('Set_First_Task_Ready')?['value'])?['taskid']",
+        "fields": {
+          "status": "Ready"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "createdCount": { "type": "integer" },
+      "message": { "type": "string" }
+    }
+  },
+  "notes": "Replace table and field logical names (new_order, scheduledend, taskid, etc.) with the logical names used in your Dataverse environment before importing as a solution-aware child flow. Use connection references in the flow designer."
+}

@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cheeky Bridge Command Ticket",
+  "description": "Schema for structured tickets produced by Cheeky AI and consumed by GitHub Copilot.",
+  "type": "object",
+  "required": ["id", "timestamp", "issuedBy", "source", "rawCommand", "commandType", "priority", "targetArea", "requestedAction", "status"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique ticket identifier (e.g. CB-20250101-abc123)."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the command was issued."
+    },
+    "issuedBy": {
+      "type": "string",
+      "description": "Name of the person who issued the command."
+    },
+    "source": {
+      "type": "string",
+      "enum": ["mobile", "cli", "chat", "voice"],
+      "description": "Where the command originated."
+    },
+    "rawCommand": {
+      "type": "string",
+      "description": "The exact plain-English command as spoken or typed."
+    },
+    "commandType": {
+      "type": "string",
+      "enum": [
+        "BUILD_FEATURE",
+        "MODIFY_FEATURE",
+        "CREATE_TABLE",
+        "UPDATE_TABLE",
+        "CREATE_FLOW",
+        "UPDATE_FLOW",
+        "CREATE_UI",
+        "FIX_BUG",
+        "QUOTE_OPS",
+        "SALES_OPS",
+        "PRODUCTION_OPS",
+        "DOCUMENT_SYSTEM",
+        "UNKNOWN"
+      ],
+      "description": "Classified command type."
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["HIGH", "MEDIUM", "LOW"],
+      "description": "Execution priority."
+    },
+    "targetArea": {
+      "type": "string",
+      "enum": ["intake", "dataverse", "automation", "ui", "production", "sales", "quotes", "ops", "unknown"],
+      "description": "Which part of the system this command targets."
+    },
+    "requestedAction": {
+      "type": "string",
+      "description": "Clear summary of what should be done."
+    },
+    "entities": {
+      "type": "object",
+      "properties": {
+        "tables": { "type": "array", "items": { "type": "string" } },
+        "flows": { "type": "array", "items": { "type": "string" } },
+        "screens": { "type": "array", "items": { "type": "string" } },
+        "fields": { "type": "array", "items": { "type": "string" } },
+        "integrations": { "type": "array", "items": { "type": "string" } }
+      },
+      "description": "Dataverse tables, flows, screens, fields, and integrations referenced."
+    },
+    "constraints": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Rules or limitations for execution."
+    },
+    "dependencies": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Other tickets or features this depends on."
+    },
+    "acceptanceCriteria": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Conditions that must be true when this ticket is complete."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["NEW", "IN_PROGRESS", "COMPLETE", "FAILED", "UNKNOWN"],
+      "description": "Current ticket status."
+    },
+    "recommendedNextStep": {
+      "type": "string",
+      "description": "Suggested next action after this ticket is executed."
+    }
+  }
+}

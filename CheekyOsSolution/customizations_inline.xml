@@ -1,0 +1,699 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Entities>
+
+<Entity>
+  <Name LocalizedName="Orders" OriginalName="Orders">
+    <LocalizedNames>
+      <LocalizedName description="Orders" languagecode="1033" />
+    </LocalizedNames>
+  </Name>
+  <ObjectTypeCode>0</ObjectTypeCode>
+  <EntityInfo>
+    <entity Name="crb_orders">
+      <LocalizedNames>
+        <LocalizedName description="Orders" languagecode="1033" />
+      </LocalizedNames>
+      <LocalizedCollectionNames>
+        <LocalizedCollectionName description="Orders" languagecode="1033" />
+      </LocalizedCollectionNames>
+      <Descriptions>
+        <Description description="Cheeky OS Orders" languagecode="1033" />
+      </Descriptions>
+      <attributes>
+        <attribute PhysicalName="crb_name">
+          <Type>nvarchar</Type><Name>crb_name</Name><LogicalName>crb_name</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled>
+          <IsSecured>0</IsSecured><IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <Length>200</Length>
+          <displaynames><displayname description="Order Number" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_customername">
+          <Type>nvarchar</Type><Name>crb_customername</Name><LogicalName>crb_customername</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled>
+          <IsSecured>0</IsSecured><IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <Length>200</Length>
+          <displaynames><displayname description="Customer Name" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_orderstage">
+          <Type>picklist</Type><Name>crb_orderstage</Name><LogicalName>crb_orderstage</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled>
+          <IsSecured>0</IsSecured><IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="crb_orderstage">
+            <OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="Order Stage" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="Intake" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="Approved" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="Production Ready" languagecode="1033" /></labels></option>
+              <option value="100000003"><labels><label description="Printing" languagecode="1033" /></labels></option>
+              <option value="100000004"><labels><label description="QC" languagecode="1033" /></labels></option>
+              <option value="100000005"><labels><label description="Ready for Pickup" languagecode="1033" /></labels></option>
+              <option value="100000006"><labels><label description="Completed" languagecode="1033" /></labels></option>
+              <option value="100000007"><labels><label description="Cancelled" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="Order Stage" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_productiontype">
+          <Type>picklist</Type><Name>crb_productiontype</Name><LogicalName>crb_productiontype</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled>
+          <IsSecured>0</IsSecured><IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="crb_productiontype">
+            <OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="Production Type" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="DTG" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="DTF" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="Screen Print" languagecode="1033" /></labels></option>
+              <option value="100000003"><labels><label description="Embroidery" languagecode="1033" /></labels></option>
+              <option value="100000004"><labels><label description="Vinyl" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="Production Type" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_quantity">
+          <Type>int</Type><Name>crb_quantity</Name><LogicalName>crb_quantity</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled>
+          <IsSecured>0</IsSecured><IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <MinValue>0</MinValue><MaxValue>1000000</MaxValue>
+          <displaynames><displayname description="Quantity" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_unitprice">
+          <Type>money</Type><Name>crb_unitprice</Name><LogicalName>crb_unitprice</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled>
+          <IsSecured>0</IsSecured><IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <MinValue>0</MinValue><MaxValue>1000000</MaxValue><Precision>2</Precision>
+          <displaynames><displayname description="Unit Price" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_totalamount">
+          <Type>money</Type><Name>crb_totalamount</Name><LogicalName>crb_totalamount</LogicalName>
+          <RequiredLevel>none</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled>
+          <IsSecured>0</IsSecured><IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <MinValue>0</MinValue><MaxValue>10000000</MaxValue><Precision>2</Precision>
+          <displaynames><displayname description="Total Amount" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_marginpercent">
+          <Type>decimal</Type><Name>crb_marginpercent</Name><LogicalName>crb_marginpercent</LogicalName>
+          <RequiredLevel>none</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled>
+          <IsSecured>0</IsSecured><IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <MinValue>0</MinValue><MaxValue>100</MaxValue><Precision>2</Precision>
+          <displaynames><displayname description="Margin %" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_paymentstatus">
+          <Type>picklist</Type><Name>crb_paymentstatus</Name><LogicalName>crb_paymentstatus</LogicalName>
+          <RequiredLevel>none</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled>
+          <IsSecured>0</IsSecured><IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="crb_paymentstatus">
+            <OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="Payment Status" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="Unpaid" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="Deposit Paid" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="Paid in Full" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="Payment Status" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_depositamount">
+          <Type>money</Type><Name>crb_depositamount</Name><LogicalName>crb_depositamount</LogicalName>
+          <RequiredLevel>none</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled>
+          <IsSecured>0</IsSecured><IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <MinValue>0</MinValue><MaxValue>1000000</MaxValue><Precision>2</Precision>
+          <displaynames><displayname description="Deposit Amount" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_duedate">
+          <Type>datetime</Type><Name>crb_duedate</Name><LogicalName>crb_duedate</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled>
+          <IsSecured>0</IsSecured><IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <Format>DateOnly</Format><CanChangeDateTimeBehavior>1</CanChangeDateTimeBehavior>
+          <DateTimeBehavior>UserLocal</DateTimeBehavior>
+          <displaynames><displayname description="Due Date" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_rushorder">
+          <Type>bit</Type><Name>crb_rushorder</Name><LogicalName>crb_rushorder</LogicalName>
+          <RequiredLevel>none</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled>
+          <IsSecured>0</IsSecured><IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <DefaultValue>0</DefaultValue>
+          <displaynames><displayname description="Rush Order" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_artworkstatus">
+          <Type>picklist</Type><Name>crb_artworkstatus</Name><LogicalName>crb_artworkstatus</LogicalName>
+          <RequiredLevel>none</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled>
+          <IsSecured>0</IsSecured><IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="crb_artworkstatus">
+            <OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="Artwork Status" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="Not Received" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="Received" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="Approved" languagecode="1033" /></labels></option>
+              <option value="100000003"><labels><label description="Revision Needed" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="Artwork Status" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_qcstatus">
+          <Type>picklist</Type><Name>crb_qcstatus</Name><LogicalName>crb_qcstatus</LogicalName>
+          <RequiredLevel>none</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled>
+          <IsSecured>0</IsSecured><IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="crb_qcstatus">
+            <OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="QC Status" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="Pending" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="Passed" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="Failed" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="QC Status" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_notes">
+          <Type>ntext</Type><Name>crb_notes</Name><LogicalName>crb_notes</LogicalName>
+          <RequiredLevel>none</RequiredLevel>
+          <DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled>
+          <IsSecured>0</IsSecured><IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <Length>10000</Length>
+          <displaynames><displayname description="Notes" languagecode="1033" /></displaynames>
+        </attribute>
+      </attributes>
+      <EntitySetName>crb_orderses</EntitySetName>
+      <IsBPFEntity>0</IsBPFEntity><IsCustomEntity>1</IsCustomEntity><IsActivity>0</IsActivity>
+      <IsAvailableOffline>1</IsAvailableOffline><IsDocumentManagementEnabled>0</IsDocumentManagementEnabled>
+      <AutoRouteToOwnerQueue>0</AutoRouteToOwnerQueue><IsConnectionsEnabled>0</IsConnectionsEnabled>
+      <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><IsMappable>1</IsMappable>
+      <IsDuplicateDetectionEnabled>0</IsDuplicateDetectionEnabled>
+      <CanCreateAttributes>1</CanCreateAttributes><CanCreateForms>1</CanCreateForms>
+      <CanCreateViews>1</CanCreateViews><CanCreateCharts>1</CanCreateCharts>
+      <CanModifyAdditionalSettings>1</CanModifyAdditionalSettings>
+      <IsAuditEnabled>1</IsAuditEnabled><OwnershipTypeMask>UserOwned</OwnershipTypeMask>
+      <IntroducedVersion>1.0</IntroducedVersion>
+      <IsVisibleInMobile>1</IsVisibleInMobile><IsVisibleInMobileClient>1</IsVisibleInMobileClient>
+      <IsReadOnlyInMobileClient>0</IsReadOnlyInMobileClient>
+      <HasNotes>1</HasNotes><HasActivities>0</HasActivities>
+      <PrimaryFieldName>crb_name</PrimaryFieldName>
+    </entity>
+  </EntityInfo>
+</Entity>
+
+<Entity>
+  <Name LocalizedName="Customers" OriginalName="Customers">
+    <LocalizedNames><LocalizedName description="Customers" languagecode="1033" /></LocalizedNames>
+  </Name>
+  <ObjectTypeCode>0</ObjectTypeCode>
+  <EntityInfo>
+    <entity Name="crb_customers">
+      <LocalizedNames><LocalizedName description="Customers" languagecode="1033" /></LocalizedNames>
+      <LocalizedCollectionNames><LocalizedCollectionName description="Customers" languagecode="1033" /></LocalizedCollectionNames>
+      <Descriptions><Description description="Cheeky OS Customers" languagecode="1033" /></Descriptions>
+      <attributes>
+        <attribute PhysicalName="crb_name">
+          <Type>nvarchar</Type><Name>crb_name</Name><LogicalName>crb_name</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><Length>200</Length>
+          <displaynames><displayname description="Customer Name" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_email">
+          <Type>nvarchar</Type><Name>crb_email</Name><LogicalName>crb_email</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><Format>Email</Format><Length>200</Length>
+          <displaynames><displayname description="Email" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_phone">
+          <Type>nvarchar</Type><Name>crb_phone</Name><LogicalName>crb_phone</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><Format>Phone</Format><Length>50</Length>
+          <displaynames><displayname description="Phone" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_company">
+          <Type>nvarchar</Type><Name>crb_company</Name><LogicalName>crb_company</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><Length>200</Length>
+          <displaynames><displayname description="Company" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_clienttier">
+          <Type>picklist</Type><Name>crb_clienttier</Name><LogicalName>crb_clienttier</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="crb_clienttier"><OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="Client Tier" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="Standard" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="LRCS" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="PPH" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="Client Tier" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_firsttimecustomer">
+          <Type>bit</Type><Name>crb_firsttimecustomer</Name><LogicalName>crb_firsttimecustomer</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><DefaultValue>1</DefaultValue>
+          <displaynames><displayname description="First Time Customer" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_address">
+          <Type>ntext</Type><Name>crb_address</Name><LogicalName>crb_address</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><Length>2000</Length>
+          <displaynames><displayname description="Address" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_notes">
+          <Type>ntext</Type><Name>crb_notes</Name><LogicalName>crb_notes</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><Length>10000</Length>
+          <displaynames><displayname description="Notes" languagecode="1033" /></displaynames>
+        </attribute>
+      </attributes>
+      <EntitySetName>crb_customerses</EntitySetName>
+      <IsBPFEntity>0</IsBPFEntity><IsCustomEntity>1</IsCustomEntity><IsActivity>0</IsActivity>
+      <IsAvailableOffline>1</IsAvailableOffline><IsDocumentManagementEnabled>0</IsDocumentManagementEnabled>
+      <AutoRouteToOwnerQueue>0</AutoRouteToOwnerQueue><IsConnectionsEnabled>0</IsConnectionsEnabled>
+      <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><IsMappable>1</IsMappable>
+      <IsDuplicateDetectionEnabled>0</IsDuplicateDetectionEnabled>
+      <CanCreateAttributes>1</CanCreateAttributes><CanCreateForms>1</CanCreateForms>
+      <CanCreateViews>1</CanCreateViews><CanCreateCharts>1</CanCreateCharts>
+      <CanModifyAdditionalSettings>1</CanModifyAdditionalSettings>
+      <IsAuditEnabled>1</IsAuditEnabled><OwnershipTypeMask>UserOwned</OwnershipTypeMask>
+      <IntroducedVersion>1.0</IntroducedVersion>
+      <IsVisibleInMobile>1</IsVisibleInMobile><IsVisibleInMobileClient>1</IsVisibleInMobileClient>
+      <IsReadOnlyInMobileClient>0</IsReadOnlyInMobileClient>
+      <HasNotes>1</HasNotes><HasActivities>0</HasActivities><PrimaryFieldName>crb_name</PrimaryFieldName>
+    </entity>
+  </EntityInfo>
+</Entity>
+
+<Entity>
+  <Name LocalizedName="Tasks" OriginalName="Tasks">
+    <LocalizedNames><LocalizedName description="Tasks" languagecode="1033" /></LocalizedNames>
+  </Name>
+  <ObjectTypeCode>0</ObjectTypeCode>
+  <EntityInfo>
+    <entity Name="crb_tasks">
+      <LocalizedNames><LocalizedName description="Tasks" languagecode="1033" /></LocalizedNames>
+      <LocalizedCollectionNames><LocalizedCollectionName description="Tasks" languagecode="1033" /></LocalizedCollectionNames>
+      <Descriptions><Description description="Cheeky OS Tasks" languagecode="1033" /></Descriptions>
+      <attributes>
+        <attribute PhysicalName="crb_name">
+          <Type>nvarchar</Type><Name>crb_name</Name><LogicalName>crb_name</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><Length>200</Length>
+          <displaynames><displayname description="Task Name" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_tasktype">
+          <Type>picklist</Type><Name>crb_tasktype</Name><LogicalName>crb_tasktype</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="crb_tasktype"><OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="Task Type" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="Artwork Approval" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="Blank Ordering" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="Printing" languagecode="1033" /></labels></option>
+              <option value="100000003"><labels><label description="QC Check" languagecode="1033" /></labels></option>
+              <option value="100000004"><labels><label description="Packaging" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="Task Type" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_status">
+          <Type>picklist</Type><Name>crb_status</Name><LogicalName>crb_status</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="crb_taskstatus"><OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="Status" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="Not Started" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="In Progress" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="Completed" languagecode="1033" /></labels></option>
+              <option value="100000003"><labels><label description="Blocked" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="Status" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_assignedto">
+          <Type>nvarchar</Type><Name>crb_assignedto</Name><LogicalName>crb_assignedto</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><Length>200</Length>
+          <displaynames><displayname description="Assigned To" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_duedate">
+          <Type>datetime</Type><Name>crb_duedate</Name><LogicalName>crb_duedate</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <Format>DateOnly</Format><CanChangeDateTimeBehavior>1</CanChangeDateTimeBehavior><DateTimeBehavior>UserLocal</DateTimeBehavior>
+          <displaynames><displayname description="Due Date" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_ordernumber">
+          <Type>nvarchar</Type><Name>crb_ordernumber</Name><LogicalName>crb_ordernumber</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><Length>100</Length>
+          <displaynames><displayname description="Order Number" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_priority">
+          <Type>picklist</Type><Name>crb_priority</Name><LogicalName>crb_priority</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="crb_priority"><OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="Priority" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="Normal" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="High" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="Rush" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="Priority" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_blockingflag">
+          <Type>bit</Type><Name>crb_blockingflag</Name><LogicalName>crb_blockingflag</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><DefaultValue>0</DefaultValue>
+          <displaynames><displayname description="Blocking" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_notes">
+          <Type>ntext</Type><Name>crb_notes</Name><LogicalName>crb_notes</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><Length>10000</Length>
+          <displaynames><displayname description="Notes" languagecode="1033" /></displaynames>
+        </attribute>
+      </attributes>
+      <EntitySetName>crb_taskses</EntitySetName>
+      <IsBPFEntity>0</IsBPFEntity><IsCustomEntity>1</IsCustomEntity><IsActivity>0</IsActivity>
+      <IsAvailableOffline>1</IsAvailableOffline><IsDocumentManagementEnabled>0</IsDocumentManagementEnabled>
+      <AutoRouteToOwnerQueue>0</AutoRouteToOwnerQueue><IsConnectionsEnabled>0</IsConnectionsEnabled>
+      <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><IsMappable>1</IsMappable>
+      <IsDuplicateDetectionEnabled>0</IsDuplicateDetectionEnabled>
+      <CanCreateAttributes>1</CanCreateAttributes><CanCreateForms>1</CanCreateForms>
+      <CanCreateViews>1</CanCreateViews><CanCreateCharts>1</CanCreateCharts>
+      <CanModifyAdditionalSettings>1</CanModifyAdditionalSettings>
+      <IsAuditEnabled>1</IsAuditEnabled><OwnershipTypeMask>UserOwned</OwnershipTypeMask>
+      <IntroducedVersion>1.0</IntroducedVersion>
+      <IsVisibleInMobile>1</IsVisibleInMobile><IsVisibleInMobileClient>1</IsVisibleInMobileClient>
+      <IsReadOnlyInMobileClient>0</IsReadOnlyInMobileClient>
+      <HasNotes>1</HasNotes><HasActivities>0</HasActivities><PrimaryFieldName>crb_name</PrimaryFieldName>
+    </entity>
+  </EntityInfo>
+</Entity>
+
+<Entity>
+  <Name LocalizedName="ProductionJobs" OriginalName="ProductionJobs">
+    <LocalizedNames><LocalizedName description="ProductionJobs" languagecode="1033" /></LocalizedNames>
+  </Name>
+  <ObjectTypeCode>0</ObjectTypeCode>
+  <EntityInfo>
+    <entity Name="crb_productionjobs">
+      <LocalizedNames><LocalizedName description="ProductionJobs" languagecode="1033" /></LocalizedNames>
+      <LocalizedCollectionNames><LocalizedCollectionName description="Production Jobs" languagecode="1033" /></LocalizedCollectionNames>
+      <Descriptions><Description description="Cheeky OS Production Jobs" languagecode="1033" /></Descriptions>
+      <attributes>
+        <attribute PhysicalName="crb_name">
+          <Type>nvarchar</Type><Name>crb_name</Name><LogicalName>crb_name</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><Length>200</Length>
+          <displaynames><displayname description="Job Name" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_ordernumber">
+          <Type>nvarchar</Type><Name>crb_ordernumber</Name><LogicalName>crb_ordernumber</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><Length>100</Length>
+          <displaynames><displayname description="Order Number" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_productiontype">
+          <Type>picklist</Type><Name>crb_productiontype</Name><LogicalName>crb_productiontype</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="crb_productiontype_pj"><OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="Production Type" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="DTG" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="DTF" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="Screen Print" languagecode="1033" /></labels></option>
+              <option value="100000003"><labels><label description="Embroidery" languagecode="1033" /></labels></option>
+              <option value="100000004"><labels><label description="Vinyl" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="Production Type" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_jobstatus">
+          <Type>picklist</Type><Name>crb_jobstatus</Name><LogicalName>crb_jobstatus</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="crb_jobstatus"><OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="Status" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="Queued" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="In Production" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="QC" languagecode="1033" /></labels></option>
+              <option value="100000003"><labels><label description="Complete" languagecode="1033" /></labels></option>
+              <option value="100000004"><labels><label description="On Hold" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="Status" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_garmenttype">
+          <Type>nvarchar</Type><Name>crb_garmenttype</Name><LogicalName>crb_garmenttype</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><Length>200</Length>
+          <displaynames><displayname description="Garment Type" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_garmentcolor">
+          <Type>nvarchar</Type><Name>crb_garmentcolor</Name><LogicalName>crb_garmentcolor</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><Length>100</Length>
+          <displaynames><displayname description="Garment Color" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_quantity">
+          <Type>int</Type><Name>crb_quantity</Name><LogicalName>crb_quantity</LogicalName>
+          <RequiredLevel>applicationrequired</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <MinValue>0</MinValue><MaxValue>1000000</MaxValue>
+          <displaynames><displayname description="Quantity" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_frontprint">
+          <Type>bit</Type><Name>crb_frontprint</Name><LogicalName>crb_frontprint</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><DefaultValue>0</DefaultValue>
+          <displaynames><displayname description="Front Print" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_backprint">
+          <Type>bit</Type><Name>crb_backprint</Name><LogicalName>crb_backprint</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><DefaultValue>0</DefaultValue>
+          <displaynames><displayname description="Back Print" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_blankstatus">
+          <Type>picklist</Type><Name>crb_blankstatus</Name><LogicalName>crb_blankstatus</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="crb_blankstatus"><OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="Blank Status" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="Not Ordered" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="Ordered" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="Received" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="Blank Status" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_artworkapproved">
+          <Type>bit</Type><Name>crb_artworkapproved</Name><LogicalName>crb_artworkapproved</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><DefaultValue>0</DefaultValue>
+          <displaynames><displayname description="Artwork Approved" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_productionready">
+          <Type>bit</Type><Name>crb_productionready</Name><LogicalName>crb_productionready</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><DefaultValue>0</DefaultValue>
+          <displaynames><displayname description="Production Ready" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_qcresult">
+          <Type>picklist</Type><Name>crb_qcresult</Name><LogicalName>crb_qcresult</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <optionset Name="crb_qcresult"><OptionSetType>picklist</OptionSetType><IsGlobal>0</IsGlobal>
+            <IntroducedVersion>1.0</IntroducedVersion><IsCustomizable>1</IsCustomizable>
+            <displaynames><displayname description="QC Result" languagecode="1033" /></displaynames>
+            <options>
+              <option value="100000000"><labels><label description="Pending" languagecode="1033" /></labels></option>
+              <option value="100000001"><labels><label description="Passed" languagecode="1033" /></labels></option>
+              <option value="100000002"><labels><label description="Failed" languagecode="1033" /></labels></option>
+            </options>
+          </optionset>
+          <displaynames><displayname description="QC Result" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_vendorroute">
+          <Type>nvarchar</Type><Name>crb_vendorroute</Name><LogicalName>crb_vendorroute</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><Length>200</Length>
+          <displaynames><displayname description="Vendor Route" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_startdate">
+          <Type>datetime</Type><Name>crb_startdate</Name><LogicalName>crb_startdate</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <Format>DateOnly</Format><CanChangeDateTimeBehavior>1</CanChangeDateTimeBehavior><DateTimeBehavior>UserLocal</DateTimeBehavior>
+          <displaynames><displayname description="Start Date" languagecode="1033" /></displaynames>
+        </attribute>
+        <attribute PhysicalName="crb_completeddate">
+          <Type>datetime</Type><Name>crb_completeddate</Name><LogicalName>crb_completeddate</LogicalName>
+          <RequiredLevel>none</RequiredLevel><DisplayMask>ValidForAdvancedFind|ValidForForm|ValidForGrid</DisplayMask>
+          <ValidForUpdateApi>1</ValidForUpdateApi><ValidForCreateApi>1</ValidForCreateApi>
+          <IsCustomField>1</IsCustomField><IsAuditEnabled>1</IsAuditEnabled><IsSecured>0</IsSecured>
+          <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable>
+          <Format>DateOnly</Format><CanChangeDateTimeBehavior>1</CanChangeDateTimeBehavior><DateTimeBehavior>UserLocal</DateTimeBehavior>
+          <displaynames><displayname description="Completed Date" languagecode="1033" /></displaynames>
+        </attribute>
+      </attributes>
+      <EntitySetName>crb_productionjobses</EntitySetName>
+      <IsBPFEntity>0</IsBPFEntity><IsCustomEntity>1</IsCustomEntity><IsActivity>0</IsActivity>
+      <IsAvailableOffline>1</IsAvailableOffline><IsDocumentManagementEnabled>0</IsDocumentManagementEnabled>
+      <AutoRouteToOwnerQueue>0</AutoRouteToOwnerQueue><IsConnectionsEnabled>0</IsConnectionsEnabled>
+      <IsCustomizable>1</IsCustomizable><IsRenameable>1</IsRenameable><IsMappable>1</IsMappable>
+      <IsDuplicateDetectionEnabled>0</IsDuplicateDetectionEnabled>
+      <CanCreateAttributes>1</CanCreateAttributes><CanCreateForms>1</CanCreateForms>
+      <CanCreateViews>1</CanCreateViews><CanCreateCharts>1</CanCreateCharts>
+      <CanModifyAdditionalSettings>1</CanModifyAdditionalSettings>
+      <IsAuditEnabled>1</IsAuditEnabled><OwnershipTypeMask>UserOwned</OwnershipTypeMask>
+      <IntroducedVersion>1.0</IntroducedVersion>
+      <IsVisibleInMobile>1</IsVisibleInMobile><IsVisibleInMobileClient>1</IsVisibleInMobileClient>
+      <IsReadOnlyInMobileClient>0</IsReadOnlyInMobileClient>
+      <HasNotes>1</HasNotes><HasActivities>0</HasActivities><PrimaryFieldName>crb_name</PrimaryFieldName>
+    </entity>
+  </EntityInfo>
+</Entity>
+  </Entities>
+  <Roles />
+  <Workflows />
+  <FieldSecurityProfiles />
+  <Templates />
+  <EntityMaps />
+  <EntityRelationships />
+  <OrganizationSettings />
+  <optionsets />
+  <CustomControls />
+  <SolutionPluginAssemblies />
+  <EntityDataProviders />
+  <Languages>
+    <Language>1033</Language>
+  </Languages>
+</ImportExportXml>

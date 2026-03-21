@@ -1,0 +1,6 @@
+{
+  "name": "Email Intake Flow - Workflow Metadata",
+  "id": "8f2b1c3d-4e5f-4123-8a7b-111111111111",
+  "description": "Workflow wrapper for Email Intake flow",
+  "definitionFile": "definition.json"
+}

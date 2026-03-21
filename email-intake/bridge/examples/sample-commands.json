@@ -1,0 +1,62 @@
+[
+  {
+    "command": "Build a quote calculator that pulls garment prices from Square and calculates margins",
+    "issuedBy": "Pat",
+    "source": "mobile"
+  },
+  {
+    "command": "Add a phone number column to ct_orders in Dataverse",
+    "issuedBy": "Pat",
+    "source": "cli"
+  },
+  {
+    "command": "Create a Power Automate flow that sends a Teams message when a new order comes in",
+    "issuedBy": "Pat",
+    "source": "chat"
+  },
+  {
+    "command": "Fix the email poller — it crashes when the email body is empty HTML",
+    "issuedBy": "Chad",
+    "source": "cli"
+  },
+  {
+    "command": "Build a production queue dashboard that shows all orders sorted by due date",
+    "issuedBy": "Pat",
+    "source": "mobile"
+  },
+  {
+    "command": "Update the intake pipeline to extract art file URLs from customer emails",
+    "issuedBy": "Pat",
+    "source": "cli"
+  },
+  {
+    "command": "Create a new Dataverse table for tracking garment inventory levels",
+    "issuedBy": "Pat",
+    "source": "chat"
+  },
+  {
+    "command": "URGENT — the Dataverse submission is returning 401, fix it now",
+    "issuedBy": "Chad",
+    "source": "voice"
+  },
+  {
+    "command": "Build a customer lookup screen that searches by name, email, or phone",
+    "issuedBy": "Pat",
+    "source": "mobile"
+  },
+  {
+    "command": "Update the order confirmation flow to include size breakdown in the email body",
+    "issuedBy": "Pat",
+    "source": "cli"
+  },
+  {
+    "command": "Add shipping tracking number and carrier fields to ct_orders",
+    "issuedBy": "Pat",
+    "source": "chat"
+  },
+  {
+    "command": "Document the full Cheeky OS architecture including all Dataverse tables and flows",
+    "issuedBy": "Pat",
+    "source": "cli"
+  }
+]

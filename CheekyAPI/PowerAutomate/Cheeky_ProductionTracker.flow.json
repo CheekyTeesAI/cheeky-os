@@ -1,0 +1,154 @@
+{
+  "name": "Cheeky_ProductionTracker",
+  "type": "ChildFlowExport",
+  "solution": "CheekyTeesAutomation",
+  "displayName": "Cheeky_ProductionTracker",
+  "description": "Solution-aware child flow to handle task completion: logs ProgressTracker entry, advances next task, or completes the Order.",
+  "connectionReferences": {
+    "shared_commondataserviceforapps": {
+      "api": {
+        "name": "shared_commondataserviceforapps",
+        "displayName": "Microsoft Dataverse"
+      },
+      "connectionName": "@connection.shared_commondataserviceforapps",
+      "id": "",
+      "parameterValues": {}
+    }
+  },
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "triggers": {
+      "manual": {
+        "type": "Request",
+        "kind": "Button",
+        "inputs": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "OrderId": { "type": "string" },
+              "TaskId": { "type": "string" },
+              "TaskName": { "type": "string" },
+              "TaskOrder": { "type": "integer" },
+              "Status": { "type": "string" },
+              "User": { "type": "string" },
+              "Notes": { "type": "string" }
+            },
+            "required": [ "OrderId", "TaskId", "TaskName", "TaskOrder", "Status" ]
+          }
+        }
+      }
+    },
+    "actions": {
+      "Condition_Is_Completed": {
+        "type": "If",
+        "expression": "@equals(triggerBody()?['Status'], 'Completed')",
+        "actions": {
+          "Create_ProgressTracker_Row": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": { "connection": { "name": "shared_commondataserviceforapps" } },
+              "operationId": "CreateItem",
+              "parameters": {
+                "table": "ProgressTracker",
+                "item": {
+                  "new_order@odata.bind": "@concat('/orders(', triggerBody()?['OrderId'], ')')",
+                  "new_taskname": "@triggerBody()?['TaskName']",
+                  "new_status": "@triggerBody()?['Status']",
+                  "new_timestamp": "@utcNow()",
+                  "new_user": "@triggerBody()?['User']",
+                  "new_notes": "@triggerBody()?['Notes']"
+                }
+              }
+            }
+          },
+          "List_Next_Task": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": { "connection": { "name": "shared_commondataserviceforapps" } },
+              "operationId": "GetItems",
+              "parameters": {
+                "table": "Tasks",
+                "filter": "_new_order_value eq @{triggerBody()?['OrderId']} and taskorder gt @{triggerBody()?['TaskOrder']} and status ne 'Completed'",
+                "orderby": "taskorder asc",
+                "top": 1
+              }
+            }
+          },
+          "Condition_Has_Next_Task": {
+            "type": "If",
+            "expression": "@greater(length(body('List_Next_Task')?['value']), 0)",
+            "actions": {
+              "Update_Next_Task_To_Ready": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": { "connection": { "name": "shared_commondataserviceforapps" } },
+                  "operationId": "UpdateItem",
+                  "parameters": {
+                    "table": "Tasks",
+                    "id": "@first(body('List_Next_Task')?['value'])?['taskid']",
+                    "item": { "status": "Ready" }
+                  }
+                }
+              },
+              "Create_ProgressTracker_For_Next": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": { "connection": { "name": "shared_commondataserviceforapps" } },
+                  "operationId": "CreateItem",
+                  "parameters": {
+                    "table": "ProgressTracker",
+                    "item": {
+                      "new_order@odata.bind": "@concat('/orders(', triggerBody()?['OrderId'], ')')",
+                      "new_taskname": "@first(body('List_Next_Task')?['value'])?['taskname']",
+                      "new_status": "Ready",
+                      "new_timestamp": "@utcNow()",
+                      "new_user": "System",
+                      "new_notes": "Automatically moved to Ready"
+                    }
+                  }
+                }
+              }
+            },
+            "else": {
+              "actions": {
+                "Update_Order_To_ProductionComplete": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": { "connection": { "name": "shared_commondataserviceforapps" } },
+                    "operationId": "UpdateItem",
+                    "parameters": {
+                      "table": "Orders",
+                      "id": "@triggerBody()?['OrderId']",
+                      "item": { "statuscode": "Production Complete" }
+                    }
+                  }
+                },
+                "Create_ProgressTracker_Order_Complete": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": { "connection": { "name": "shared_commondataserviceforapps" } },
+                    "operationId": "CreateItem",
+                    "parameters": {
+                      "table": "ProgressTracker",
+                      "item": {
+                        "new_order@odata.bind": "@concat('/orders(', triggerBody()?['OrderId'], ')')",
+                        "new_taskname": "Order",
+                        "new_status": "Production Complete",
+                        "new_timestamp": "@utcNow()",
+                        "new_user": "System",
+                        "new_notes": "All tasks completed"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "outputs": {}
+  },
+  "notes": "Verify and adjust field logical names (new_order, taskid, taskorder, status) and connection references in Power Automate before importing."
+}

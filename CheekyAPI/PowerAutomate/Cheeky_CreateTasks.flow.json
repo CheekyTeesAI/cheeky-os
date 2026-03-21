@@ -1,0 +1,110 @@
+{
+  "name": "Cheeky_CreateTasks",
+  "type": "ChildFlowExport",
+  "solution": "CheekyTeesAutomation",
+  "displayName": "Cheeky_CreateTasks",
+  "description": "Solution-aware child flow to create production tasks for an Order. Uses Dataverse tables: Orders, OrderItems, Tasks.",
+  "connectionReferences": {
+    "shared_commondataserviceforapps": {
+      "api": {
+        "name": "shared_commondataserviceforapps",
+        "displayName": "Microsoft Dataverse"
+      },
+      "connectionName": "@connection.shared_commondataserviceforapps",
+      "id": "",
+      "parameterValues": {}
+    }
+  },
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "triggers": {
+      "manual": {
+        "type": "Request",
+        "kind": "Button",
+        "inputs": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "OrderId": { "type": "string" }
+            },
+            "required": [ "OrderId" ]
+          }
+        }
+      }
+    },
+    "actions": {
+      "List_OrderItems": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": { "connection": { "name": "shared_commondataserviceforapps" } },
+          "operationId": "GetItems",
+          "parameters": {
+            "table": "OrderItems",
+            "filter": "_orderid_value eq @{triggerBody()?['OrderId']}",
+            "top": 5000
+          }
+        }
+      },
+      "Determine_ProductionType": {
+        "type": "Compose",
+        "inputs": "@first(body('List_OrderItems')?['value'])?['productiontype']"
+      },
+      "Compose_Tasks_Array": {
+        "type": "Compose",
+        "inputs": "@switch(outputs('Determine_ProductionType'), 'DTF', json('[{"TaskName":"Artwork Prep","TaskOrder":1,"Department":"Artwork","DueInDays":1},{"TaskName":"Print Transfers","TaskOrder":2,"Department":"Print","DueInDays":2},{"TaskName":"Heat Press","TaskOrder":3,"Department":"Production","DueInDays":3},{"TaskName":"Quality Check","TaskOrder":4,"Department":"QA","DueInDays":4},{"TaskName":"Package Order","TaskOrder":5,"Department":"Fulfillment","DueInDays":5},{"TaskName":"Ship Order","TaskOrder":6,"Department":"Shipping","DueInDays":6}]'), 'Screen Print', json('[{"TaskName":"Artwork Prep","TaskOrder":1,"Department":"Artwork","DueInDays":1},{"TaskName":"Separate Colors","TaskOrder":2,"Department":"Artwork","DueInDays":1},{"TaskName":"Burn Screens","TaskOrder":3,"Department":"Prep","DueInDays":2},{"TaskName":"Print Shirts","TaskOrder":4,"Department":"Print","DueInDays":3},{"TaskName":"Cure","TaskOrder":5,"Department":"Print","DueInDays":3},{"TaskName":"Quality Check","TaskOrder":6,"Department":"QA","DueInDays":4},{"TaskName":"Package Order","TaskOrder":7,"Department":"Fulfillment","DueInDays":5},{"TaskName":"Ship Order","TaskOrder":8,"Department":"Shipping","DueInDays":6}]'), 'Embroidery', json('[{"TaskName":"Digitize Artwork","TaskOrder":1,"Department":"Artwork","DueInDays":1},{"TaskName":"Load Machine","TaskOrder":2,"Department":"Production","DueInDays":2},{"TaskName":"Run Embroidery","TaskOrder":3,"Department":"Production","DueInDays":3},{"TaskName":"Quality Check","TaskOrder":4,"Department":"QA","DueInDays":4},{"TaskName":"Package Order","TaskOrder":5,"Department":"Fulfillment","DueInDays":5},{"TaskName":"Ship Order","TaskOrder":6,"Department":"Shipping","DueInDays":6}]'), 'Vinyl', json('[{"TaskName":"Artwork Prep","TaskOrder":1,"Department":"Artwork","DueInDays":1},{"TaskName":"Cut Vinyl","TaskOrder":2,"Department":"Production","DueInDays":2},{"TaskName":"Apply Vinyl","TaskOrder":3,"Department":"Production","DueInDays":3},{"TaskName":"Quality Check","TaskOrder":4,"Department":"QA","DueInDays":4},{"TaskName":"Package Order","TaskOrder":5,"Department":"Fulfillment","DueInDays":5},{"TaskName":"Ship Order","TaskOrder":6,"Department":"Shipping","DueInDays":6}]'), json('[{"TaskName":"Artwork Prep","TaskOrder":1,"Department":"Artwork","DueInDays":1},{"TaskName":"Quality Check","TaskOrder":2,"Department":"QA","DueInDays":2},{"TaskName":"Package Order","TaskOrder":3,"Department":"Fulfillment","DueInDays":3},{"TaskName":"Ship Order","TaskOrder":4,"Department":"Shipping","DueInDays":4}]'))"
+      },
+      "Create_Tasks_Loop": {
+        "type": "Foreach",
+        "foreach": "@outputs('Compose_Tasks_Array')",
+        "actions": {
+          "Add_Task_Row": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": { "connection": { "name": "shared_commondataserviceforapps" } },
+              "operationId": "CreateItem",
+              "parameters": {
+                "table": "Tasks",
+                "item": {
+                  "taskname": "@items('Create_Tasks_Loop')?['TaskName']",
+                  "taskorder": "@items('Create_Tasks_Loop')?['TaskOrder']",
+                  "new_order@odata.bind": "@concat('/orders(', triggerBody()?['OrderId'], ')')",
+                  "status": "New",
+                  "department": "@items('Create_Tasks_Loop')?['Department']",
+                  "scheduledend": "@addDays(utcNow(), int(items('Create_Tasks_Loop')?['DueInDays']))"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Set_First_Task_Ready_List": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": { "connection": { "name": "shared_commondataserviceforapps" } },
+          "operationId": "GetItems",
+          "parameters": {
+            "table": "Tasks",
+            "filter": "_new_order_value eq @{triggerBody()?['OrderId']}",
+            "orderby": "taskorder asc",
+            "top": 1
+          }
+        }
+      },
+      "Update_First_To_Ready": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": { "connection": { "name": "shared_commondataserviceforapps" } },
+          "operationId": "UpdateItem",
+          "parameters": {
+            "table": "Tasks",
+            "id": "@first(body('Set_First_Task_Ready_List')?['value'])?['taskid']",
+            "item": { "status": "Ready" }
+          }
+        }
+      }
+    },
+    "outputs": {}
+  },
+  "notes": "This flow is a solution-aware child flow stub. Verify and adjust field logical names (productiontype, new_order, taskid, taskorder, scheduledend, status) and connection references in Power Automate before importing."
+}

@@ -1,0 +1,25 @@
+{
+  "name": "email-intake",
+  "version": "1.0.0",
+  "description": "Simple Email Intake Engine — raw email text to structured JSON via OpenAI, then POST to Dataverse",
+  "main": "intake.js",
+  "scripts": {
+    "start": "node start.js",
+    "test": "node tests/test-runner.js",
+    "test:intake": "node --test tests/intake.test.js",
+    "test:webhook": "node --test tests/test-webhook.js",
+    "test:square": "node --test tests/test-square.js",
+    "test:bridge": "node --test tests/test-bridge.js",
+    "test:email": "node --test tests/test-email.js",
+    "test:all": "node tests/test-runner.js --all"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@azure/identity": "^4.13.1",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1"
+  }
+}

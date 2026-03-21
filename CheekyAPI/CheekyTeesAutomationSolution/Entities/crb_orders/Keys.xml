@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keys>
+  <Key Name="pk_crb_orderid">
+    <Attribute>crb_orderid</Attribute>
+  </Key>
+  <Index Name="idx_crb_orders_squareinvoiceid">
+    <Column>crb_squareinvoiceid</Column>
+  </Index>
+  <Index Name="idx_crb_orders_customerid">
+    <Column>crb_customerid</Column>
+  </Index>
+  <Index Name="idx_crb_orders_orderstage">
+    <Column>crb_orderstage</Column>
+  </Index>
+  <Index Name="idx_crb_orders_duedate">
+    <Column>crb_duedate</Column>
+  </Index>
+</Keys>

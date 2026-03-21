@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml>
+  <SolutionManifest>
+    <UniqueName>CheekyTeesAutomation</UniqueName>
+    <Version>1.0.0.0</Version>
+    <PublisherUniqueName>Cheeky</PublisherUniqueName>
+    <PublisherId>{d8e7f6a1-9b2c-4e3f-8123-abcdef123456}</PublisherId>
+    <FriendlyName>Cheeky Tees Automation</FriendlyName>
+    <Description>Customizations for CheekyTeesAutomation</Description>
+  </SolutionManifest>
+
+  <Entities>
+    <EntityFile>Entities\crb_customers\Entity.xml</EntityFile>
+    <EntityFile>Entities\crb_orders\Entity.xml</EntityFile>
+    <EntityFile>Entities\crb_lineitems\Entity.xml</EntityFile>
+    <EntityFile>Entities\crb_productionjobs\Entity.xml</EntityFile>
+  </Entities>
+
+  <Workflows>
+    <WorkflowFile>Workflows\EmailIntakeFlow\definition.json</WorkflowFile>
+    <WorkflowFile>Workflows\SquareInvoicePaidFlow\definition.json</WorkflowFile>
+    <WorkflowFile>Workflows\ArtworkUploadFlow\definition.json</WorkflowFile>
+    <WorkflowFile>Workflows\ProductionRoutingEngineFlow\definition.json</WorkflowFile>
+    <WorkflowFile>Workflows\SquareEstimateConversionFlow\definition.json</WorkflowFile>
+    <WorkflowFile>Workflows\Cheeky_TaskGenerator\definition.json</WorkflowFile>
+    <WorkflowFile>Workflows\Cheeky_ArtworkFolderCreator\definition.json</WorkflowFile>
+  </Workflows>
+
+  <RootComponents>
+    <RootComponent>
+      <Type>Workflow</Type>
+      <UniqueName>Email Intake Flow</UniqueName>
+      <Id>{8f2b1c3d-4e5f-4123-8a7b-111111111111}</Id>
+    </RootComponent>
+
+    <RootComponent>
+      <Type>Workflow</Type>
+      <UniqueName>Square Invoice Paid Flow</UniqueName>
+      <Id>{9f3c2d4e-5a6b-4123-8b7c-222222222222}</Id>
+    </RootComponent>
+
+    <RootComponent>
+      <Type>Workflow</Type>
+      <UniqueName>Artwork Upload Flow</UniqueName>
+      <Id>{a4d5c6e7-1b2c-4123-8c9d-333333333333}</Id>
+    </RootComponent>
+
+    <RootComponent>
+      <Type>Workflow</Type>
+      <UniqueName>Production Routing Engine</UniqueName>
+      <Id>{b5e6f7a8-2c3d-4123-8d0e-444444444444}</Id>
+    </RootComponent>
+
+    <RootComponent>
+      <Type>Workflow</Type>
+      <UniqueName>Square Estimate Conversion Flow</UniqueName>
+      <Id>{c6f7a8b9-3d4e-4123-8e1f-555555555555}</Id>
+    </RootComponent>
+  </RootComponents>
+
+</ImportExportXml>

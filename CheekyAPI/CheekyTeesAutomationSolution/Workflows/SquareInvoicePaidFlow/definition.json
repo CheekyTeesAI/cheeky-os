@@ -1,0 +1,195 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "properties": {
+    "displayName": "Square Invoice Paid Flow",
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "triggers": {
+        "When_a_HTTP_request_is_received": {
+          "type": "Request",
+          "kind": "Http",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string" },
+                "event_id": { "type": "string" },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "object",
+                      "properties": {
+                        "invoice": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "string" },
+                            "status": { "type": "string" },
+                            "order_id": { "type": "string" },
+                            "primary_recipient": {
+                              "type": "object",
+                              "properties": {
+                                "customer_id": { "type": "string" },
+                                "email_address": { "type": "string" }
+                              }
+                            },
+                            "payment_requests": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "computed_amount_money": {
+                                    "type": "object",
+                                    "properties": {
+                                      "amount": { "type": "integer" },
+                                      "currency": { "type": "string" }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "actions": {
+        "CheckEventType": {
+          "type": "If",
+          "expression": "@or(equals(triggerBody()?['type'], 'invoice.payment_made'), equals(triggerBody()?['type'], 'invoice.updated'))",
+          "actions": {
+            "ParseInvoice": {
+              "type": "Compose",
+              "inputs": {
+                "InvoiceID": "@triggerBody()?['data']?['object']?['invoice']?['id']",
+                "Status": "@triggerBody()?['data']?['object']?['invoice']?['status']",
+                "OrderID": "@triggerBody()?['data']?['object']?['invoice']?['order_id']",
+                "CustomerID": "@triggerBody()?['data']?['object']?['invoice']?['primary_recipient']?['customer_id']",
+                "CustomerEmail": "@triggerBody()?['data']?['object']?['invoice']?['primary_recipient']?['email_address']",
+                "Amount": "@triggerBody()?['data']?['object']?['invoice']?['payment_requests']?[0]?['computed_amount_money']?['amount']"
+              }
+            },
+            "CheckIfPaid": {
+              "type": "If",
+              "runAfter": { "ParseInvoice": [ "Succeeded" ] },
+              "expression": "@equals(outputs('ParseInvoice')?['Status'], 'PAID')",
+              "actions": {
+                "FindOrderByInvoiceId": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "get",
+                    "path": "/datasets/default/tables/crb_orders/items",
+                    "queries": {
+                      "$filter": "crb_squareinvoiceid eq '@{outputs('ParseInvoice')?['InvoiceID']}'",
+                      "$top": 1
+                    }
+                  }
+                },
+                "CheckOrderExists": {
+                  "type": "If",
+                  "runAfter": { "FindOrderByInvoiceId": [ "Succeeded" ] },
+                  "expression": "@greater(length(body('FindOrderByInvoiceId')?['value']), 0)",
+                  "actions": {
+                    "CalculateMargin": {
+                      "type": "Compose",
+                      "inputs": "@if(greater(first(body('FindOrderByInvoiceId')?['value'])?['crb_totalamount'], 0), div(sub(first(body('FindOrderByInvoiceId')?['value'])?['crb_totalamount'], mul(first(body('FindOrderByInvoiceId')?['value'])?['crb_totalamount'], 0.55)), first(body('FindOrderByInvoiceId')?['value'])?['crb_totalamount']), 0)"
+                    },
+                    "CheckMarginGate": {
+                      "type": "If",
+                      "runAfter": { "CalculateMargin": [ "Succeeded" ] },
+                      "expression": "@greaterOrEquals(first(body('FindOrderByInvoiceId')?['value'])?['crb_marginpercent'], 45)",
+                      "actions": {
+                        "UpdateOrderToProductionReady": {
+                          "type": "ApiConnection",
+                          "inputs": {
+                            "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                            "method": "patch",
+                            "path": "/datasets/default/tables/crb_orders/items/@{first(body('FindOrderByInvoiceId')?['value'])?['crb_orderid']}",
+                            "body": {
+                              "crb_orderstage": "Production Ready",
+                              "crb_depositpaid": true
+                            }
+                          }
+                        },
+                        "CreateProductionJob": {
+                          "type": "ApiConnection",
+                          "runAfter": { "UpdateOrderToProductionReady": [ "Succeeded" ] },
+                          "inputs": {
+                            "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                            "method": "post",
+                            "path": "/datasets/default/tables/crb_productionjobs/items",
+                            "body": {
+                              "crb_productionjobname": "@{concat('PJ-', first(body('FindOrderByInvoiceId')?['value'])?['crb_ordername'])}",
+                              "crb_productiontype": "@first(body('FindOrderByInvoiceId')?['value'])?['crb_productiontype']",
+                              "crb_quantity": "@first(body('FindOrderByInvoiceId')?['value'])?['crb_quantity']",
+                              "crb_status": "Production Ready",
+                              "crb_assignedto": "Production Queue",
+                              "crb_startdate": "@utcNow()",
+                              "crb_orderid@odata.bind": "@concat('/crb_orders(', first(body('FindOrderByInvoiceId')?['value'])?['crb_orderid'], ')')"
+                            }
+                          }
+                        }
+                      },
+                      "ifFalse": {
+                        "FlagLowMarginOrder": {
+                          "type": "ApiConnection",
+                          "inputs": {
+                            "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                            "method": "patch",
+                            "path": "/datasets/default/tables/crb_orders/items/@{first(body('FindOrderByInvoiceId')?['value'])?['crb_orderid']}",
+                            "body": {
+                              "crb_orderstage": "Deposit Paid",
+                              "crb_depositpaid": true,
+                              "crb_notes": "MARGIN ALERT: Below 45% minimum. Requires owner review before production."
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "ifFalse": {
+                    "CreateNewOrderFromInvoice": {
+                      "type": "ApiConnection",
+                      "inputs": {
+                        "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                        "method": "post",
+                        "path": "/datasets/default/tables/crb_orders/items",
+                        "body": {
+                          "crb_ordername": "@{concat('SQ-', outputs('ParseInvoice')?['InvoiceID'])}",
+                          "crb_ordersource": "Square Invoice",
+                          "crb_orderstage": "Deposit Paid",
+                          "crb_squareinvoiceid": "@outputs('ParseInvoice')?['InvoiceID']",
+                          "crb_depositpaid": true,
+                          "crb_customeremail": "@outputs('ParseInvoice')?['CustomerEmail']",
+                          "crb_totalamount": "@div(outputs('ParseInvoice')?['Amount'], 100)",
+                          "crb_orderdate": "@utcNow()",
+                          "crb_notes": "Auto-created from Square invoice payment"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "SendResponse": {
+          "type": "Response",
+          "runAfter": { "CheckEventType": [ "Succeeded", "Failed" ] },
+          "inputs": {
+            "statusCode": 200,
+            "body": { "status": "processed" }
+          }
+        }
+      }
+    }
+  }
+}

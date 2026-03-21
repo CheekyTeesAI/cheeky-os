@@ -1,0 +1,211 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "properties": {
+    "displayName": "Production Routing Engine",
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "triggers": {
+        "When_a_row_is_added_or_modified": {
+          "type": "ApiConnection",
+          "inputs": {
+            "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+            "method": "post",
+            "path": "/datasets/default/tables/crb_orders/onupdateditems",
+            "queries": {
+              "filter": "crb_orderstage eq 'Production Ready'"
+            }
+          }
+        }
+      },
+      "actions": {
+        "GetOrder": {
+          "type": "ApiConnection",
+          "inputs": {
+            "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+            "method": "get",
+            "path": "/datasets/default/tables/crb_orders/items/@{triggerBody()?['crb_orderid']}"
+          }
+        },
+        "CheckDuplicateProductionJob": {
+          "type": "ApiConnection",
+          "runAfter": { "GetOrder": [ "Succeeded" ] },
+          "inputs": {
+            "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+            "method": "get",
+            "path": "/datasets/default/tables/crb_productionjobs/items",
+            "queries": {
+              "$filter": "_crb_orderid_value eq @{triggerBody()?['crb_orderid']}",
+              "$top": 1
+            }
+          }
+        },
+        "SkipIfJobExists": {
+          "type": "If",
+          "runAfter": { "CheckDuplicateProductionJob": [ "Succeeded" ] },
+          "expression": "@equals(length(body('CheckDuplicateProductionJob')?['value']), 0)",
+          "actions": {
+            "DetermineProductionType": {
+              "type": "Compose",
+              "inputs": "@coalesce(body('GetOrder')?['crb_productiontype'], 'DTG')"
+            },
+            "CheckMarginGate": {
+              "type": "If",
+              "runAfter": { "DetermineProductionType": [ "Succeeded" ] },
+              "expression": "@or(equals(body('GetOrder')?['crb_marginpercent'], null), greaterOrEquals(body('GetOrder')?['crb_marginpercent'], 45))",
+              "actions": {
+                "CreateProductionJob": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "post",
+                    "path": "/datasets/default/tables/crb_productionjobs/items",
+                    "body": {
+                      "crb_productionjobname": "@{concat('PJ-', body('GetOrder')?['crb_ordername'])}",
+                      "crb_productiontype": "@outputs('DetermineProductionType')",
+                      "crb_quantity": "@body('GetOrder')?['crb_quantity']",
+                      "crb_status": "Production Ready",
+                      "crb_assignedto": "Production Queue",
+                      "crb_startdate": "@utcNow()",
+                      "crb_orderid@odata.bind": "@concat('/crb_orders(', triggerBody()?['crb_orderid'], ')')",
+                      "crb_notes": "@{concat('Auto-routed: ', outputs('DetermineProductionType'))}"
+                    }
+                  }
+                },
+                "CreateTask_ArtPrep": {
+                  "type": "ApiConnection",
+                  "runAfter": { "CreateProductionJob": [ "Succeeded" ] },
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "post",
+                    "path": "/datasets/default/tables/crb_tasks/items",
+                    "body": {
+                      "crb_taskname": "@{concat('Art Prep - ', body('GetOrder')?['crb_ordername'])}",
+                      "crb_tasktype": "Art Prep",
+                      "crb_status": "Pending",
+                      "crb_priority": "Normal",
+                      "crb_assignedto": "Art Department",
+                      "crb_taskorder": 1,
+                      "crb_duedate": "@body('GetOrder')?['crb_duedate']",
+                      "crb_orderid@odata.bind": "@concat('/crb_orders(', triggerBody()?['crb_orderid'], ')')",
+                      "crb_productionjobid@odata.bind": "@concat('/crb_productionjobs(', body('CreateProductionJob')?['crb_productionjobid'], ')')"
+                    }
+                  }
+                },
+                "CreateTask_GarmentOrder": {
+                  "type": "ApiConnection",
+                  "runAfter": { "CreateProductionJob": [ "Succeeded" ] },
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "post",
+                    "path": "/datasets/default/tables/crb_tasks/items",
+                    "body": {
+                      "crb_taskname": "@{concat('Garment Order - ', body('GetOrder')?['crb_ordername'])}",
+                      "crb_tasktype": "Garment Order",
+                      "crb_status": "Pending",
+                      "crb_priority": "Normal",
+                      "crb_assignedto": "Purchasing",
+                      "crb_taskorder": 2,
+                      "crb_duedate": "@body('GetOrder')?['crb_duedate']",
+                      "crb_orderid@odata.bind": "@concat('/crb_orders(', triggerBody()?['crb_orderid'], ')')",
+                      "crb_productionjobid@odata.bind": "@concat('/crb_productionjobs(', body('CreateProductionJob')?['crb_productionjobid'], ')')"
+                    }
+                  }
+                },
+                "CreateTask_Printing": {
+                  "type": "ApiConnection",
+                  "runAfter": { "CreateProductionJob": [ "Succeeded" ] },
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "post",
+                    "path": "/datasets/default/tables/crb_tasks/items",
+                    "body": {
+                      "crb_taskname": "@{concat('Printing - ', body('GetOrder')?['crb_ordername'])}",
+                      "crb_tasktype": "Printing",
+                      "crb_status": "Pending",
+                      "crb_priority": "Normal",
+                      "crb_assignedto": "Production Queue",
+                      "crb_taskorder": 3,
+                      "crb_duedate": "@body('GetOrder')?['crb_duedate']",
+                      "crb_orderid@odata.bind": "@concat('/crb_orders(', triggerBody()?['crb_orderid'], ')')",
+                      "crb_productionjobid@odata.bind": "@concat('/crb_productionjobs(', body('CreateProductionJob')?['crb_productionjobid'], ')')"
+                    }
+                  }
+                },
+                "CreateTask_QualityCheck": {
+                  "type": "ApiConnection",
+                  "runAfter": { "CreateProductionJob": [ "Succeeded" ] },
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "post",
+                    "path": "/datasets/default/tables/crb_tasks/items",
+                    "body": {
+                      "crb_taskname": "@{concat('Quality Check - ', body('GetOrder')?['crb_ordername'])}",
+                      "crb_tasktype": "Quality Check",
+                      "crb_status": "Pending",
+                      "crb_priority": "Normal",
+                      "crb_assignedto": "QC Team",
+                      "crb_taskorder": 4,
+                      "crb_duedate": "@body('GetOrder')?['crb_duedate']",
+                      "crb_orderid@odata.bind": "@concat('/crb_orders(', triggerBody()?['crb_orderid'], ')')",
+                      "crb_productionjobid@odata.bind": "@concat('/crb_productionjobs(', body('CreateProductionJob')?['crb_productionjobid'], ')')"
+                    }
+                  }
+                },
+                "CreateTask_CustomerNotification": {
+                  "type": "ApiConnection",
+                  "runAfter": { "CreateProductionJob": [ "Succeeded" ] },
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "post",
+                    "path": "/datasets/default/tables/crb_tasks/items",
+                    "body": {
+                      "crb_taskname": "@{concat('Notify Customer - ', body('GetOrder')?['crb_ordername'])}",
+                      "crb_tasktype": "Customer Notification",
+                      "crb_status": "Pending",
+                      "crb_priority": "Normal",
+                      "crb_assignedto": "Sales",
+                      "crb_taskorder": 5,
+                      "crb_duedate": "@body('GetOrder')?['crb_duedate']",
+                      "crb_orderid@odata.bind": "@concat('/crb_orders(', triggerBody()?['crb_orderid'], ')')",
+                      "crb_productionjobid@odata.bind": "@concat('/crb_productionjobs(', body('CreateProductionJob')?['crb_productionjobid'], ')')"
+                    }
+                  }
+                },
+                "UpdateOrderToPrinting": {
+                  "type": "ApiConnection",
+                  "runAfter": {
+                    "CreateTask_ArtPrep": [ "Succeeded" ],
+                    "CreateTask_GarmentOrder": [ "Succeeded" ],
+                    "CreateTask_Printing": [ "Succeeded" ],
+                    "CreateTask_QualityCheck": [ "Succeeded" ],
+                    "CreateTask_CustomerNotification": [ "Succeeded" ]
+                  },
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "patch",
+                    "path": "/datasets/default/tables/crb_orders/items/@{triggerBody()?['crb_orderid']}",
+                    "body": { "crb_orderstage": "Printing" }
+                  }
+                }
+              },
+              "ifFalse": {
+                "FlagMarginBlock": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                    "method": "patch",
+                    "path": "/datasets/default/tables/crb_orders/items/@{triggerBody()?['crb_orderid']}",
+                    "body": {
+                      "crb_notes": "@{concat(coalesce(body('GetOrder')?['crb_notes'], ''), ' | MARGIN GATE: Below 45%. Production blocked pending owner review.')}"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

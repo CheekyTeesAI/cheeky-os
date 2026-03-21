@@ -1,0 +1,9 @@
+{
+  "imapServer": "",
+  "imapPort": 993,
+  "username": "",
+  "password": "",
+  "useSsl": true,
+  "scanFolder": "INBOX",
+  "processedTag": "CheekyProcessed"
+}

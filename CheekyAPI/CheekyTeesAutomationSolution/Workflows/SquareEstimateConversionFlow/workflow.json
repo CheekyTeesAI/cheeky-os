@@ -1,0 +1,6 @@
+{
+  "name": "Square Estimate Conversion Flow - Workflow Metadata",
+  "id": "c6f7a8b9-3d4e-4123-8e1f-555555555555",
+  "description": "Workflow wrapper for Square Estimate Conversion flow",
+  "definitionFile": "definition.json"
+}

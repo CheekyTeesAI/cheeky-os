@@ -1,0 +1,73 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "properties": {
+    "displayName": "Email Intake Flow",
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {},
+      "triggers": {
+        "When_a_new_email_arrives_in_a_shared_mailbox_(V2)": {
+          "type": "ApiConnection",
+          "inputs": {
+            "host": { "connection": { "name": "@connections['office365']['connectionId']" } },
+            "method": "get",
+            "path": "/v2/Mail/GetMessages"
+          }
+        }
+      },
+      "actions": {
+        "ParseEmailForDetails": {
+          "type": "Compose",
+          "inputs": "Compose or AI Builder step to extract CustomerName, CustomerEmail, Phone, Company and order payload"
+        },
+        "FindCustomerByEmail": {
+          "type": "ApiConnection",
+          "inputs": {
+            "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+            "method": "get",
+            "path": "/datasets/default/tables/crb_customers/items",
+            "queries": { "$filter": "crb_email eq '@{outputs('ParseEmailForDetails')?['CustomerEmail']}'", "$top": 1 }
+          }
+        },
+        "CreateCustomerIfNotExists": {
+          "type": "If",
+          "expression": "@equals(length(body('FindCustomerByEmail')?['value']), 0)",
+          "actions": {
+            "CreateCustomer": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+                "method": "post",
+                "path": "/datasets/default/tables/crb_customers/items",
+                "body": {
+                  "crb_customername": "@outputs('ParseEmailForDetails')?['CustomerName']",
+                  "crb_email": "@outputs('ParseEmailForDetails')?['CustomerEmail']",
+                  "crb_phone": "@outputs('ParseEmailForDetails')?['Phone']",
+                  "crb_company": "@outputs('ParseEmailForDetails')?['Company']",
+                  "crb_notes": "Created from email intake"
+                }
+              }
+            }
+          }
+        },
+        "CreateOrder": {
+          "type": "ApiConnection",
+          "inputs": {
+            "host": { "connection": { "name": "@connections['shared_commondataverse']['connectionId']" } },
+            "method": "post",
+            "path": "/datasets/default/tables/crb_orders/items",
+            "body": {
+              "crb_orderdate": "@utcNow()",
+              "crb_status": "Intake",
+              "crb_squareinvoiceid": "",
+              "crb_depositpaid": false,
+              "crb_notes": "Order created from email intake",
+              "crb_customerid@odata.bind": "@if(equals(length(body('FindCustomerByEmail')?['value']), 0), concat('/crb_customers(', body('CreateCustomer')?['crb_customerid'], ')'), concat('/crb_customers(', first(body('FindCustomerByEmail')?['value'])?['crb_customerid'], ')'))"
+            }
+          }
+        }
+      }
+    }
+  }
+}

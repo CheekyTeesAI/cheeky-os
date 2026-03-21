@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Entity Name="crb_customers" DisplayName="Customers" SchemaName="crb_customers">
+  <PrimaryKey>
+    <Attribute LogicalName="crb_customerid" Type="UniqueIdentifier" IsPrimary="true" DisplayName="CustomerID" />
+  </PrimaryKey>
+  <AttributesFile>Attributes.xml</AttributesFile>
+  <RelationshipsFile>Relationships.xml</RelationshipsFile>
+  <KeysFile>Keys.xml</KeysFile>
+</Entity>

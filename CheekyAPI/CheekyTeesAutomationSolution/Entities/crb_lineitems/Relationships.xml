@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Relationships>
+  <Relationship Name="rel_lineitems_orders" Type="N:1" ReferencingEntity="crb_lineitems" ReferencedEntity="crb_orders">
+    <ReferencingAttribute>crb_orderid</ReferencingAttribute>
+    <ReferencedAttribute>crb_orderid</ReferencedAttribute>
+  </Relationship>
+</Relationships>

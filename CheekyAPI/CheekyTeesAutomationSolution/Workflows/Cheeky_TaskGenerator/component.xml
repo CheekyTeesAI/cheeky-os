@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WorkflowComponent>
+  <UniqueName>Cheeky_TaskGenerator</UniqueName>
+  <DisplayName>Cheeky Task Generator</DisplayName>
+  <Description>SolutionPackager component: creates production tasks for new orders (idempotent).</Description>
+  <WorkflowType>Microsoft.Flow</WorkflowType>
+  <WorkflowId>{d1f8a9b2-7c3e-4a1b-9d2f-777777777777}</WorkflowId>
+  <DefinitionFile>definition.json</DefinitionFile>
+  <ConnectionReferencesFile>connectionReferences.json</ConnectionReferencesFile>
+</WorkflowComponent>
