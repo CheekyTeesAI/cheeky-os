@@ -37,8 +37,8 @@ function getIntake() {
   return _intake;
 }
 
-/** Server port — defaults to 3000. */
-const PORT = parseInt(process.env.PORT, 10) || 3000;
+/** Server port — defaults to 3001. */
+const PORT = process.env.PORT || 3001;
 
 /** Optional webhook secret for basic auth. */
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || "";
@@ -105,6 +105,11 @@ function authMiddleware(req, res, next) {
   }
   next();
 }
+
+// ── GET / — root route ──────────────────────────────────────────────────────
+app.get("/", (req, res) => {
+  res.send("Cheeky API running");
+});
 
 // ── GET /health — health check endpoint ─────────────────────────────────────
 app.get("/health", (req, res) => {
@@ -398,67 +403,73 @@ app.post("/square-webhook", (req, res) => {
   }
 });
 
+// ── Cheeky OS module system ─────────────────────────────────────────────────
+const cheekRouter = require("../cheeky-os/routes");
+app.use("/cheeky", cheekRouter);
+
+// Serve dashboard static files (index.html, mobile.html)
+app.use("/cheeky", express.static(path.join(__dirname, "..", "public", "cheeky")));
+
 // ── 404 handler for unknown routes ──────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({
     success: false,
     error: `Route not found: ${req.method} ${req.path}`,
     availableRoutes: [
-      "GET /health",
+      "GET  /health",
       "POST /intake",
       "POST /order-complete",
       "POST /notify-customer",
       "POST /production-update",
       "POST /square-webhook",
+      "GET  /cheeky/health",
+      "GET  /cheeky/activity",
+      "GET  /cheeky/mobile",
+      "GET  /cheeky/voice/commands",
+      "POST /cheeky/voice/run",
+      "POST /cheeky/voice/shortcut",
+      "POST /cheeky/commands/run",
+      "GET  /cheeky/autopilot/status",
+      "POST /cheeky/autopilot/tick",
+      "POST /cheeky/run",
+      "POST /cheeky/followups",
+      "POST /cheeky/leads",
+      "POST /cheeky/quote",
+      "POST /cheeky/close",
+      "POST /cheeky/intake",
+      "POST /cheeky/invoice",
+      "POST /cheeky/invoice/create",
+      "POST /cheeky/invoice/from-quote",
+      "POST /cheeky/build",
+      "POST /cheeky/deploy",
+      "POST /cheeky/rollback",
+      "POST /cheeky/followup2/run",
+      "POST /cheeky/followup2/track",
+      "POST /cheeky/followup2/mark-paid",
+      "GET  /cheeky/followup2/open",
+      "GET  /cheeky/followup2/stale",
+      "GET  /cheeky/followup2/hot",
+      "GET  /cheeky/followup2/next",
+      "GET  /cheeky/payments/sync",
+      "POST /cheeky/payments/sync",
+      "GET  /cheeky/payments/status/:invoiceId",
+      "POST /cheeky/payments/webhook",
+      "GET  /cheeky/payments/open",
+      "GET  /cheeky/payments/paid",
+      "GET  /cheeky/data/mode",
+      "GET  /cheeky/data/snapshot",
+      "GET  /cheeky/data/deals/open",
+      "GET  /cheeky/data/events",
+      "POST /cheeky/data/customer",
+      "POST /cheeky/data/deal",
+      "POST /cheeky/data/payment",
     ],
   });
 });
 
-/** HTTP server reference — used for shutdown. */
-let _server = null;
+// ── Start server immediately ────────────────────────────────────────────────
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
-/**
- * Start the Express webhook server on the configured port.
- * @returns {Promise<void>} Resolves when the server is listening.
- */
-function startServer() {
-  return new Promise((resolve) => {
-    _server = app.listen(PORT, () => {
-      log("INFO", "═══════════════════════════════════════════════════");
-      log("INFO", "  🌐 Cheeky Tees Webhook Server — STARTED");
-      log("INFO", `  POST http://localhost:${PORT}/intake`);
-      log("INFO", `  POST http://localhost:${PORT}/order-complete`);
-      log("INFO", `  POST http://localhost:${PORT}/notify-customer`);
-      log("INFO", `  POST http://localhost:${PORT}/production-update`);
-      log("INFO", `  POST http://localhost:${PORT}/square-webhook`);
-      log("INFO", `  GET  http://localhost:${PORT}/health`);
-      log("INFO", `  Auth: ${WEBHOOK_SECRET ? "ENABLED (x-webhook-secret)" : "DISABLED (dev mode)"}`);
-      log("INFO", "═══════════════════════════════════════════════════");
-      resolve();
-    });
-  });
-}
-
-/**
- * Stop the Express server gracefully.
- * @returns {Promise<void>}
- */
-function stopServer() {
-  return new Promise((resolve) => {
-    if (_server) {
-      _server.close(() => {
-        log("INFO", "Webhook server stopped.");
-        resolve();
-      });
-    } else {
-      resolve();
-    }
-  });
-}
-
-module.exports = { app, startServer, stopServer, PORT };
-
-// ── Direct execution: node webhook/server.js ────────────────────────────────
-if (require.main === module) {
-  startServer();
-}
+module.exports = { app, PORT };
