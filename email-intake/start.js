@@ -11,7 +11,7 @@
  * @module start
  */
 
-require("dotenv").config();
+require('dotenv').config();
 
 const fs = require("fs");
 const path = require("path");
@@ -54,6 +54,11 @@ async function main() {
     console.log(`  ✅ Webhook server running on port ${PORT}`);
   } catch (err) {
     console.error(`  ❌ Webhook server failed to start: ${err.message}`);
+    if (err && err.stack) {
+      const stackHead = String(err.stack).split("\n").slice(0, 4).join("\n");
+      console.error("  ↳ Startup trace:");
+      console.error(stackHead);
+    }
     console.log("     (continuing without webhook — fix config and restart)");
   }
 

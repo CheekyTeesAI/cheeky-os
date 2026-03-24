@@ -18,33 +18,40 @@ const { rollback } = require("../safety/rollback");
 const { logger } = require("../utils/logger");
 const { fetchSafe } = require("../utils/fetchSafe");
 const { runFollowupCycle, getHotDeals, getNextSalesActions } = require("../followup/engine");
+const { runAllSystems } = require("../engine/run-all");
+const { getInternalBaseUrl } = require("../utils/internal-base");
+const { store, getMode } = require("../data/provider");
+const dataverseStore = require("../data/dataverse-store");
 
-/** Base URL for internal HTTP calls to this app (must match webhook PORT, default 3001). */
-const INTERNAL_BASE = process.env.BASE_URL || "http://localhost:3001";
+const INTERNAL_BASE = getInternalBaseUrl();
 
 const router = Router();
 
+async function handleRun(req, res) {
+  logger.info("[CONTROL] /run — orchestrated run-all");
+  const out = await runAllSystems();
+  return res.json({ ok: out.ok, data: out.data, error: out.error });
+}
+
+async function handleFollowups(req, res) {
+  logger.info("[CONTROL] /followups");
+  const result = await runFollowups();
+  return res.json(result);
+}
+
+async function handleLeads(req, res) {
+  logger.info("[CONTROL] /leads");
+  const result = await runOutreach();
+  return res.json(result);
+}
+
 // ── POST /run — orchestrated run-all ────────────────────────────────────────
-router.post("/run", async (req, res) => {
-  logger.info("[CONTROL] POST /run — orchestrated run-all");
-  const results = {};
-
-  results.followups = await runFollowups();
-  results.cash = await getCashSummary();
-  results.pipeline = await getPipeline();
-  results.leads = await runOutreach();
-  results.queue = await getProductionQueue();
-
-  const allOk = Object.values(results).every((r) => r.ok);
-  res.json({ ok: allOk, data: results, error: null });
-});
+router.post("/run", async (req, res) => handleRun(req, res));
+router.get("/test-run", async (req, res) => handleRun(req, res));
 
 // ── POST /followups — run follow-up cycle ───────────────────────────────────
-router.post("/followups", async (req, res) => {
-  logger.info("[CONTROL] POST /followups");
-  const result = await runFollowups();
-  res.json(result);
-});
+router.post("/followups", async (req, res) => handleFollowups(req, res));
+router.get("/test-followups", async (req, res) => handleFollowups(req, res));
 
 // ── POST /build — validate build + tests ────────────────────────────────────
 router.post("/build", (req, res) => {
@@ -82,11 +89,8 @@ router.post("/intake", async (req, res) => {
 });
 
 // ── POST /leads — run outreach ──────────────────────────────────────────────
-router.post("/leads", async (req, res) => {
-  logger.info("[CONTROL] POST /leads");
-  const result = await runOutreach();
-  res.json(result);
-});
+router.post("/leads", async (req, res) => handleLeads(req, res));
+router.get("/test-leads", async (req, res) => handleLeads(req, res));
 
 // ── POST /invoice — create an invoice (passes through to Square integration) ─
 router.post("/invoice", async (req, res) => {
@@ -201,10 +205,29 @@ router.get("/data/snapshot", async (req, res) => {
 // ── GET /data/deals/open — proxy to open deals ─────────────────────────────
 router.get("/data/deals/open", async (req, res) => {
   try {
-    const result = await fetchSafe(`${INTERNAL_BASE}/cheeky/data/deals/open`);
-    res.json(result.ok ? result.data : { ok: false, data: null, error: result.error });
+    if (getMode() === "dataverse") {
+      const auth = await dataverseStore.ensureAuth();
+      if (!auth.ok) {
+        return res.json({ ok: false, data: null, error: auth.error });
+      }
+    }
+    const timeoutMs = 5000;
+    const deals = await Promise.race([
+      store.getOpenDeals(),
+      new Promise((resolve) =>
+        setTimeout(
+          () => resolve({ ok: false, data: null, error: `Dataverse deals query timed out after ${timeoutMs}ms` }),
+          timeoutMs
+        )
+      ),
+    ]);
+    if (deals && deals.ok === false) {
+      return res.json({ ok: false, data: null, error: deals.error || "Unable to load open deals" });
+    }
+    const records = Array.isArray(deals) ? deals : deals?.data || [];
+    return res.json({ ok: true, data: { count: records.length, records }, error: null });
   } catch (err) {
-    res.json({ ok: false, data: null, error: err.message });
+    return res.json({ ok: false, data: null, error: err.message });
   }
 });
 

@@ -128,24 +128,25 @@ async function executeCommand({ action, params }) {
       }
 
       case "create_invoice": {
-        const fetch = require("node-fetch");
+        const customerName = p.customer || p.customerName || "Customer";
+        const customerEmail = p.email || p.customerEmail || null;
+        const title = p.title || p.product || p.item || "Custom Order";
+        const qty = Number(p.quantity || 1);
+        const unitPrice = Number(p.unitPrice || p.total || 0);
+        const total = Number(p.total || (qty * unitPrice));
+        const deposit = p.deposit || Math.round(total * 0.5 * 100);
 
-        const response = await fetch(
-          `${process.env.BASE_URL || "http://localhost:3000"}/cheeky/invoice/create`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(params || {}),
-          }
-        );
+        const result = await createSquareInvoice({
+          customerName,
+          customerEmail,
+          title,
+          quantity: qty,
+          unitPrice: unitPrice || total,
+          total,
+          deposit,
+        });
 
-        const data = await response.json();
-
-        return {
-          ok: true,
-          action: "create_invoice",
-          result: data,
-        };
+        return { ok: true, data: result, error: null };
       }
 
       default:

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CHANGE LOG
  * v2.3 — Phase 11: final fixes from screenshots (field inject, labor entity, date, banner)
  * v2.2 — Phase 10 fixes: email/phone/sizes mapping, choice integers, labor entity, date parsing
@@ -239,61 +239,54 @@ async function promptForOrderText() {
       }
     }
   }
-  return new Promise((resolve, reject) => {
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-      terminal: process.stdin.isTTY || false,
-    });
-    const lines = [];
-    let consecutiveEmpty = 0;
-    let firstLine = true;
-    let isJsonMode = jsonFlagIndex !== -1;
-    if (!isJsonMode) {
-      console.log("Paste customer order below. Press Enter twice when done:");
-    } else {
-      console.log("⚡ JSON test mode — paste JSON below. Press Enter twice when done:");
-    }
-    rl.on("line", (line) => {
-      if (firstLine && line.trim() === "JSON") {
-        isJsonMode = true;
-        console.log("⚡ JSON test mode — bypassing OpenAI");
-        firstLine = false;
-        return;
-      }
-      firstLine = false;
-      if (line.trim() === "") {
-        consecutiveEmpty++;
-      } else {
-        consecutiveEmpty = 0;
-      }
-      lines.push(line);
-      if (consecutiveEmpty >= 2) {
-        rl.close();
-      }
-    });
-    rl.on("close", () => {
-      let text = lines.join("\n");
-      text = text.trim();
-      text = text.replace(/(\r?\n){3,}/g, "\n\n");
-      if (isJsonMode) {
-        console.log("⚡ JSON test mode — bypassing OpenAI");
-        try {
-          const parsed = JSON.parse(text);
-          resolve({ rawText: "", jsonMode: true, parsedJson: parsed });
-        } catch (err) {
-          const parseErr = new Error(`Invalid JSON input: ${err.message}`);
-          parseErr.name = "SyntaxError";
-          reject(parseErr);
-        }
-      } else {
-        resolve({ rawText: text, jsonMode: false, parsedJson: null });
-      }
-    });
-    rl.on("error", (err) => {
-      reject(err);
-    });
+  const lines = [];
+  let consecutiveEmpty = 0;
+  let firstLine = true;
+  let isJsonMode = jsonFlagIndex !== -1;
+  if (!isJsonMode) {
+    console.log("Paste customer order below. Press Enter twice when done (or Ctrl+D):");
+  } else {
+    console.log("⚡ JSON test mode — paste JSON below. Press Enter twice when done (or Ctrl+D):");
+  }
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: true,
   });
+  for await (const line of rl) {
+    if (firstLine && line.trim() === "JSON") {
+      isJsonMode = true;
+      console.log("⚡ JSON test mode — bypassing OpenAI");
+      firstLine = false;
+      continue;
+    }
+    firstLine = false;
+    if (line.trim() === "") {
+      consecutiveEmpty++;
+    } else {
+      consecutiveEmpty = 0;
+    }
+    lines.push(line);
+    if (consecutiveEmpty >= 2) {
+      rl.close();
+      break;
+    }
+  }
+  let text = lines.join("\n");
+  text = text.trim();
+  text = text.replace(/(\r?\n){3,}/g, "\n\n");
+  if (isJsonMode) {
+    console.log("⚡ JSON test mode — bypassing OpenAI");
+    try {
+      const parsed = JSON.parse(text);
+      return { rawText: "", jsonMode: true, parsedJson: parsed };
+    } catch (err) {
+      const parseErr = new Error(`Invalid JSON input: ${err.message}`);
+      parseErr.name = "SyntaxError";
+      throw parseErr;
+    }
+  }
+  return { rawText: text, jsonMode: false, parsedJson: null };
 }
 
 // ── OpenAI Extraction ────────────────────────────────────────────────────────
@@ -807,24 +800,37 @@ async function createLaborRecord(orderId, userName) {
       ct_laborhours: 0,
       "ct_orderid@odata.bind": `/ct_orderses(${orderId})`
     };
-    const url = `${DATAVERSE_URL}/api/data/v9.2/ct_laborrecords`;
-    logger.logPayload("Labor record payload", payload);
-    logger.info(`POST → ${url}`);
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-        "OData-MaxVersion": "4.0",
-        "OData-Version": "4.0",
-        Accept: "application/json",
-        Prefer: "return=representation",
-      },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      const errorText = await res.text();
-      logger.error(`Labor record failed (${res.status}): ${errorText}`);
+    const candidateEntitySets = ["ct_laborrecords", "ct_laborrecordses"];
+    let res = null;
+    let lastErrorText = "";
+    for (const entitySet of candidateEntitySets) {
+      const url = `${DATAVERSE_URL}/api/data/v9.2/${entitySet}`;
+      logger.logPayload("Labor record payload", payload);
+      logger.info(`POST → ${url}`);
+      res = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+          "OData-MaxVersion": "4.0",
+          "OData-Version": "4.0",
+          Accept: "application/json",
+          Prefer: "return=representation",
+        },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) break;
+      lastErrorText = await res.text();
+      const isMissingEntitySet = res.status === 404 && /Resource not found for the segment/i.test(lastErrorText);
+      if (isMissingEntitySet) {
+        logger.warn(`Labor record table "${entitySet}" not found — trying next candidate.`);
+        continue;
+      }
+      logger.warn(`Labor record skipped (${res.status}): ${lastErrorText}`);
+      return null;
+    }
+    if (!res || !res.ok) {
+      logger.warn(`Labor record skipped: no valid labor table found. Last response: ${lastErrorText || "(none)"}`);
       return null;
     }
     const entityId = res.headers.get("OData-EntityId");

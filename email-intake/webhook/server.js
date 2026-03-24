@@ -37,8 +37,9 @@ function getIntake() {
   return _intake;
 }
 
-/** Server port — defaults to 3001. */
-const PORT = process.env.PORT || 3001;
+/** Server port — defaults to 3000 (align BASE_URL in .env with this port). */
+const _parsedPort = parseInt(process.env.PORT, 10);
+const PORT = Number.isFinite(_parsedPort) && _parsedPort > 0 ? _parsedPort : 3000;
 
 /** Optional webhook secret for basic auth. */
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || "";
@@ -112,11 +113,36 @@ app.get("/", (req, res) => {
 });
 
 // ── GET /health — health check endpoint ─────────────────────────────────────
-app.get("/health", (req, res) => {
+app.get("/health", async (req, res) => {
   const uptimeMs = Date.now() - startedAt.getTime();
   const uptimeSec = Math.floor(uptimeMs / 1000);
+  const base = `http://127.0.0.1:${PORT}`;
+  async function probe(name, endpoint) {
+    try {
+      const r = await fetch(`${base}${endpoint}`);
+      const j = await r.json();
+      if (!r.ok || j.ok === false) {
+        return `${name} error: ${j.error || `HTTP ${r.status}`}`;
+      }
+      return "ok";
+    } catch (err) {
+      return `${name} error: ${err.message}`;
+    }
+  }
+  const health = await probe("autopilot", "/cheeky/autopilot/run");
+  const followups = await probe("followups", "/cheeky/followup2/open");
+  const leads = await probe("leads", "/cheeky/test-leads");
+  const payments = await probe("payments", "/cheeky/payments/sync");
+  const cheekyHealth = await probe("cheeky", "/cheeky/health");
   res.json({
-    status: "ok",
+    ok: true,
+    intake: "ok",
+    followups,
+    leads,
+    autopilot: health,
+    payments,
+    dataverse: cheekyHealth,
+    square: process.env.SQUARE_ACCESS_TOKEN && process.env.SQUARE_LOCATION_ID ? "configured" : "skipped",
     service: "Cheeky Tees Webhook Intake",
     uptime: `${uptimeSec}s`,
     startedAt: startedAt.toISOString(),
@@ -430,6 +456,8 @@ app.use((req, res) => {
       "POST /cheeky/voice/shortcut",
       "POST /cheeky/commands/run",
       "GET  /cheeky/autopilot/status",
+      "GET  /cheeky/autopilot/run",
+      "POST /cheeky/autopilot/run",
       "POST /cheeky/autopilot/tick",
       "POST /cheeky/run",
       "POST /cheeky/followups",
@@ -467,9 +495,97 @@ app.use((req, res) => {
   });
 });
 
-// ── Start server immediately ────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+/** HTTP server instance (set when listening). */
+let _server = null;
 
-module.exports = { app, PORT };
+/**
+ * Start the Express app on PORT. Safe to call once; used by start.js and direct runs.
+ * @returns {Promise<void>}
+ */
+function startServer() {
+  return new Promise((resolve) => {
+    if (_server) {
+      return resolve();
+    }
+    _server = app.listen(PORT, () => {
+      log("INFO", "═══════════════════════════════════════════════════");
+      log("INFO", "  Cheeky Tees Webhook + Cheeky OS — STARTED");
+      log("INFO", `  http://127.0.0.1:${PORT}/health`);
+      log("INFO", `  http://127.0.0.1:${PORT}/cheeky/health`);
+      log("INFO", `  Auth: ${WEBHOOK_SECRET ? "ENABLED (x-webhook-secret)" : "DISABLED (dev mode)"}`);
+      log("INFO", "═══════════════════════════════════════════════════");
+      const routes = [];
+      function normalizePath(p) {
+        if (!p) return "";
+        return ("/" + String(p)).replace(/\/+/g, "/").replace(/\/$/, "") || "/";
+      }
+      function inferMountPath(layer) {
+        if (!layer || !Array.isArray(layer.matchers) || !layer.matchers.length) return "";
+        const probes = [
+          "/cheeky/test",
+          "/cheeky/autopilot/run",
+          "/cheeky/data/deals/open",
+          "/health",
+          "/intake",
+          "/",
+        ];
+        for (const probe of probes) {
+          for (const matcher of layer.matchers) {
+            try {
+              const m = matcher(probe);
+              if (m && m.path && m.path !== "/") return normalizePath(m.path);
+            } catch {
+              // no-op
+            }
+          }
+        }
+        return "";
+      }
+      function walk(stack, prefix = "") {
+        if (!Array.isArray(stack)) return;
+        for (const layer of stack) {
+          if (layer.route && layer.route.path) {
+            const methods = Object.keys(layer.route.methods || {}).filter(Boolean).map((m) => m.toUpperCase());
+            const routePath = normalizePath(`${prefix}/${String(layer.route.path)}`);
+            for (const m of methods) routes.push(`${m.padEnd(4)} ${routePath}`);
+          } else if (layer.name === "router" && layer.handle && layer.handle.stack) {
+            const mountPath = inferMountPath(layer);
+            const nextPrefix = normalizePath(`${prefix}/${mountPath}`);
+            walk(layer.handle.stack, nextPrefix);
+          }
+        }
+      }
+      const rootStack = (app._router && app._router.stack) || (app.router && app.router.stack) || [];
+      walk(rootStack, "");
+      console.log("[ROUTES]");
+      for (const r of routes.sort()) console.log(r);
+      resolve();
+    });
+  });
+}
+
+/**
+ * Stop the HTTP server.
+ * @returns {Promise<void>}
+ */
+function stopServer() {
+  return new Promise((resolve) => {
+    if (!_server) {
+      return resolve();
+    }
+    _server.close(() => {
+      _server = null;
+      log("INFO", "Webhook server stopped.");
+      resolve();
+    });
+  });
+}
+
+module.exports = { app, PORT, startServer, stopServer };
+
+if (require.main === module) {
+  startServer().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

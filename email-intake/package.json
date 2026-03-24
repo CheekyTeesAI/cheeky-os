@@ -2,8 +2,9 @@
   "name": "email-intake",
   "version": "1.0.0",
   "description": "Simple Email Intake Engine — raw email text to structured JSON via OpenAI, then POST to Dataverse",
-  "main": "intake.js",
+  "main": "index.js",
   "scripts": {
+    "dev": "node start.js",
     "start": "node start.js",
     "test": "node tests/test-runner.js",
     "test:intake": "node --test tests/intake.test.js",
