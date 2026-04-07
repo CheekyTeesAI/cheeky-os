@@ -22,6 +22,8 @@ const { getRecentEvents } = require("../services/actionLedgerService");
 const { actionLedgerSectionHtml } = require("./ledger");
 const { getFounderKpiSnapshot } = require("../services/kpiService");
 const { founderKpiSnapshotSectionHtml } = require("./scorecard");
+const { getGoalsStatus } = require("../services/goalsService");
+const { goalsTrackerSectionHtml } = require("./goals");
 
 const router = Router();
 
@@ -645,6 +647,14 @@ router.get("/today", async (_req, res) => {
   }
   const kpiPanelHtml = founderKpiSnapshotSectionHtml(esc, kpi || {});
 
+  let goalsPayload = null;
+  try {
+    goalsPayload = await getGoalsStatus();
+  } catch (_) {
+    goalsPayload = { kpiAvailable: false, daily: {}, weekly: {} };
+  }
+  const goalsPanelHtml = goalsTrackerSectionHtml(esc, goalsPayload);
+
   let ledgerEvents = [];
   try {
     ledgerEvents = getRecentEvents(10);
@@ -702,6 +712,7 @@ router.get("/today", async (_req, res) => {
 </head>
 <body style="margin:0;padding:16px;padding-bottom:max(28px,env(safe-area-inset-bottom));font-family:system-ui,-apple-system,sans-serif;background:#0a0c10;color:#e8eaed;max-width:560px;margin-left:auto;margin-right:auto;">
   ${kpiPanelHtml}
+  ${goalsPanelHtml}
   ${activeAlertsPanelHtml()}
   ${cashPrioritiesSectionHtml(esc, cashPriorities)}
   ${depositPrioritiesSectionHtml(esc, depositPriorities)}

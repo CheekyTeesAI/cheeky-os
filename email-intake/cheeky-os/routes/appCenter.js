@@ -35,6 +35,8 @@ const { getRecentEvents } = require("../services/actionLedgerService");
 const { actionLedgerSectionHtml } = require("./ledger");
 const { getFounderKpiSnapshot } = require("../services/kpiService");
 const { founderKpiSnapshotSectionHtml } = require("./scorecard");
+const { getGoalsStatus } = require("../services/goalsService");
+const { goalsTrackerSectionHtml } = require("./goals");
 
 const router = Router();
 
@@ -236,6 +238,13 @@ router.get("/app", async (req, res) => {
     kpi = null;
   }
   const kpiPanelHtml = founderKpiSnapshotSectionHtml(esc, kpi || {});
+  let goalsPayload = null;
+  try {
+    goalsPayload = await getGoalsStatus();
+  } catch (_) {
+    goalsPayload = { kpiAvailable: false, daily: {}, weekly: {} };
+  }
+  const goalsPanelHtml = goalsTrackerSectionHtml(esc, goalsPayload);
   let ledgerEvents = [];
   try {
     ledgerEvents = getRecentEvents(10);
@@ -1198,6 +1207,7 @@ router.get("/app", async (req, res) => {
   <p style="margin:0 0 12px;font-size:0.92rem;opacity:0.75;">Command Center</p>
   ${topBar}
   ${kpiPanelHtml}
+  ${goalsPanelHtml}
   ${cashPrioritiesPanelHtml}
   ${depositPrioritiesPanelHtml}
   ${approvedOverridesPanelHtml}
