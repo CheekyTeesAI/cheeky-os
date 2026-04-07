@@ -40,6 +40,7 @@ const { router: exceptionsRouter } = require("./routes/exceptions");
 const { router: ledgerRouter } = require("./routes/ledger");
 const { router: scorecardRouter } = require("./routes/scorecard");
 const { router: goalsRouter } = require("./routes/goals");
+const { router: nextActionsRouter } = require("./routes/nextActions");
 
 /** Bundle 1 requires 3001; override with CHEEKY_OS_PORT only (not generic PORT). */
 const PORT = Number(process.env.CHEEKY_OS_PORT || 3001);
@@ -97,6 +98,7 @@ app.use("/exceptions", exceptionsRouter);
 app.use("/ledger", ledgerRouter);
 app.use(scorecardRouter);
 app.use("/goals", goalsRouter);
+app.use("/next", nextActionsRouter);
 app.use(appCenterRouter);
 app.use("/", mobileDashboardRouter);
 

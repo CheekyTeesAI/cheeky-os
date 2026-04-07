@@ -37,6 +37,8 @@ const { getFounderKpiSnapshot } = require("../services/kpiService");
 const { founderKpiSnapshotSectionHtml } = require("./scorecard");
 const { getGoalsStatus } = require("../services/goalsService");
 const { goalsTrackerSectionHtml } = require("./goals");
+const { getNextActionsPayload } = require("../services/gapDetectorService");
+const { nextActionsSectionHtml } = require("./nextActions");
 
 const router = Router();
 
@@ -238,6 +240,13 @@ router.get("/app", async (req, res) => {
     kpi = null;
   }
   const kpiPanelHtml = founderKpiSnapshotSectionHtml(esc, kpi || {});
+  let nextPayload = { gaps: [], topActions: [] };
+  try {
+    nextPayload = await getNextActionsPayload();
+  } catch (_) {
+    nextPayload = { gaps: [], topActions: [] };
+  }
+  const nextActionsPanelHtml = nextActionsSectionHtml(esc, nextPayload);
   let goalsPayload = null;
   try {
     goalsPayload = await getGoalsStatus();
@@ -1203,6 +1212,7 @@ router.get("/app", async (req, res) => {
   <title>Command Center — Cheeky</title>
 </head>
 <body style="margin:0;padding:14px;padding-bottom:max(24px,env(safe-area-inset-bottom));font-family:system-ui,-apple-system,sans-serif;background:#0a0a0a;color:#e8e8e8;max-width:520px;margin-left:auto;margin-right:auto;">
+  ${nextActionsPanelHtml}
   <h1 style="font-size:1.35rem;margin:8px 0 4px;color:#f0ff44;font-weight:900;">Cheeky Tees</h1>
   <p style="margin:0 0 12px;font-size:0.92rem;opacity:0.75;">Command Center</p>
   ${topBar}

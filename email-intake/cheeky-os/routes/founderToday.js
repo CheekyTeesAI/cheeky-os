@@ -24,6 +24,8 @@ const { getFounderKpiSnapshot } = require("../services/kpiService");
 const { founderKpiSnapshotSectionHtml } = require("./scorecard");
 const { getGoalsStatus } = require("../services/goalsService");
 const { goalsTrackerSectionHtml } = require("./goals");
+const { getNextActionsPayload } = require("../services/gapDetectorService");
+const { nextActionsSectionHtml } = require("./nextActions");
 
 const router = Router();
 
@@ -647,6 +649,14 @@ router.get("/today", async (_req, res) => {
   }
   const kpiPanelHtml = founderKpiSnapshotSectionHtml(esc, kpi || {});
 
+  let nextPayload = { gaps: [], topActions: [] };
+  try {
+    nextPayload = await getNextActionsPayload();
+  } catch (_) {
+    nextPayload = { gaps: [], topActions: [] };
+  }
+  const nextActionsPanelHtml = nextActionsSectionHtml(esc, nextPayload);
+
   let goalsPayload = null;
   try {
     goalsPayload = await getGoalsStatus();
@@ -711,6 +721,7 @@ router.get("/today", async (_req, res) => {
   <title>Founder — Today</title>
 </head>
 <body style="margin:0;padding:16px;padding-bottom:max(28px,env(safe-area-inset-bottom));font-family:system-ui,-apple-system,sans-serif;background:#0a0c10;color:#e8eaed;max-width:560px;margin-left:auto;margin-right:auto;">
+  ${nextActionsPanelHtml}
   ${kpiPanelHtml}
   ${goalsPanelHtml}
   ${activeAlertsPanelHtml()}
