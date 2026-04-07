@@ -12,6 +12,7 @@ const {
 } = require("./paymentGateService");
 const { getMemory } = require("./orderMemoryService");
 const { analyzeJob, inferProductType } = require("./jobIntelligenceService");
+const { collectAutomationActions } = require("./automationActionsService");
 
 async function fetchCaptureOrders() {
   const prisma = getPrisma();
@@ -35,7 +36,8 @@ async function fetchCaptureOrders() {
  *   readyForProduction: object[],
  *   highRisk: object[],
  *   queue: { ready: object[], printing: object[], qc: object[] },
- *   jobMemory: object[]
+ *   jobMemory: object[],
+ *   systemActions: object[]
  * }>}
  */
 function buildJobMemoryRows(orders, paymentBlockers, readyForProduction, queue) {
@@ -120,11 +122,12 @@ function buildJobMemoryRows(orders, paymentBlockers, readyForProduction, queue) 
 }
 
 async function getFounderDashboardPayload() {
-  const [next, auto, queue, orders] = await Promise.all([
+  const [next, auto, queue, orders, autoActions] = await Promise.all([
     getNextAction(),
     getAutoFollowupsResponse(),
     getProductionQueue(),
     fetchCaptureOrders(),
+    collectAutomationActions(5),
   ]);
 
   const paymentBlockers = [];
@@ -191,6 +194,7 @@ async function getFounderDashboardPayload() {
 
   return {
     next,
+    systemActions: (autoActions && autoActions.actions) || [],
     jobMemory,
     paymentBlockers,
     urgentFollowups,

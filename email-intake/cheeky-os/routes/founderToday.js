@@ -4,6 +4,7 @@
 
 const { Router } = require("express");
 const { getFounderDashboardPayload } = require("../services/founderTodayService");
+const { priVal } = require("../services/automationActionsService");
 
 const router = Router();
 
@@ -17,6 +18,50 @@ function esc(s) {
 
 const BTN =
   "display:inline-block;padding:14px 16px;margin:6px 6px 0 0;min-height:48px;line-height:1.2;border-radius:12px;text-decoration:none;font-weight:700;font-size:0.95rem;text-align:center;border:1px solid #334;background:#1a1d26;color:#7dd3fc;";
+
+function cardSystemAction(a) {
+  const pr = String(a.priority || "low").toUpperCase();
+  const prColor =
+    pr === "CRITICAL"
+      ? "#fecaca"
+      : pr === "HIGH"
+        ? "#fdba74"
+        : pr === "MEDIUM"
+          ? "#93c5fd"
+          : "#94a3b8";
+  const band =
+    pr === "CRITICAL"
+      ? "background:#450a0a;border:1px solid #dc2626;"
+      : pr === "HIGH"
+        ? "background:#431407;border:1px solid #ea580c;"
+        : "background:#151922;border:1px solid #334155;";
+  let hint = "";
+  const t = String(a.type || "").toLowerCase();
+  if (t === "followup") hint = "Call / Text now";
+  else if (t === "invoice") hint = "Create draft invoice";
+  else if (t === "production") hint = "Move to printing";
+  const hintHtml = hint
+    ? `<div style="margin-top:8px;font-size:0.82rem;opacity:0.88;color:#a5b4fc;">${esc(
+        hint
+      )}</div>`
+    : "";
+  return `
+  <div style="margin-bottom:12px;padding:14px;border-radius:14px;${band}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+      <span style="font-weight:800;font-size:1.05rem;line-height:1.35;">${esc(
+        a.label || ""
+      )}</span>
+      <span style="font-size:0.72rem;font-weight:800;color:${prColor};white-space:nowrap;">${esc(
+        pr
+      )}</span>
+    </div>
+    <div style="margin-top:8px;font-weight:600;">${esc(a.customerName || "")}</div>
+    <div style="margin-top:6px;font-size:0.9rem;opacity:0.9;line-height:1.4;">${esc(
+      a.reason || ""
+    )}</div>
+    ${hintHtml}
+  </div>`;
+}
 
 function cardNext(next) {
   const a = (next && next.action) || "—";
@@ -231,6 +276,10 @@ router.get("/today", async (_req, res) => {
     ? jm.map(cardJobMemory).join("")
     : `<p style="opacity:0.6;">No orders in memory preview.</p>`;
 
+  const saHtml = sa.length
+    ? sa.map(cardSystemAction).join("")
+    : `<p style="opacity:0.6;">No system actions right now.</p>`;
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -247,7 +296,14 @@ router.get("/today", async (_req, res) => {
     <a href="/dashboard/today/mobile" style="${BTN}">Sales mobile</a>
     <a href="/production/mobile" style="${BTN}">Production</a>
     <a href="/capture/founder" style="${BTN}">Brief workbench</a>
+    <a href="/automation/actions" style="${BTN}">Actions (JSON)</a>
   </div>
+
+  <section style="margin-bottom:22px;">
+    <h2 style="font-size:1.08rem;margin:0 0 10px;color:#f0abfc;">🚀 SYSTEM ACTIONS</h2>
+    <p style="opacity:0.75;font-size:0.88rem;margin:0 0 12px;line-height:1.45;">Top prioritized actions from recent jobs + follow-ups. Full list: <code style="background:#1e293b;padding:2px 6px;border-radius:6px;">GET /automation/actions</code></p>
+    ${saHtml}
+  </section>
 
   ${cardNext(next)}
 
