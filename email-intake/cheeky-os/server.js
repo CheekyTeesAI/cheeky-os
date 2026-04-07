@@ -116,6 +116,9 @@ async function main() {
     console.log(
       `[cheeky-os] responses: POST http://127.0.0.1:${PORT}/responses/ingest`
     );
+    console.log(
+      `[cheeky-os] responses: POST http://127.0.0.1:${PORT}/responses/queue-next-step`
+    );
     console.log(`[cheeky-os] mobile: http://127.0.0.1:${PORT}/dashboard/today/mobile`);
     console.log(
       `[cheeky-os] capture quick-entry: POST http://127.0.0.1:${PORT}/capture/quick-entry`

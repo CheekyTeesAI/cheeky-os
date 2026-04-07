@@ -1,5 +1,6 @@
 /**
  * Bundle 29 — POST /responses/ingest (interpretation + optional order memory + recent queue).
+ * Bundle 30 — POST /responses/queue-next-step (interpretation + next-step action + optional history).
  */
 
 const express = require("express");
@@ -12,6 +13,9 @@ const {
   memoryInnerToJson,
 } = require("../services/orderMemoryService");
 const { interpretCustomerResponse } = require("../services/responseInterpretationService");
+const {
+  buildQueuedActionFromInterpretation,
+} = require("../services/nextStepTriggerService");
 
 const router = express.Router();
 
@@ -20,6 +24,12 @@ const RECENT_FILE = path.join(
   "..",
   "data",
   "response-ingest-recent.json"
+);
+const NEXT_STEP_RECENT_FILE = path.join(
+  __dirname,
+  "..",
+  "data",
+  "response-next-step-recent.json"
 );
 const MAX_RECENT = 50;
 
@@ -48,6 +58,41 @@ function appendRecentEntry(entry) {
 function readRecentEntries() {
   try {
     const txt = fs.readFileSync(RECENT_FILE, "utf8");
+    const j = JSON.parse(txt);
+    if (j && Array.isArray(j.entries)) return { entries: j.entries };
+  } catch (_) {}
+  return { entries: [] };
+}
+
+/**
+ * @param {object} entry
+ */
+function appendRecentNextStep(entry) {
+  let data = { entries: [] };
+  try {
+    const txt = fs.readFileSync(NEXT_STEP_RECENT_FILE, "utf8");
+    const j = JSON.parse(txt);
+    if (j && Array.isArray(j.entries)) data = { entries: j.entries };
+  } catch (_) {}
+  data.entries.unshift(entry);
+  if (data.entries.length > MAX_RECENT) {
+    data.entries = data.entries.slice(0, MAX_RECENT);
+  }
+  const dir = path.dirname(NEXT_STEP_RECENT_FILE);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    NEXT_STEP_RECENT_FILE,
+    JSON.stringify(data, null, 2),
+    "utf8"
+  );
+}
+
+/**
+ * @returns {{ entries: object[] }}
+ */
+function readRecentNextStepEntries() {
+  try {
+    const txt = fs.readFileSync(NEXT_STEP_RECENT_FILE, "utf8");
     const j = JSON.parse(txt);
     if (j && Array.isArray(j.entries)) return { entries: j.entries };
   } catch (_) {}
@@ -149,4 +194,105 @@ router.post("/ingest", async (req, res) => {
   }
 });
 
-module.exports = { router, readRecentEntries };
+router.post("/queue-next-step", async (req, res) => {
+  try {
+    const body = req.body || {};
+    const customerName = String(body.customerName != null ? body.customerName : "").trim();
+    const orderId = String(body.orderId != null ? body.orderId : "").trim();
+    const message = String(body.message != null ? body.message : "").trim();
+
+    if (!customerName) {
+      return res.json({
+        success: false,
+        error: "customerName is required",
+      });
+    }
+    if (!message) {
+      return res.json({
+        success: false,
+        error: "message is required",
+      });
+    }
+
+    const interpretation = interpretCustomerResponse({ customerName, message });
+    const queuedAction = buildQueuedActionFromInterpretation({
+      customerName,
+      orderId,
+      interpretation,
+    });
+
+    if (orderId) {
+      const prisma = getPrisma();
+      if (!prisma || !prisma.captureOrder) {
+        return res.json({
+          success: false,
+          error: "Database not available",
+        });
+      }
+
+      const order = await prisma.captureOrder.findUnique({ where: { id: orderId } });
+      if (!order) {
+        return res.json({
+          success: false,
+          error: "order not found",
+        });
+      }
+
+      const histPack = addHistory(
+        order,
+        `Queued next step: ${queuedAction.actionLabel}`
+      );
+
+      await prisma.captureOrder.update({
+        where: { id: orderId },
+        data: { memoryJson: memoryInnerToJson(histPack.innerForStore) },
+      });
+    }
+
+    const reasonShort =
+      String(queuedAction.reason || "").length > 160
+        ? String(queuedAction.reason).slice(0, 157) + "…"
+        : String(queuedAction.reason || "");
+
+    appendRecentNextStep({
+      at: new Date().toISOString(),
+      customerName,
+      orderId: orderId || "",
+      intent: interpretation.intent,
+      actionLabel: queuedAction.actionLabel,
+      actionType: queuedAction.actionType,
+      priority: queuedAction.priority,
+      reason: reasonShort,
+    });
+
+    return res.json({
+      success: true,
+      customerName,
+      orderId: orderId || "",
+      interpretation: {
+        intent: interpretation.intent,
+        confidence: interpretation.confidence,
+        recommendedNextStep: interpretation.recommendedNextStep,
+      },
+      queuedAction: {
+        actionType: queuedAction.actionType,
+        shouldQueue: queuedAction.shouldQueue,
+        priority: queuedAction.priority,
+        reason: queuedAction.reason,
+        actionLabel: queuedAction.actionLabel,
+      },
+    });
+  } catch (err) {
+    console.error("[responses/queue-next-step]", err.message || err);
+    return res.json({
+      success: false,
+      error: err instanceof Error ? err.message : "failed",
+    });
+  }
+});
+
+module.exports = {
+  router,
+  readRecentEntries,
+  readRecentNextStepEntries,
+};

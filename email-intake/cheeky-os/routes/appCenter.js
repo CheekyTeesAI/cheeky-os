@@ -13,7 +13,10 @@ const { getProductionQueue } = require("../services/orderStatusEngine");
 const { prepareMessage } = require("../services/messagePrepService");
 const { runSystemCheck } = require("../services/systemCheckService");
 const { buildSalesLoop } = require("../services/salesLoopService");
-const { readRecentEntries } = require("./responses");
+const {
+  readRecentEntries,
+  readRecentNextStepEntries,
+} = require("./responses");
 
 const router = Router();
 
@@ -321,6 +324,80 @@ router.get("/app", async (req, res) => {
         ${
           hint
             ? `<p style="margin:8px 0 0;font-size:0.8rem;font-weight:800;color:#f0ff44;">${esc(
+                hint
+              )}</p>`
+            : ""
+        }
+      </div>`;
+      })
+      .join("")}
+  </section>`;
+
+  const recentNextSteps = readRecentNextStepEntries().entries.slice(0, 5);
+  function nextStepUiHint(actionType) {
+    const t = String(actionType || "");
+    if (t === "invoice") return "Create Draft Invoice";
+    if (t === "review") return "Review Now";
+    if (t === "clarify") return "Respond Now";
+    if (t === "later_followup") return "Schedule Later";
+    return "";
+  }
+  const nextStepsPanelHtml =
+    recentNextSteps.length === 0
+      ? `<section style="${CARD}">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 10px;color:#fde047;">⚡ RESPONSE NEXT STEPS</h2>
+    <p style="margin:0;opacity:0.65;font-size:0.9rem;line-height:1.45;">No queued next steps yet. Use <code style="background:#1a1a1a;padding:2px 6px;border-radius:4px;font-size:0.82rem;">POST /responses/queue-next-step</code>.</p>
+  </section>`
+      : `<section style="${CARD}">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 12px;color:#fde047;">⚡ RESPONSE NEXT STEPS</h2>
+    ${recentNextSteps
+      .map((row) => {
+        if (!row || typeof row !== "object") return "";
+        const priRaw = String(row.priority || "").toLowerCase();
+        const priDisp = priRaw.toUpperCase();
+        const pcol = sevColor(priDisp);
+        const atype = String(row.actionType || "");
+        const isCriticalInvoice =
+          priRaw === "critical" && atype === "invoice";
+        const isHighRq =
+          priRaw === "high" && (atype === "review" || atype === "clarify");
+        let border = "border:1px solid #333;";
+        if (isCriticalInvoice) {
+          border =
+            "border:2px solid #22c55e;box-shadow:0 0 12px rgba(34,197,94,0.25);";
+        } else if (isHighRq) {
+          border =
+            "border:2px solid #f97316;box-shadow:0 0 10px rgba(249,115,22,0.2);";
+        }
+        const hint = nextStepUiHint(atype);
+        const reasonLine = String(row.reason || "").trim();
+        return `<div style="margin-top:10px;padding:12px;border-radius:8px;background:#101010;${border}">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+          <strong style="font-size:1rem;line-height:1.3;">${esc(
+            String(row.customerName || "—")
+          )}</strong>
+          <span style="font-size:0.65rem;font-weight:900;color:${pcol};white-space:nowrap;">${esc(
+            priDisp || "—"
+          )}</span>
+        </div>
+        <div style="font-size:0.72rem;font-weight:800;margin-top:6px;color:#a78bfa;letter-spacing:0.04em;">${esc(
+          String(row.intent || "")
+        )}</div>
+        <p style="margin:8px 0 0;font-size:0.92rem;font-weight:700;color:#e8e8e8;">${esc(
+          String(row.actionLabel || "")
+        )}</p>
+        ${
+          reasonLine
+            ? `<p style="margin:6px 0 0;font-size:0.82rem;line-height:1.4;opacity:0.82;">${esc(
+                reasonLine.length > 120
+                  ? reasonLine.slice(0, 117) + "…"
+                  : reasonLine
+              )}</p>`
+            : ""
+        }
+        ${
+          hint
+            ? `<p style="margin:8px 0 0;font-size:0.78rem;font-weight:800;color:#f0ff44;">${esc(
                 hint
               )}</p>`
             : ""
@@ -710,6 +787,7 @@ router.get("/app", async (req, res) => {
   ${topBar}
   ${salesLoopHtml}
   ${responsesPanelHtml}
+  ${nextStepsPanelHtml}
   ${copilotHtml}
   ${summaryHtml}
   ${actionsHtml}
