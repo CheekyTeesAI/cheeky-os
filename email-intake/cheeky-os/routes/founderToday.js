@@ -19,6 +19,97 @@ function esc(s) {
 const BTN =
   "display:inline-block;padding:14px 16px;margin:6px 6px 0 0;min-height:48px;line-height:1.2;border-radius:12px;text-decoration:none;font-weight:700;font-size:0.95rem;text-align:center;border:1px solid #334;background:#1a1d26;color:#7dd3fc;";
 
+const BTN_SUBMIT =
+  "width:100%;box-sizing:border-box;padding:14px 16px;margin-top:10px;border-radius:12px;font-weight:800;font-size:0.95rem;border:1px solid #334155;background:#1e3a5f;color:#7dd3fc;cursor:pointer;min-height:48px;";
+const INPUT =
+  "width:100%;box-sizing:border-box;padding:10px 12px;margin-top:4px;border-radius:10px;border:1px solid #475569;background:#0f1419;color:#e2e8f0;font-size:1rem;";
+
+function actionExecuteJsonExample(a) {
+  const t = String(a.type || "").toLowerCase();
+  const ex = {
+    approved: true,
+    actionType: t || "review",
+    orderId: a.orderId || "",
+    customerId: "",
+    payload: {},
+  };
+  if (t === "invoice") {
+    ex.customerId = "YOUR_SQUARE_CUSTOMER_ID";
+    ex.payload = {
+      customerName: a.customerName || "",
+      amount: 100,
+      description: "Custom T-Shirts",
+      sourceType: "followup",
+    };
+  }
+  return JSON.stringify(ex, null, 2);
+}
+
+function cardSystemExecuteControls(a) {
+  const t = String(a.type || "").toLowerCase();
+  const oid = esc(a.orderId || "");
+  const cname = esc(a.customerName || "");
+
+  if (t === "production") {
+    return `<form method="post" action="/automation/execute" style="margin-top:12px;">
+  <input type="hidden" name="approved" value="true" />
+  <input type="hidden" name="actionType" value="production" />
+  <input type="hidden" name="orderId" value="${oid}" />
+  <button type="submit" style="${BTN_SUBMIT}">Move to Printing</button>
+</form>
+<details style="margin-top:10px;font-size:0.8rem;opacity:0.9;"><summary style="cursor:pointer;">Copy JSON</summary>
+<pre style="white-space:pre-wrap;word-break:break-all;background:#0c0e12;padding:10px;border-radius:10px;border:1px solid #334;">${esc(
+      actionExecuteJsonExample(a)
+    )}</pre>
+</details>`;
+  }
+
+  if (t === "invoice") {
+    return `<form method="post" action="/automation/execute" style="margin-top:12px;display:flex;flex-direction:column;gap:10px;">
+  <input type="hidden" name="approved" value="true" />
+  <input type="hidden" name="actionType" value="invoice" />
+  <input type="hidden" name="orderId" value="${oid}" />
+  <label style="font-size:0.82rem;font-weight:600;">Square customer ID
+    <input name="customerId" required autocomplete="off" placeholder="cus_…" style="${INPUT}" />
+  </label>
+  <label style="font-size:0.82rem;font-weight:600;">Amount (USD)
+    <input name="payload[amount]" type="number" step="0.01" min="0.01" required value="100" style="${INPUT}" />
+  </label>
+  <label style="font-size:0.82rem;font-weight:600;">Description
+    <input name="payload[description]" value="Custom T-Shirts" style="${INPUT}" />
+  </label>
+  <input type="hidden" name="payload[customerName]" value="${cname}" />
+  <input type="hidden" name="payload[sourceType]" value="followup" />
+  <button type="submit" style="${BTN_SUBMIT}">Create Draft Invoice</button>
+</form>
+<details style="margin-top:10px;font-size:0.8rem;opacity:0.9;"><summary style="cursor:pointer;">Copy JSON</summary>
+<pre style="white-space:pre-wrap;word-break:break-all;background:#0c0e12;padding:10px;border-radius:10px;border:1px solid #334;">${esc(
+      actionExecuteJsonExample(a)
+    )}</pre>
+</details>`;
+  }
+
+  if (t === "followup") {
+    return `<div style="margin-top:12px;padding:12px;border-radius:12px;background:#111827;border:1px solid #3730a3;font-size:0.9rem;line-height:1.45;color:#c7d2fe;">Call / Email manually · use scripts or CRM — no auto-send from this endpoint yet.</div>
+<details style="margin-top:10px;font-size:0.8rem;opacity:0.9;"><summary style="cursor:pointer;">Copy JSON</summary>
+<pre style="white-space:pre-wrap;word-break:break-all;background:#0c0e12;padding:10px;border-radius:10px;border:1px solid #334;">${esc(
+      actionExecuteJsonExample(a)
+    )}</pre>
+</details>`;
+  }
+
+  if (t === "review") {
+    return `<div style="margin-top:12px;padding:12px;border-radius:12px;background:#1a1508;border:1px solid #b45309;font-size:0.9rem;line-height:1.45;color:#fde68a;">Manual review needed — check job details before moving money or production.</div>
+<details style="margin-top:10px;font-size:0.8rem;opacity:0.9;"><summary style="cursor:pointer;">Copy JSON</summary>
+<pre style="white-space:pre-wrap;word-break:break-all;background:#0c0e12;padding:10px;border-radius:10px;border:1px solid #334;">${esc(
+      actionExecuteJsonExample(a)
+    )}</pre>
+</details>`;
+  }
+
+  return "";
+}
+
 function cardSystemAction(a) {
   const pr = String(a.priority || "low").toUpperCase();
   const prColor =
@@ -31,13 +122,13 @@ function cardSystemAction(a) {
           : "#94a3b8";
   const band =
     pr === "CRITICAL"
-      ? "background:#450a0a;border:1px solid #dc2626;"
+      ? "background:#450a0a;border:2px solid #ef4444;box-shadow:0 0 0 1px rgba(239,68,68,0.35);"
       : pr === "HIGH"
         ? "background:#431407;border:1px solid #ea580c;"
         : "background:#151922;border:1px solid #334155;";
   let hint = "";
   const t = String(a.type || "").toLowerCase();
-  if (t === "followup") hint = "Call / Text now";
+  if (t === "followup") hint = "Call / Email manually";
   else if (t === "invoice") hint = "Create draft invoice";
   else if (t === "production") hint = "Move to printing";
   const hintHtml = hint
@@ -45,6 +136,7 @@ function cardSystemAction(a) {
         hint
       )}</div>`
     : "";
+  const execHtml = cardSystemExecuteControls(a);
   return `
   <div style="margin-bottom:12px;padding:14px;border-radius:14px;${band}">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
@@ -60,6 +152,7 @@ function cardSystemAction(a) {
       a.reason || ""
     )}</div>
     ${hintHtml}
+    ${execHtml}
   </div>`;
 }
 
@@ -234,6 +327,7 @@ router.get("/today", async (_req, res) => {
         action: "Unable to load",
         reason: String(err.message || err),
       },
+      systemActions: [],
       paymentBlockers: [],
       urgentFollowups: [],
       readyForProduction: [],
@@ -244,6 +338,9 @@ router.get("/today", async (_req, res) => {
   }
 
   const next = data.next || {};
+  const sa = (data.systemActions || [])
+    .slice()
+    .sort((x, y) => priVal(x.priority) - priVal(y.priority));
   const jm = data.jobMemory || [];
   const pb = data.paymentBlockers || [];
   const uf = data.urgentFollowups || [];
@@ -301,7 +398,7 @@ router.get("/today", async (_req, res) => {
 
   <section style="margin-bottom:22px;">
     <h2 style="font-size:1.08rem;margin:0 0 10px;color:#f0abfc;">🚀 SYSTEM ACTIONS</h2>
-    <p style="opacity:0.75;font-size:0.88rem;margin:0 0 12px;line-height:1.45;">Top prioritized actions from recent jobs + follow-ups. Full list: <code style="background:#1e293b;padding:2px 6px;border-radius:6px;">GET /automation/actions</code></p>
+    <p style="opacity:0.75;font-size:0.88rem;margin:0 0 12px;line-height:1.45;">Top prioritized actions. List: <code style="background:#1e293b;padding:2px 6px;border-radius:6px;">GET /automation/actions</code> · Execute (approved only): <code style="background:#1e293b;padding:2px 6px;border-radius:6px;">POST /automation/execute</code></p>
     ${saHtml}
   </section>
 
