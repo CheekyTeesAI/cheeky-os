@@ -2,94 +2,197 @@
  * Cheeky OS — Square invoice integration.
  * Creates invoices via Square Orders + Invoices API, or returns mock in dev mode.
  *
- * Env vars: SQUARE_ACCESS_TOKEN, SQUARE_LOCATION_ID, SQUARE_ENVIRONMENT
+ * Env vars: SQUARE_ACCESS_TOKEN, optional SQUARE_LOCATION_ID, optional SQUARE_ENVIRONMENT
  *
  * @module cheeky-os/integrations/square
  */
 
 const { logger } = require("../utils/logger");
 
-function getSquareEnvironment() {
-  return (process.env.SQUARE_ENVIRONMENT || "production").toLowerCase();
+const squareState = {
+  initialized: false,
+  initPromise: null,
+  tokenPrefix: "",
+  explicitEnvironment: null,
+  tokenDetectedEnvironment: "production",
+  environment: "production",
+  authVerified: false,
+  selectedLocation: null,
+  lastError: null,
+  warnings: new Set(),
+};
+
+function getToken() {
+  return (process.env.SQUARE_ACCESS_TOKEN || "").trim();
 }
 
-function resolveEnvironmentFromToken() {
-  const env = getSquareEnvironment();
-  const token = (process.env.SQUARE_ACCESS_TOKEN || "").trim();
-  if (!token) return env;
-  const looksSandbox = token.startsWith("EAAAl");
-  if (env === "sandbox" && !looksSandbox) return "production";
-  if (env === "production" && looksSandbox) return "sandbox";
-  return env;
+function warnOnce(key, message) {
+  if (squareState.warnings.has(key)) return;
+  squareState.warnings.add(key);
+  logger.warn(message);
 }
 
-/**
- * Resolve Square API base URL from environment setting.
- * @returns {string}
- */
-function getBaseUrl() {
-  const env = resolveEnvironmentFromToken();
-  return env === "sandbox"
+function normalizeExplicitEnvironment(value) {
+  const env = String(value || "").trim().toLowerCase();
+  if (env === "sandbox" || env === "production") return env;
+  return null;
+}
+
+function detectEnvironmentFromToken(token) {
+  if (!token) return "production";
+  if (token.startsWith("EAAAl") && token.includes("-EAAA")) return "sandbox";
+  if (token.startsWith("EAAAl") && !token.includes("-EAAA")) return "production";
+  return "production";
+}
+
+function getSquareRuntimeConfig() {
+  const token = getToken();
+  const tokenPrefix = token ? token.slice(0, 12) : "";
+  const explicitEnvironment = normalizeExplicitEnvironment(process.env.SQUARE_ENVIRONMENT);
+  const tokenDetectedEnvironment = detectEnvironmentFromToken(token);
+  const environment = explicitEnvironment || tokenDetectedEnvironment;
+  const configuredLocationId = (process.env.SQUARE_LOCATION_ID || "").trim();
+  return {
+    token,
+    tokenPrefix,
+    explicitEnvironment,
+    tokenDetectedEnvironment,
+    environment,
+    configuredLocationId,
+  };
+}
+
+function getBaseUrlForEnvironment(environment) {
+  return environment === "sandbox"
     ? "https://connect.squareupsandbox.com/v2"
     : "https://connect.squareup.com/v2";
 }
 
-function validateSquareAuthEnvironment() {
-  const token = (process.env.SQUARE_ACCESS_TOKEN || "").trim();
-  const env = getSquareEnvironment();
-  const effectiveEnv = resolveEnvironmentFromToken();
-  if (!token) return;
-  const looksSandbox = token.startsWith("EAAAl");
-  if (env === "sandbox" && !looksSandbox) {
-    logger.warn(
-      '[SQUARE] Auth/environment mismatch: SQUARE_ENVIRONMENT="sandbox" but token does not look like a sandbox token (expected prefix "EAAAl"). Using production API host.'
-    );
-  }
-  if (env === "production" && looksSandbox) {
-    logger.warn(
-      '[SQUARE] Auth/environment mismatch: SQUARE_ENVIRONMENT="production" but token looks like a sandbox token (prefix "EAAAl"). Using sandbox API host.'
-    );
-  }
-  if (env !== effectiveEnv) {
-    logger.warn(`[SQUARE] Effective environment switched to "${effectiveEnv}" based on token format.`);
-  }
+/**
+ * Resolve Square API base URL from token-detected environment.
+ * @returns {string}
+ */
+function getBaseUrl() {
+  return getBaseUrlForEnvironment(squareState.environment);
+}
+
+async function initializeSquareIntegration() {
+  if (squareState.initPromise) return squareState.initPromise;
+
+  squareState.initPromise = (async () => {
+    const config = getSquareRuntimeConfig();
+    const { token, tokenPrefix, explicitEnvironment, tokenDetectedEnvironment, environment, configuredLocationId } = config;
+    squareState.tokenPrefix = tokenPrefix;
+    squareState.explicitEnvironment = explicitEnvironment;
+    squareState.tokenDetectedEnvironment = tokenDetectedEnvironment;
+    squareState.environment = environment;
+    squareState.authVerified = false;
+    squareState.selectedLocation = null;
+    squareState.lastError = null;
+
+    console.log(`[SQUARE INIT] token_prefix=${token ? token.slice(0, 10) : "(empty)"}`);
+    if (explicitEnvironment) {
+      logger.info(`[SQUARE] Using environment from .env: ${explicitEnvironment}`);
+      if (explicitEnvironment !== tokenDetectedEnvironment) {
+        warnOnce(
+          "env-mismatch",
+          `[SQUARE] Environment mismatch detected. Token suggests "${tokenDetectedEnvironment}" but .env forces "${explicitEnvironment}". Respecting .env setting.`
+        );
+      }
+    } else {
+      logger.info(`[SQUARE] Auto-detected environment: ${squareState.environment}`);
+    }
+
+    if (!token) {
+      squareState.lastError = "Square not configured";
+      logger.info("[SQUARE] Integration disabled (no token configured).");
+      squareState.initialized = true;
+      logger.info("[SQUARE] Startup status: SKIPPED - not configured");
+      return squareState;
+    }
+
+    const baseUrl = getBaseUrlForEnvironment(squareState.environment);
+    const headers = {
+      "Square-Version": "2025-05-21",
+      Authorization: "Bearer " + token,
+      "Content-Type": "application/json",
+    };
+
+    try {
+      const response = await fetch(baseUrl + "/locations", { method: "GET", headers });
+      const data = await response.json();
+
+      if (response.status === 401) {
+        squareState.lastError = "Token invalid";
+        warnOnce("token-invalid", "[SQUARE] ❌ Token invalid - Square integration disabled. Check SQUARE_ACCESS_TOKEN in .env");
+        logger.info("[SQUARE] Startup status: SKIPPED - invalid token");
+        squareState.initialized = true;
+        return squareState;
+      }
+
+      if (!response.ok) {
+        squareState.lastError = JSON.stringify(data.errors || data);
+        logger.warn(`[SQUARE] Location self-test failed: ${squareState.lastError}`);
+        squareState.initialized = true;
+        return squareState;
+      }
+
+      const locations = Array.isArray(data.locations) ? data.locations : [];
+      const active = locations.find((loc) => String(loc.status || "").toUpperCase() === "ACTIVE");
+      squareState.authVerified = true;
+      logger.info("[SQUARE] ✅ Auth verified");
+
+      if (active) {
+        squareState.selectedLocation = {
+          id: active.id,
+          name: active.name || "(unnamed)",
+        };
+      } else if (configuredLocationId) {
+        const fallback = locations.find((loc) => loc.id === configuredLocationId);
+        if (fallback) {
+          squareState.selectedLocation = {
+            id: fallback.id,
+            name: fallback.name || "(unnamed)",
+          };
+        }
+      }
+
+      if (!squareState.selectedLocation) {
+        squareState.lastError = "No ACTIVE location found";
+        warnOnce("no-location", "[SQUARE] No active/usable location found - Square integration disabled.");
+        logger.info("[SQUARE] Startup status: SKIPPED - no active location");
+        squareState.initialized = true;
+        return squareState;
+      }
+
+      logger.info(`[SQUARE] Auto-selected location: ${squareState.selectedLocation.name} (${squareState.selectedLocation.id})`);
+      logger.info("[SQUARE] Startup status: READY");
+      squareState.initialized = true;
+      return squareState;
+    } catch (err) {
+      squareState.lastError = err.message;
+      warnOnce("self-test-failed", `[SQUARE] Location self-test failed: ${err.message}`);
+      logger.info("[SQUARE] Startup status: SKIPPED - auth test failed");
+      squareState.initialized = true;
+      return squareState;
+    }
+  })();
+
+  return squareState.initPromise;
 }
 
 async function testSquareAuth() {
-  const token = (process.env.SQUARE_ACCESS_TOKEN || "").trim();
-  const locationId = (process.env.SQUARE_LOCATION_ID || "").trim();
-  const env = resolveEnvironmentFromToken();
-
-  if (!token || !locationId) {
-    return {
-      ok: false,
-      data: null,
-      error: "Square not configured - set SQUARE_ACCESS_TOKEN and SQUARE_LOCATION_ID in .env",
-    };
-  }
-
-  const baseUrl = getBaseUrl();
-  const headers = {
-    "Square-Version": "2025-05-21",
-    Authorization: "Bearer " + token,
-    "Content-Type": "application/json",
+  await initializeSquareIntegration();
+  const { tokenPrefix } = getSquareRuntimeConfig();
+  return {
+    ok: !!squareState.authVerified,
+    token_prefix: tokenPrefix,
+    auto_detected_environment: squareState.environment,
+    auto_selected_location: squareState.selectedLocation,
+    auth_verified: !!squareState.authVerified,
+    square_app_hint: "If auth fails, make sure your token comes from the same Square app as your location",
+    error: squareState.lastError,
   };
-
-  try {
-    const response = await fetch(baseUrl + "/locations", { method: "GET", headers });
-    const data = await response.json();
-    return {
-      ok: response.ok,
-      data: {
-        environment: env,
-        status: response.status,
-        raw: data,
-      },
-      error: response.ok ? null : JSON.stringify(data.errors || data),
-    };
-  } catch (err) {
-    return { ok: false, data: null, error: err.message };
-  }
 }
 
 /**
@@ -102,12 +205,13 @@ async function testSquareAuth() {
 async function createSquareInvoice(payload) {
   const { customerName, customerEmail, title, quantity, unitPrice, total, deposit } = payload;
 
-  const token = process.env.SQUARE_ACCESS_TOKEN;
-  const locationId = process.env.SQUARE_LOCATION_ID;
+  await initializeSquareIntegration();
+  const token = getToken();
+  const locationId = squareState.selectedLocation && squareState.selectedLocation.id;
 
   // ── Mock mode — no credentials ────────────────────────────────────────────
   if (!token || !locationId) {
-    logger.info(`[SQUARE] Mock mode — no credentials. Invoice for "${customerName}": $${total}`);
+    logger.info(`[SQUARE] Disabled/mock mode — missing verified auth/location. Invoice for "${customerName}": $${total}`);
     return {
       mode: "mock",
       invoiceId: "mock-" + Date.now(),
@@ -237,6 +341,26 @@ async function createSquareInvoice(payload) {
   }
 }
 
-validateSquareAuthEnvironment();
+initializeSquareIntegration().catch(() => null);
 
-module.exports = { createSquareInvoice, testSquareAuth, validateSquareAuthEnvironment };
+function getSquareIntegrationStatus() {
+  const status = squareState.authVerified
+    ? "READY"
+    : (squareState.lastError === "Square not configured" ? "SKIPPED - not configured" : "SKIPPED - invalid token");
+  return {
+    status,
+    environment: squareState.environment,
+    tokenPrefix: squareState.tokenPrefix || "",
+    location: squareState.selectedLocation,
+    error: squareState.lastError,
+  };
+}
+
+module.exports = {
+  createSquareInvoice,
+  testSquareAuth,
+  initializeSquareIntegration,
+  getSquareIntegrationStatus,
+  getSquareRuntimeConfig,
+  getBaseUrl,
+};

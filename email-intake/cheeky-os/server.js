@@ -1,0 +1,67 @@
+/**
+ * Cheeky OS — Bundle 1 standalone HTTP server (mobile + revenue routes).
+ * Listen on 0.0.0.0:3001. Run from repo: `node cheeky-os/server.js` (cwd: email-intake).
+ *
+ * Does not modify the main TypeScript API (voice.run); use this process for LAN/mobile tests.
+ */
+
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
+
+const express = require("express");
+const { initializeSquareIntegration } = require("./integrations/square");
+const cheekyRouter = require("./routes");
+const revenueRouter = require("./routes/revenue");
+const mobileDashboardRouter = require("./routes/mobileDashboard");
+
+/** Bundle 1 requires 3001; override with CHEEKY_OS_PORT only (not generic PORT). */
+const PORT = Number(process.env.CHEEKY_OS_PORT || 3001);
+const HOST = "0.0.0.0";
+
+const app = express();
+
+app.get("/health", (_req, res) => {
+  res.json({
+    status: "ok",
+    service: "cheeky-os",
+    port: PORT,
+    time: new Date().toISOString(),
+  });
+});
+
+app.use(express.json());
+
+app.use("/cheeky", cheekyRouter);
+app.use("/revenue", revenueRouter);
+app.use("/", mobileDashboardRouter);
+
+app.use((err, req, res, _next) => {
+  console.error("[cheeky-os/server]", req.method, req.url, err.message || err);
+  res.status(500).json({ ok: false, error: err.message || "error" });
+});
+
+async function main() {
+  try {
+    await initializeSquareIntegration();
+  } catch (e) {
+    console.warn("[cheeky-os/server] Square init non-fatal:", e.message || e);
+  }
+
+  app.listen(PORT, HOST, () => {
+    console.log(`[cheeky-os] listening on http://${HOST}:${PORT}`);
+    console.log(`[cheeky-os] health: http://127.0.0.1:${PORT}/health`);
+    console.log(`[cheeky-os] reactivation: http://127.0.0.1:${PORT}/revenue/reactivation`);
+    console.log(`[cheeky-os] followups: http://127.0.0.1:${PORT}/revenue/followups`);
+    console.log(`[cheeky-os] mobile: http://127.0.0.1:${PORT}/dashboard/today/mobile`);
+    console.log(`[cheeky-os] legacy mount: http://127.0.0.1:${PORT}/cheeky/health`);
+  });
+}
+
+if (require.main === module) {
+  main().catch((err) => {
+    console.error("[cheeky-os/server] fatal:", err);
+    process.exit(1);
+  });
+}
+
+module.exports = { app, main };
