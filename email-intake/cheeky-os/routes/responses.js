@@ -1,6 +1,7 @@
 /**
  * Bundle 29 — POST /responses/ingest (interpretation + optional order memory + recent queue).
  * Bundle 30 — POST /responses/queue-next-step (interpretation + next-step action + optional history).
+ * Bundle 32 — POST /responses/auto-invoice (guarded draft only, no send/charge).
  */
 
 const express = require("express");
@@ -16,6 +17,8 @@ const { interpretCustomerResponse } = require("../services/responseInterpretatio
 const {
   buildQueuedActionFromInterpretation,
 } = require("../services/nextStepTriggerService");
+const { evaluateAutoInvoiceGuard } = require("../services/autoInvoiceGuardService");
+const { createDraftInvoice } = require("../services/squareDraftInvoice");
 
 const router = express.Router();
 
@@ -31,7 +34,28 @@ const NEXT_STEP_RECENT_FILE = path.join(
   "data",
   "response-next-step-recent.json"
 );
+const AUTO_INVOICE_RECENT_FILE = path.join(
+  __dirname,
+  "..",
+  "data",
+  "response-auto-invoice-recent.json"
+);
+/** Same path as invoiceExecutorService — shared dedupe for draft invoices. */
+const INVOICE_AUTO_STATE_FILE = path.join(
+  __dirname,
+  "..",
+  "data",
+  "invoice-auto-state.json"
+);
+const AUTO_INVOICE_THROTTLE_FILE = path.join(
+  __dirname,
+  "..",
+  "data",
+  "response-auto-invoice-throttle.json"
+);
 const MAX_RECENT = 50;
+const INVOICE_EXISTS_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+const AUTO_INVOICE_THROTTLE_MS = 90 * 1000;
 
 /**
  * @param {object} entry
@@ -93,6 +117,119 @@ function appendRecentNextStep(entry) {
 function readRecentNextStepEntries() {
   try {
     const txt = fs.readFileSync(NEXT_STEP_RECENT_FILE, "utf8");
+    const j = JSON.parse(txt);
+    if (j && Array.isArray(j.entries)) return { entries: j.entries };
+  } catch (_) {}
+  return { entries: [] };
+}
+
+/**
+ * @returns {{ byCustomerId: Record<string, { invoiceId?: string, createdAt?: string }> }}
+ */
+function loadInvoiceAutoStateForDedupe() {
+  try {
+    const txt = fs.readFileSync(INVOICE_AUTO_STATE_FILE, "utf8");
+    const j = JSON.parse(txt);
+    if (
+      j &&
+      typeof j === "object" &&
+      j.byCustomerId &&
+      typeof j.byCustomerId === "object"
+    ) {
+      return { byCustomerId: { ...j.byCustomerId } };
+    }
+  } catch (_) {}
+  return { byCustomerId: {} };
+}
+
+/**
+ * @param {{ byCustomerId: Record<string, { invoiceId?: string, createdAt?: string }> }} s
+ */
+function saveInvoiceAutoStateForDedupe(s) {
+  const dir = path.dirname(INVOICE_AUTO_STATE_FILE);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    INVOICE_AUTO_STATE_FILE,
+    JSON.stringify(s, null, 2),
+    "utf8"
+  );
+}
+
+/**
+ * @param {string} customerId
+ * @param {number} windowMs
+ */
+function isRecentDraftForCustomer(customerId, state, windowMs) {
+  const cid = String(customerId || "").trim();
+  if (!cid) return false;
+  const e = state.byCustomerId[cid];
+  if (!e || !e.createdAt) return false;
+  const t = new Date(e.createdAt).getTime();
+  if (!Number.isFinite(t)) return false;
+  return Date.now() - t < windowMs;
+}
+
+/**
+ * @returns {{ byCustomerId: Record<string, string> }}
+ */
+function loadAutoInvoiceThrottle() {
+  try {
+    const txt = fs.readFileSync(AUTO_INVOICE_THROTTLE_FILE, "utf8");
+    const j = JSON.parse(txt);
+    if (
+      j &&
+      typeof j === "object" &&
+      j.byCustomerId &&
+      typeof j.byCustomerId === "object"
+    ) {
+      return { byCustomerId: { ...j.byCustomerId } };
+    }
+  } catch (_) {}
+  return { byCustomerId: {} };
+}
+
+/**
+ * @param {{ byCustomerId: Record<string, string> }} s
+ */
+function saveAutoInvoiceThrottle(s) {
+  const dir = path.dirname(AUTO_INVOICE_THROTTLE_FILE);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    AUTO_INVOICE_THROTTLE_FILE,
+    JSON.stringify(s, null, 2),
+    "utf8"
+  );
+}
+
+/**
+ * @param {object} entry
+ */
+function appendAutoInvoiceRecent(entry) {
+  let data = { entries: [] };
+  try {
+    const txt = fs.readFileSync(AUTO_INVOICE_RECENT_FILE, "utf8");
+    const j = JSON.parse(txt);
+    if (j && Array.isArray(j.entries)) data = { entries: j.entries };
+  } catch (_) {}
+  data.entries.unshift(entry);
+  if (data.entries.length > MAX_RECENT) {
+    data.entries = data.entries.slice(0, MAX_RECENT);
+  }
+  const dir = path.dirname(AUTO_INVOICE_RECENT_FILE);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    AUTO_INVOICE_RECENT_FILE,
+    JSON.stringify(data, null, 2),
+    "utf8"
+  );
+}
+
+/**
+ * @returns {{ entries: object[] }}
+ */
+function readRecentAutoInvoiceEntries() {
+  try {
+    const txt = fs.readFileSync(AUTO_INVOICE_RECENT_FILE, "utf8");
     const j = JSON.parse(txt);
     if (j && Array.isArray(j.entries)) return { entries: j.entries };
   } catch (_) {}
@@ -291,8 +428,193 @@ router.post("/queue-next-step", async (req, res) => {
   }
 });
 
+router.post("/auto-invoice", async (req, res) => {
+  const body = req.body || {};
+  const customerName = String(body.customerName != null ? body.customerName : "").trim();
+  const orderId = String(body.orderId != null ? body.orderId : "").trim();
+  const message = String(body.message != null ? body.message : "").trim();
+  const customerId = String(body.customerId != null ? body.customerId : "").trim();
+  const amount = Number(body.amount);
+
+  function finishThrottle() {
+    const cid = String(customerId || "").trim();
+    if (!cid) return;
+    const th = loadAutoInvoiceThrottle();
+    th.byCustomerId[cid] = new Date().toISOString();
+    saveAutoInvoiceThrottle(th);
+  }
+
+  try {
+    if (!customerName) {
+      return res.json({
+        success: false,
+        error: "customerName is required",
+      });
+    }
+    if (!message) {
+      return res.json({
+        success: false,
+        error: "message is required",
+      });
+    }
+
+    if (orderId) {
+      const prisma = getPrisma();
+      if (!prisma || !prisma.captureOrder) {
+        return res.json({
+          success: false,
+          error: "Database not available",
+        });
+      }
+      const order = await prisma.captureOrder.findUnique({ where: { id: orderId } });
+      if (!order) {
+        return res.json({
+          success: false,
+          error: "order not found",
+        });
+      }
+    }
+
+    const interpretation = interpretCustomerResponse({ customerName, message });
+    const invState = loadInvoiceAutoStateForDedupe();
+    const invoiceExists = isRecentDraftForCustomer(
+      customerId,
+      invState,
+      INVOICE_EXISTS_WINDOW_MS
+    );
+
+    const throttle = loadAutoInvoiceThrottle();
+    const lastAt = customerId
+      ? throttle.byCustomerId[customerId]
+      : "";
+    const lastMs = lastAt ? new Date(lastAt).getTime() : 0;
+    const cooldownPassed =
+      !customerId ||
+      !Number.isFinite(lastMs) ||
+      Date.now() - lastMs >= AUTO_INVOICE_THROTTLE_MS;
+
+    const guard = evaluateAutoInvoiceGuard({
+      customerName,
+      customerId,
+      orderId,
+      intent: interpretation.intent,
+      confidence: interpretation.confidence,
+      amount,
+      invoiceExists,
+      cooldownPassed,
+    });
+
+    const baseLog = {
+      at: new Date().toISOString(),
+      customerName,
+      orderId: orderId || "",
+      amount: Number.isFinite(amount) ? amount : 0,
+      intent: interpretation.intent,
+      confidence: interpretation.confidence,
+      safetyLevel: guard.safetyLevel,
+      reason: guard.reason,
+      executed: false,
+      draftCreated: false,
+      invoiceId: "",
+    };
+
+    async function writeMemoryDecision(line) {
+      if (!orderId) return;
+      const prisma = getPrisma();
+      if (!prisma || !prisma.captureOrder) return;
+      const order = await prisma.captureOrder.findUnique({ where: { id: orderId } });
+      if (!order) return;
+      const histPack = addHistory(order, `Auto-invoice decision: ${line}`);
+      await prisma.captureOrder.update({
+        where: { id: orderId },
+        data: { memoryJson: memoryInnerToJson(histPack.innerForStore) },
+      });
+    }
+
+    if (!guard.shouldCreateDraft) {
+      appendAutoInvoiceRecent(baseLog);
+      finishThrottle();
+      await writeMemoryDecision(guard.reason);
+      return res.json({
+        success: true,
+        executed: false,
+        draftCreated: false,
+        safetyLevel: guard.safetyLevel,
+        reason: guard.reason,
+        invoiceId: "",
+      });
+    }
+
+    const desc = customerName.slice(0, 200) || "Custom order";
+    const inv = await createDraftInvoice({
+      customerId,
+      lineItems: [{ name: desc, quantity: 1, price: amount }],
+    });
+
+    if (!inv.success) {
+      appendAutoInvoiceRecent({
+        ...baseLog,
+        reason: String(inv.error || "draft_failed"),
+        safetyLevel: "review",
+      });
+      finishThrottle();
+      await writeMemoryDecision(String(inv.error || "draft_failed"));
+      return res.json({
+        success: false,
+        executed: true,
+        draftCreated: false,
+        safetyLevel: "review",
+        reason: String(inv.error || "Draft creation failed"),
+        invoiceId: "",
+      });
+    }
+
+    invState.byCustomerId[customerId] = {
+      invoiceId: String(inv.invoiceId || ""),
+      createdAt: new Date().toISOString(),
+    };
+    saveInvoiceAutoStateForDedupe(invState);
+
+    const okLog = {
+      ...baseLog,
+      executed: true,
+      draftCreated: true,
+      reason: guard.reason,
+      safetyLevel: "clear",
+      invoiceId: String(inv.invoiceId || ""),
+    };
+    appendAutoInvoiceRecent(okLog);
+    finishThrottle();
+    await writeMemoryDecision(
+      `${guard.reason} — draft ${String(inv.invoiceId || "").slice(0, 24)}`
+    );
+
+    return res.json({
+      success: true,
+      executed: true,
+      draftCreated: true,
+      safetyLevel: "clear",
+      reason: guard.reason,
+      invoiceId: String(inv.invoiceId || ""),
+    });
+  } catch (err) {
+    console.error("[responses/auto-invoice]", err.message || err);
+    finishThrottle();
+    return res.json({
+      success: false,
+      executed: false,
+      draftCreated: false,
+      safetyLevel: "blocked",
+      reason: err instanceof Error ? err.message : "failed",
+      invoiceId: "",
+      error: err instanceof Error ? err.message : "failed",
+    });
+  }
+});
+
 module.exports = {
   router,
   readRecentEntries,
   readRecentNextStepEntries,
+  readRecentAutoInvoiceEntries,
 };

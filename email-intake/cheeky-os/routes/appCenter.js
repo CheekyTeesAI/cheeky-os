@@ -17,6 +17,7 @@ const { readLastOperatorRun } = require("../services/salesOperatorService");
 const {
   readRecentEntries,
   readRecentNextStepEntries,
+  readRecentAutoInvoiceEntries,
 } = require("./responses");
 
 const router = Router();
@@ -463,6 +464,58 @@ router.get("/app", async (req, res) => {
       .join("")}
   </section>`;
 
+  const recentAutoInv = readRecentAutoInvoiceEntries().entries.slice(0, 5);
+  function autoInvBorder(level) {
+    const u = String(level || "").toLowerCase();
+    if (u === "clear")
+      return "border:2px solid #22c55e;box-shadow:0 0 10px rgba(34,197,94,0.2);";
+    if (u === "review")
+      return "border:2px solid #f97316;box-shadow:0 0 8px rgba(249,115,22,0.15);";
+    return "border:2px solid #ef4444;opacity:0.95;";
+  }
+  const autoInvoicePanelHtml = `<section style="${CARD}">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 10px;color:#93c5fd;">🧾 AUTO-INVOICE READY</h2>
+    <p style="margin:0 0 12px;font-size:0.8rem;opacity:0.72;line-height:1.45;"><strong>CLEAR</strong> = auto draft allowed · <strong>REVIEW</strong> = check manually · <strong>BLOCKED</strong> = do not auto-run</p>
+    ${
+      recentAutoInv.length === 0
+        ? `<p style="margin:0 0 12px;opacity:0.65;font-size:0.88rem;">No checks yet. Submit the form below or call <code style="background:#1a1a1a;padding:2px 6px;border-radius:4px;font-size:0.78rem;">POST /responses/auto-invoice</code>.</p>`
+        : recentAutoInv
+            .map((row) => {
+              if (!row || typeof row !== "object") return "";
+              const sl = String(row.safetyLevel || "blocked");
+              return `<div style="margin-top:10px;padding:12px;border-radius:8px;background:#101010;${autoInvBorder(sl)}">
+          <strong style="font-size:0.98rem;">${esc(
+            String(row.customerName || "—")
+          )}</strong>
+          <div style="font-size:0.7rem;font-weight:900;margin-top:6px;letter-spacing:0.05em;">${esc(sl.toUpperCase())}</div>
+          <p style="margin:6px 0 0;font-size:0.86rem;">$${esc(String(Math.round(Number(row.amount) || 0)))} · intent ${esc(
+            String(row.intent || "—")
+          )}</p>
+          <p style="margin:6px 0 0;font-size:0.8rem;line-height:1.4;opacity:0.85;">${esc(
+            String(row.reason || "").length > 130
+              ? String(row.reason).slice(0, 127) + "…"
+              : String(row.reason || "")
+          )}</p>
+        </div>`;
+            })
+            .join("")
+    }
+    <form id="app-auto-invoice-form" style="margin-top:14px;padding-top:12px;border-top:1px solid #2a2a2a;">
+      <label style="display:block;font-size:0.72rem;opacity:0.75;margin-bottom:4px;">Customer name</label>
+      <input name="customerName" required style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #333;background:#101010;color:#eee;font-size:0.95rem;margin-bottom:8px;"/>
+      <label style="display:block;font-size:0.72rem;opacity:0.75;margin-bottom:4px;">Message (reply text)</label>
+      <textarea name="message" required rows="2" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #333;background:#101010;color:#eee;font-size:0.95rem;margin-bottom:8px;"></textarea>
+      <label style="display:block;font-size:0.72rem;opacity:0.75;margin-bottom:4px;">Square customer ID</label>
+      <input name="customerId" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #333;background:#101010;color:#eee;font-size:0.95rem;margin-bottom:8px;"/>
+      <label style="display:block;font-size:0.72rem;opacity:0.75;margin-bottom:4px;">Amount (USD)</label>
+      <input name="amount" type="number" min="0" step="1" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #333;background:#101010;color:#eee;font-size:0.95rem;margin-bottom:8px;"/>
+      <label style="display:block;font-size:0.72rem;opacity:0.75;margin-bottom:4px;">Order ID (optional)</label>
+      <input name="orderId" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #333;background:#101010;color:#eee;font-size:0.95rem;margin-bottom:10px;"/>
+      <button type="submit" style="${BTN_FULL}margin-top:0;">Run Auto-Invoice Check</button>
+    </form>
+    <p id="app-auto-invoice-msg" style="font-size:0.78rem;opacity:0.78;margin:8px 0 0;min-height:1em;"></p>
+  </section>`;
+
   const copilotHtml = `
   <section style="${CARD}">
     <h2 style="font-size:1rem;font-weight:800;margin:0 0 12px;color:#f0ff44;">🧠 COPILOT SAYS</h2>
@@ -825,6 +878,24 @@ router.get("/app", async (req, res) => {
         })
         .catch(function(){ if(opRunMsg) opRunMsg.textContent='Failed'; opRun.disabled=false; });
     });
+    var aiForm=document.getElementById('app-auto-invoice-form');
+    var aiMsg=document.getElementById('app-auto-invoice-msg');
+    if(aiForm) aiForm.addEventListener('submit',function(ev){
+      ev.preventDefault();
+      var fd=new FormData(aiForm);
+      if(aiMsg) aiMsg.textContent='Running check…';
+      postJSON('/responses/auto-invoice',{
+        customerName:String(fd.get('customerName')||'').trim(),
+        message:String(fd.get('message')||'').trim(),
+        customerId:String(fd.get('customerId')||'').trim(),
+        amount:Number(fd.get('amount')||0),
+        orderId:String(fd.get('orderId')||'').trim()
+      }).then(function(d){
+        if(aiMsg) aiMsg.textContent=String(d.reason||d.error||'').slice(0,220)||'Done';
+        if(d&&d.success===false&&!d.reason&&!d.executed) return;
+        location.reload();
+      }).catch(function(){ if(aiMsg) aiMsg.textContent='Request failed'; });
+    });
     document.querySelectorAll('.app-prep-msg').forEach(function(btn){
       btn.addEventListener('click',function(){
         var out=btn.parentElement&&btn.parentElement.querySelector('.app-prep-out');
@@ -858,6 +929,7 @@ router.get("/app", async (req, res) => {
   ${operatorPanelHtml}
   ${responsesPanelHtml}
   ${nextStepsPanelHtml}
+  ${autoInvoicePanelHtml}
   ${copilotHtml}
   ${summaryHtml}
   ${actionsHtml}
