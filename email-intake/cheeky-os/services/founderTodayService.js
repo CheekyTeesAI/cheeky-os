@@ -11,6 +11,7 @@ const {
   captureOrderToGateInput,
 } = require("./paymentGateService");
 const { getMemory } = require("./orderMemoryService");
+const { analyzeJob, inferProductType } = require("./jobIntelligenceService");
 
 async function fetchCaptureOrders() {
   const prisma = getPrisma();
@@ -82,6 +83,24 @@ function buildJobMemoryRows(orders, paymentBlockers, readyForProduction, queue) 
       flags.length > 0 ||
       (Array.isArray(mem.history) && mem.history.length > 0);
 
+    const intelligence = analyzeJob({
+      customerName: o.customerName,
+      quantity: o.quantity,
+      productType: inferProductType("", o.product),
+      product: o.product,
+      printType: o.printType,
+      dueText: o.dueDate || "",
+      status: o.status,
+      paymentStatus: o.paymentStatus || "",
+      memory: {
+        notes: mem.notes,
+        decisions: mem.decisions,
+        flags: mem.flags,
+        history: mem.history,
+      },
+      rawText: String(o.paymentNotes || ""),
+    });
+
     rows.push({
       orderId: id,
       customerName: o.customerName,
@@ -94,6 +113,7 @@ function buildJobMemoryRows(orders, paymentBlockers, readyForProduction, queue) 
       latestDecision,
       highFlags,
       hasMemory,
+      intelligence,
     });
   }
   return rows;

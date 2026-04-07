@@ -129,6 +129,28 @@ function cardJobMemory(j) {
   const memHint = j.hasMemory
     ? ""
     : `<div style="opacity:0.7;font-size:0.88rem;margin-top:10px;font-style:italic;">No stored context yet</div>`;
+
+  const intel = j.intelligence;
+  const risk = intel && intel.risk ? String(intel.risk.level || "low") : "low";
+  const riskUp = risk.toUpperCase();
+  const riskColor =
+    risk === "high" ? "#f87171" : risk === "medium" ? "#fbbf24" : "#64748b";
+  const rec =
+    intel && intel.recommendation
+      ? esc(String(intel.recommendation))
+      : "—";
+  const up =
+    intel && intel.upsell && intel.upsell.suggestion
+      ? esc(String(intel.upsell.suggestion))
+      : "";
+
+  const riskBand =
+    risk === "high"
+      ? "background:#3f1515;border:1px solid #b91c1c;"
+      : risk === "medium"
+        ? "background:#2a2210;border:1px solid #b45309;"
+        : "background:#151c22;border:1px solid #334155;";
+
   return `
   <div style="background:#12161f;border:1px solid #334155;border-radius:14px;padding:16px;margin-bottom:12px;">
     <div style="font-size:0.7rem;color:#64748b;margin-bottom:6px;word-break:break-all;">${esc(
@@ -138,9 +160,20 @@ function cardJobMemory(j) {
     <div style="margin-top:6px;font-size:0.92rem;">${esc(j.product || "")} × ${esc(
     String(j.quantity ?? 0)
   )} · <span style="opacity:0.85;">${esc(j.status || "")}</span></div>
-    <div style="margin-top:10px;font-size:0.9rem;line-height:1.45;"><span style="color:#7dd3fc;">Latest note:</span> ${noteTxt}</div>
-    <div style="margin-top:6px;font-size:0.9rem;line-height:1.45;"><span style="color:#a78bfa;">Latest decision:</span> ${decTxt}</div>
-    <div style="margin-top:6px;font-size:0.9rem;line-height:1.45;"><span style="color:#f87171;">High-severity flags:</span> ${flagsTxt}</div>
+    <div style="margin-top:12px;padding:10px 12px;border-radius:10px;${riskBand}">
+      <span style="font-size:0.72rem;letter-spacing:0.06em;font-weight:800;color:${riskColor};">RISK ${esc(
+    riskUp
+  )}</span>
+      <div style="margin-top:8px;font-size:0.95rem;font-weight:600;line-height:1.4;color:#e2e8f0;">${rec}</div>
+      ${
+        up
+          ? `<div style="margin-top:6px;font-size:0.88rem;opacity:0.9;color:#a5b4fc;">Upsell: ${up}</div>`
+          : ""
+      }
+    </div>
+    <div style="margin-top:10px;font-size:0.88rem;line-height:1.45;"><span style="color:#7dd3fc;">Latest note:</span> ${noteTxt}</div>
+    <div style="margin-top:4px;font-size:0.88rem;line-height:1.45;"><span style="color:#a78bfa;">Latest decision:</span> ${decTxt}</div>
+    <div style="margin-top:4px;font-size:0.88rem;line-height:1.45;"><span style="color:#f87171;">High-severity flags:</span> ${flagsTxt}</div>
     ${memHint}
   </div>`;
 }

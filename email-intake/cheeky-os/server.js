@@ -20,6 +20,7 @@ const captureRouter = require("./routes/capture");
 const ordersCaptureRouter = require("./routes/ordersCapture");
 const ordersStatusRouter = require("./routes/ordersStatus");
 const ordersMemoryRouter = require("./routes/ordersMemory");
+const ordersIntelligenceRouter = require("./routes/ordersIntelligence");
 const productionRouter = require("./routes/production");
 const alertsRouter = require("./routes/alerts");
 const opsTodayRouter = require("./routes/opsToday");
@@ -60,6 +61,7 @@ app.use("/capture", captureRouter);
 app.use("/orders", ordersCaptureRouter);
 app.use("/orders", ordersStatusRouter);
 app.use("/orders", ordersMemoryRouter);
+app.use("/orders", ordersIntelligenceRouter);
 app.use("/production", productionRouter);
 app.use("/alerts", alertsRouter);
 app.use("/ops", opsTodayRouter);
@@ -118,6 +120,9 @@ async function main() {
     );
     console.log(
       `[cheeky-os] orders add-decision: POST http://127.0.0.1:${PORT}/orders/add-decision`
+    );
+    console.log(
+      `[cheeky-os] orders intelligence: GET http://127.0.0.1:${PORT}/orders/intelligence/:orderId`
     );
     console.log(`[cheeky-os] legacy mount: http://127.0.0.1:${PORT}/cheeky/health`);
   });
