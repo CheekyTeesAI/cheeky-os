@@ -48,6 +48,7 @@ const {
   buildLeadQuoteResponseMessage,
 } = require("../services/quickQuoteService");
 const { buildLeadConversionPayload } = require("../services/leadConversionService");
+const { getRetargetingTargets } = require("../services/retargetingTargetsService");
 
 const router = Router();
 
@@ -109,6 +110,14 @@ function sevColor(sev) {
 function leadQualityColor(q) {
   const u = String(q || "").toLowerCase();
   if (u === "high") return "#4ade80";
+  if (u === "medium") return "#fde047";
+  return "#94a3b8";
+}
+
+function retargetPriorityColor(p) {
+  const u = String(p || "").toLowerCase();
+  if (u === "critical") return "#fecaca";
+  if (u === "high") return "#fdba74";
   if (u === "medium") return "#fde047";
   return "#94a3b8";
 }
@@ -518,6 +527,84 @@ router.get("/app", async (req, res) => {
     <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 6px;color:#ddd6fe;">🔄 LEAD CONVERSION</h2>
     <p style="margin:0 0 10px;font-size:0.78rem;line-height:1.45;opacity:0.88;"><strong>Estimates only.</strong> INTAKE orders are created only when you tap <em>Convert to Order</em> (not automatic). Default tasks run after a successful create. API: <code style="font-size:0.68rem;">POST /leads/convert</code>.</p>
     ${leadConvListHtml}
+  </section>`;
+  let retargetPayload = {
+    targets: [],
+    summary: { critical: 0, high: 0, medium: 0, low: 0 },
+  };
+  try {
+    retargetPayload = await getRetargetingTargets();
+  } catch (_) {
+    retargetPayload = {
+      targets: [],
+      summary: { critical: 0, high: 0, medium: 0, low: 0 },
+    };
+  }
+  const retargetTop = (retargetPayload.targets || []).slice(0, 5);
+  const rtSum = retargetPayload.summary || {};
+  const rtLink =
+    "font-size:0.74rem;font-weight:700;padding:8px 10px;border-radius:6px;border:1px solid #e879f9;background:#3b0764;color:#f5d0fe;text-decoration:none;display:inline-block;";
+  const retargetListHtml =
+    retargetTop.length > 0
+      ? retargetTop
+          .map((t) => {
+            const nameAttr = esc(String(t.customerName || "").trim());
+            const th = telHref(String(t.phone || ""));
+            const pcol = retargetPriorityColor(t.retargetPriority);
+            const amt = esc(String(t.amount ?? 0));
+            const d = esc(String(t.daysSinceLastContact ?? 0));
+            return `
+    <div class="rt-card" style="background:#101010;padding:10px;border-radius:8px;margin-top:8px;font-size:0.82rem;border:1px solid #86198f;">
+      <div style="font-weight:800;color:#e9d5ff;">${esc(t.customerName || "—")}</div>
+      <div style="margin-top:4px;display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;">
+        <span style="font-size:0.74rem;opacity:0.85;">$${amt} · ${d}d</span>
+        <span style="font-size:0.72rem;font-weight:800;text-transform:uppercase;color:${pcol};">${esc(
+          String(t.retargetPriority || "")
+        )}</span>
+      </div>
+      <div style="margin-top:4px;font-size:0.74rem;line-height:1.35;opacity:0.82;">${esc(
+        t.reason || ""
+      )}</div>
+      <div style="margin-top:4px;font-size:0.72rem;opacity:0.75;">${esc(
+        [t.phone ? t.phone : "", t.email ? t.email : ""].filter(Boolean).join(" · ") ||
+          "—"
+      )}</div>
+      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+        <button type="button" class="app-prep-msg" data-type="followup" data-name="${nameAttr}" data-amount="${Math.max(
+          0,
+          Number(t.amount) || 0
+        )}" data-days="${Math.max(
+          0,
+          Math.floor(Number(t.daysSinceLastContact) || 0)
+        )}" style="${rtLink};cursor:pointer;font:inherit;">Follow Up</button>
+        ${
+          th
+            ? `<a href="${esc(th)}" style="${rtLink.replace("#3b0764", "#14532d").replace("#e879f9", "#22c55e").replace("#f5d0fe", "#bbf7d0")}">Call Now</a>`
+            : `<span style="font-size:0.7rem;opacity:0.5;">No phone</span>`
+        }
+        <pre class="app-prep-out" style="display:none;flex:1 1 100%;margin:4px 0 0;padding:8px;background:#0a0a0a;border-radius:6px;font-size:0.76rem;white-space:pre-wrap;border:1px solid #333;box-sizing:border-box;"></pre>
+      </div>
+    </div>`;
+          })
+          .join("")
+      : `<p style="opacity:0.72;font-size:0.85rem;margin:0;">No retargeting opportunities.</p>`;
+  const retargetingPanelHtml = `
+  <section style="${CARD};border:2px solid #a21caf;background:#1a0a1f;">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 6px;color:#f0abfc;">🎯 RETARGETING</h2>
+    <p style="margin:0 0 8px;font-size:0.78rem;line-height:1.45;opacity:0.88;">Stalled leads &amp; follow-ups · max 3 SMS / run · 24h dedupe (autopilot + safe mode same as other pushes). <code style="font-size:0.68rem;">GET /retargeting/targets</code></p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.76rem;margin-bottom:6px;">
+      <div style="background:#101010;padding:8px;border-radius:8px;text-align:center;">
+        <div style="opacity:0.65;font-size:0.68rem;">Crit / High</div>
+        <div style="font-weight:800;">${esc(String((rtSum.critical || 0) + (rtSum.high || 0)))}</div>
+      </div>
+      <div style="background:#101010;padding:8px;border-radius:8px;text-align:center;">
+        <div style="opacity:0.65;font-size:0.68rem;">Med / Low</div>
+        <div style="font-weight:800;">${esc(String((rtSum.medium || 0) + (rtSum.low || 0)))}</div>
+      </div>
+    </div>
+    ${retargetListHtml}
+    <button type="button" id="app-retargeting-run" style="${BTN_FULL}border-color:#e879f9;background:#fae8ff;color:#3b0764;">Run Retargeting Push</button>
+    <p id="app-retargeting-msg" style="font-size:0.8rem;opacity:0.78;margin:8px 0 0;min-height:1em;"></p>
   </section>`;
   let reactPayload = { customers: [], summary: { critical: 0, high: 0, medium: 0, low: 0 } };
   try {
@@ -1533,6 +1620,19 @@ router.get("/app", async (req, res) => {
         })
         .catch(function(){ if(rrMsg) rrMsg.textContent='Request failed'; rrRun.disabled=false; });
     });
+    var rtRun=document.getElementById('app-retargeting-run');
+    var rtMsg=document.getElementById('app-retargeting-msg');
+    if(rtRun) rtRun.addEventListener('click',function(){
+      if(rtMsg) rtMsg.textContent='Running retargeting push…';
+      rtRun.disabled=true;
+      postJSON('/retargeting/run',{})
+        .then(function(d){
+          if(rtMsg) rtMsg.textContent=(d&&d.success)?('Done · contacted '+(d.contacted||0)):(String((d&&d.error)||'Blocked or failed').slice(0,180));
+          rtRun.disabled=false;
+          if(d&&d.success) location.reload();
+        })
+        .catch(function(){ if(rtMsg) rtMsg.textContent='Request failed'; rtRun.disabled=false; });
+    });
     var rbRun=document.getElementById('app-runbook-run');
     var rbRunMsg=document.getElementById('app-runbook-run-msg');
     if(rbRun) rbRun.addEventListener('click',function(){
@@ -1662,6 +1762,7 @@ router.get("/app", async (req, res) => {
   ${inboundLeadsPanelHtml}
   ${quickQuotesPanelHtml}
   ${leadConversionPanelHtml}
+  ${retargetingPanelHtml}
   ${reactivationPanelHtml}
   ${nextActionsPanelHtml}
   <h1 style="font-size:1.35rem;margin:8px 0 4px;color:#f0ff44;font-weight:900;">Cheeky Tees</h1>
