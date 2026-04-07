@@ -22,6 +22,7 @@ const ordersStatusRouter = require("./routes/ordersStatus");
 const productionRouter = require("./routes/production");
 const alertsRouter = require("./routes/alerts");
 const opsTodayRouter = require("./routes/opsToday");
+const founderTodayRouter = require("./routes/founderToday");
 
 /** Bundle 1 requires 3001; override with CHEEKY_OS_PORT only (not generic PORT). */
 const PORT = Number(process.env.CHEEKY_OS_PORT || 3001);
@@ -60,6 +61,7 @@ app.use("/orders", ordersStatusRouter);
 app.use("/production", productionRouter);
 app.use("/alerts", alertsRouter);
 app.use("/ops", opsTodayRouter);
+app.use("/founder", founderTodayRouter);
 app.use("/", mobileDashboardRouter);
 
 app.use((err, req, res, _next) => {
@@ -108,6 +110,7 @@ async function main() {
     console.log(`[cheeky-os] production mobile: GET http://127.0.0.1:${PORT}/production/mobile`);
     console.log(`[cheeky-os] alerts today: GET http://127.0.0.1:${PORT}/alerts/today`);
     console.log(`[cheeky-os] ops today: GET http://127.0.0.1:${PORT}/ops/today`);
+    console.log(`[cheeky-os] founder today: GET http://127.0.0.1:${PORT}/founder/today`);
     console.log(`[cheeky-os] legacy mount: http://127.0.0.1:${PORT}/cheeky/health`);
   });
 }
