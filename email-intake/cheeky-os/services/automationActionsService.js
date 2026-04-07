@@ -14,6 +14,45 @@ function priVal(p) {
   return PRI[String(p || "").toLowerCase()] ?? 3;
 }
 
+function normalizeName(s) {
+  return String(s || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+/**
+ * Pull amount/daysOld from scored follow-ups when names loosely match (for message prep).
+ * @param {object[]} followups
+ * @param {string} customerName
+ * @returns {{ amount: number, daysOld: number }}
+ */
+function followupMetaForCustomer(followups, customerName) {
+  const c = normalizeName(customerName);
+  if (!c) return { amount: 0, daysOld: 0 };
+  const list = Array.isArray(followups) ? followups : [];
+  for (const f of list) {
+    if (!f || typeof f !== "object") continue;
+    const fn = normalizeName(/** @type {{ customerName?: string }} */ (f).customerName);
+    if (!fn) continue;
+    if (c === fn || c.includes(fn) || fn.includes(c)) {
+      return {
+        amount: Number(/** @type {{ amount?: unknown }} */ (f).amount) || 0,
+        daysOld: Number(/** @type {{ daysOld?: unknown }} */ (f).daysOld) || 0,
+      };
+    }
+  }
+  return { amount: 0, daysOld: 0 };
+}
+
+function daysSinceCreated(createdAt) {
+  if (!createdAt) return 0;
+  const d = new Date(createdAt);
+  const t = d.getTime();
+  if (!Number.isFinite(t)) return 0;
+  return Math.max(0, Math.floor((Date.now() - t) / 86400000));
+}
+
 async function fetchActiveOrders(limit) {
   const prisma = getPrisma();
   if (!prisma || !prisma.captureOrder) return [];
@@ -81,15 +120,29 @@ async function collectAutomationActions(maxOut = 10) {
       followups,
     });
 
+    const orderAge = daysSinceCreated(order.createdAt);
+
     for (const a of actions) {
+      const cn =
+        (a.target && a.target.customerName) || order.customerName || "";
+      const rowMeta = { ...followupMetaForCustomer(followups, cn) };
+      let amount = rowMeta.amount;
+      let daysOld = rowMeta.daysOld;
+      const typ = String(a.type || "").toLowerCase();
+      if (typ === "invoice" && (!amount || amount <= 0)) {
+        amount = Number(order.balanceDue) || 0;
+      }
+      if (!daysOld || daysOld <= 0) daysOld = orderAge;
+
       flat.push({
         type: a.type,
         label: a.label,
         priority: a.priority,
-        customerName:
-          (a.target && a.target.customerName) || order.customerName || "",
+        customerName: cn,
         orderId: (a.target && a.target.orderId) || order.id || "",
         reason: a.reason || "",
+        amount,
+        daysOld,
       });
     }
   }

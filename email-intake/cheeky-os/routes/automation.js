@@ -6,6 +6,10 @@
 const express = require("express");
 const { collectAutomationActions } = require("../services/automationActionsService");
 const { runAutomationExecute } = require("../services/automationExecuteService");
+const {
+  prepareMessage,
+  isKnownType,
+} = require("../services/messagePrepService");
 
 const router = express.Router();
 
@@ -46,6 +50,52 @@ function normalizeExecuteBody(req) {
     payload,
   };
 }
+
+router.post("/prepare-message", (req, res) => {
+  try {
+    const body = req.body || {};
+    const typeRaw = String(body.type || "").trim().toLowerCase();
+    if (!typeRaw) {
+      return res.json({
+        success: false,
+        message: "type is required (followup, invoice, reactivation, new_lead)",
+        type: "",
+      });
+    }
+    if (!isKnownType(typeRaw)) {
+      return res.json({
+        success: false,
+        message:
+          "invalid type — use followup, invoice, reactivation, or new_lead",
+        type: typeRaw,
+      });
+    }
+    const out = prepareMessage({
+      type: typeRaw,
+      customerName: body.customerName,
+      amount: body.amount,
+      daysOld: body.daysOld,
+    });
+    return res.json({
+      success: true,
+      message: out.message,
+      type: out.type,
+    });
+  } catch (err) {
+    console.error("[automation/prepare-message]", err.message || err);
+    const fallback = prepareMessage({
+      type: "followup",
+      customerName: (req.body && req.body.customerName) || "",
+      amount: req.body && req.body.amount,
+      daysOld: req.body && req.body.daysOld,
+    });
+    return res.json({
+      success: true,
+      message: fallback.message,
+      type: fallback.type,
+    });
+  }
+});
 
 router.post("/execute", async (req, res) => {
   try {

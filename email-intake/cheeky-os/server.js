@@ -124,6 +124,9 @@ async function main() {
       `[cheeky-os] automation execute: POST http://127.0.0.1:${PORT}/automation/execute`
     );
     console.log(
+      `[cheeky-os] automation prepare-message: POST http://127.0.0.1:${PORT}/automation/prepare-message`
+    );
+    console.log(
       `[cheeky-os] orders add-note: POST http://127.0.0.1:${PORT}/orders/add-note`
     );
     console.log(

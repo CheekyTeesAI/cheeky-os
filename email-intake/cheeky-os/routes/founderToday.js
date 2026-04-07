@@ -5,6 +5,7 @@
 const { Router } = require("express");
 const { getFounderDashboardPayload } = require("../services/founderTodayService");
 const { priVal } = require("../services/automationActionsService");
+const { prepareMessage } = require("../services/messagePrepService");
 
 const router = Router();
 
@@ -43,6 +44,24 @@ function actionExecuteJsonExample(a) {
     };
   }
   return JSON.stringify(ex, null, 2);
+}
+
+function cardCopyMessageSection(a) {
+  const t = String(a.type || "").toLowerCase();
+  if (t !== "followup" && t !== "invoice") return "";
+  const prep = prepareMessage({
+    type: t,
+    customerName: a.customerName,
+    amount: a.amount,
+    daysOld: a.daysOld,
+  });
+  return `
+  <div style="margin-top:12px;padding:12px;border-radius:12px;background:#0f172a;border:1px solid #334155;">
+    <div style="font-size:0.72rem;font-weight:800;color:#a5b4fc;margin-bottom:8px;letter-spacing:0.04em;">COPY MESSAGE</div>
+    <div style="font-size:0.95rem;line-height:1.5;color:#e2e8f0;white-space:pre-wrap;word-break:break-word;user-select:all;">${esc(
+      prep.message
+    )}</div>
+  </div>`;
 }
 
 function cardSystemExecuteControls(a) {
@@ -151,6 +170,7 @@ function cardSystemAction(a) {
     <div style="margin-top:6px;font-size:0.9rem;opacity:0.9;line-height:1.4;">${esc(
       a.reason || ""
     )}</div>
+    ${cardCopyMessageSection(a)}
     ${hintHtml}
     ${execHtml}
   </div>`;
@@ -398,7 +418,7 @@ router.get("/today", async (_req, res) => {
 
   <section style="margin-bottom:22px;">
     <h2 style="font-size:1.08rem;margin:0 0 10px;color:#f0abfc;">🚀 SYSTEM ACTIONS</h2>
-    <p style="opacity:0.75;font-size:0.88rem;margin:0 0 12px;line-height:1.45;">Top prioritized actions. List: <code style="background:#1e293b;padding:2px 6px;border-radius:6px;">GET /automation/actions</code> · Execute (approved only): <code style="background:#1e293b;padding:2px 6px;border-radius:6px;">POST /automation/execute</code></p>
+    <p style="opacity:0.75;font-size:0.88rem;margin:0 0 12px;line-height:1.45;">Top prioritized actions. <code style="background:#1e293b;padding:2px 6px;border-radius:6px;">GET /automation/actions</code> · <code style="background:#1e293b;padding:2px 6px;border-radius:6px;">POST /automation/prepare-message</code> · <code style="background:#1e293b;padding:2px 6px;border-radius:6px;">POST /automation/execute</code></p>
     ${saHtml}
   </section>
 
