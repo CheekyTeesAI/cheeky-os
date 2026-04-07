@@ -59,6 +59,18 @@ function normalizeSeverity(s) {
 }
 
 /**
+ * Bundle 23 — label severity from alert kind (payment → critical, follow-up/risk → high, production → medium).
+ * @param {string} type normalized
+ * @param {unknown} rawSeverity
+ */
+function coerceSeverityForType(type, rawSeverity) {
+  if (type === "payment") return "critical";
+  if (type === "followup" || type === "risk") return "high";
+  if (type === "production") return "medium";
+  return normalizeSeverity(rawSeverity);
+}
+
+/**
  * @param {{
  *   type?: string,
  *   message?: string,
@@ -70,7 +82,7 @@ function addAlert(partial) {
   if (!partial || typeof partial !== "object") return null;
   const type = normalizeType(partial.type);
   const message = String(partial.message || "").trim();
-  const severity = normalizeSeverity(partial.severity);
+  const severity = coerceSeverityForType(type, partial.severity);
   if (!type || !message) return null;
 
   for (const a of store.alerts) {

@@ -134,7 +134,7 @@ async function main() {
     console.log(`[cheeky-os] summary today: GET http://127.0.0.1:${PORT}/summary/today`);
     console.log(`[cheeky-os] copilot today: GET http://127.0.0.1:${PORT}/copilot/today`);
     console.log(
-      `[cheeky-os] notifications: POST http://127.0.0.1:${PORT}/notifications/send-alerts`
+      `[cheeky-os] notifications: POST http://127.0.0.1:${PORT}/notifications/send-alerts · POST /notifications/send-sms`
     );
     console.log(
       `[cheeky-os] automation actions: GET http://127.0.0.1:${PORT}/automation/actions`
