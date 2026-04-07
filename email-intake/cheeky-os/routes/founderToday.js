@@ -8,6 +8,7 @@ const { priVal } = require("../services/automationActionsService");
 const { prepareMessage } = require("../services/messagePrepService");
 const { getDailySummary } = require("../services/dailySummaryService");
 const { getCopilotTodayPayload } = require("../services/copilotService");
+const { getActiveAlertsSorted } = require("../services/alertStoreService");
 
 const router = Router();
 
@@ -26,6 +27,53 @@ const BTN_SUBMIT =
   "width:100%;box-sizing:border-box;padding:14px 16px;margin-top:10px;border-radius:12px;font-weight:800;font-size:0.95rem;border:1px solid #334155;background:#1e3a5f;color:#7dd3fc;cursor:pointer;min-height:48px;";
 const INPUT =
   "width:100%;box-sizing:border-box;padding:10px 12px;margin-top:4px;border-radius:10px;border:1px solid #475569;background:#0f1419;color:#e2e8f0;font-size:1rem;";
+
+function activeAlertsPanelHtml() {
+  const items = getActiveAlertsSorted().slice(0, 5);
+  if (!items.length) {
+    return (
+      '<section style="margin:0 0 18px 0;padding:14px 16px;border-radius:16px;background:#0f172a;border:1px solid #334155;">' +
+      '<h2 style="font-size:1.02rem;margin:0 0 8px;color:#fecaca;font-weight:800;">🚨 ACTIVE ALERTS</h2>' +
+      '<p style="margin:0;font-size:0.9rem;opacity:0.78;line-height:1.4;">No active alerts. Run <strong>Refresh System</strong> below to scan and populate.</p></section>'
+    );
+  }
+  const cards = items
+    .map((a) => {
+      if (!a || typeof a !== "object") return "";
+      const sev = String(
+        /** @type {{ severity?: string }} */ (a).severity || ""
+      )
+        .trim()
+        .toUpperCase();
+      const crit = sev === "CRITICAL";
+      const band = crit
+        ? "background:#450a0a;border:2px solid #ef4444;box-shadow:0 0 0 1px rgba(239,68,68,0.25);"
+        : "background:#1e1b2e;border:1px solid #4c1d95;";
+      const sevColor =
+        crit ? "#fecaca" : sev === "HIGH" ? "#fdba74" : sev === "MEDIUM" ? "#fde68a" : "#94a3b8";
+      const msg = esc(String(/** @type {{ message?: string }} */ (a).message || ""));
+      const ca = String(/** @type {{ createdAt?: string }} */ (a).createdAt || "");
+      const when = ca
+        ? esc(new Date(ca).toLocaleString())
+        : "";
+      return `<div style="margin-bottom:10px;padding:12px;border-radius:12px;${band}">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+      <span style="font-weight:700;font-size:0.95rem;line-height:1.35;color:#f8fafc;">${msg}</span>
+      <span style="font-size:0.68rem;font-weight:800;color:${sevColor};white-space:nowrap;">${esc(sev || "—")}</span>
+    </div>
+    <div style="margin-top:6px;font-size:0.75rem;opacity:0.8;color:#cbd5e1;">${when}</div>
+  </div>`;
+    })
+    .filter(Boolean)
+    .join("");
+  return (
+    '<section style="margin:0 0 18px 0;padding:16px;border-radius:16px;background:#0c0a09;border:1px solid #7f1d1d;">' +
+    '<h2 style="font-size:1.02rem;margin:0 0 12px;color:#fecaca;font-weight:800;">🚨 ACTIVE ALERTS</h2>' +
+    cards +
+    '<p style="margin:12px 0 0;font-size:0.72rem;opacity:0.72;color:#94a3b8;line-height:1.35;">Resolve actions — API wiring in next bundle.</p>' +
+    "</section>"
+  );
+}
 
 function systemCheckPanelHtml() {
   const btnStyle =
@@ -572,6 +620,7 @@ router.get("/today", async (_req, res) => {
   <title>Founder — Today</title>
 </head>
 <body style="margin:0;padding:16px;padding-bottom:max(28px,env(safe-area-inset-bottom));font-family:system-ui,-apple-system,sans-serif;background:#0a0c10;color:#e8eaed;max-width:560px;margin-left:auto;margin-right:auto;">
+  ${activeAlertsPanelHtml()}
   ${systemCheckPanelHtml()}
   ${automationIntervalPanelHtml()}
   ${copilotHtml(copilot)}

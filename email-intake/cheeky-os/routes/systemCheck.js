@@ -67,6 +67,7 @@ router.get("/check", async (_req, res) => {
       actions: out.actions || [],
       alerts: out.alerts || [],
       copilotMessage: out.copilotMessage || "",
+      storedAlerts: Array.isArray(out.storedAlerts) ? out.storedAlerts : [],
     });
   } catch (err) {
     console.error("[system/check]", err.message || err);
@@ -76,6 +77,7 @@ router.get("/check", async (_req, res) => {
       actions: [],
       alerts: [],
       copilotMessage: "System check failed.",
+      storedAlerts: [],
     });
   }
 });
