@@ -40,6 +40,7 @@ const { goalsTrackerSectionHtml } = require("./goals");
 const { getNextActionsPayload } = require("../services/gapDetectorService");
 const { nextActionsSectionHtml } = require("./nextActions");
 const { getLastAutoExecutionSnapshot } = require("../services/autoExecutionService");
+const { getCashBlitzPayload } = require("../services/cashBlitzService");
 
 const router = Router();
 
@@ -248,6 +249,45 @@ router.get("/app", async (req, res) => {
     nextPayload = { gaps: [], topActions: [] };
   }
   const nextActionsPanelHtml = nextActionsSectionHtml(esc, nextPayload);
+  let blitzPayload = { targets: [], summary: { totalTargets: 0, totalValue: 0 } };
+  try {
+    blitzPayload = await getCashBlitzPayload();
+  } catch (_) {
+    blitzPayload = { targets: [], summary: { totalTargets: 0, totalValue: 0 } };
+  }
+  const blitzTop = (blitzPayload.targets || []).slice(0, 5);
+  const blitzSum = blitzPayload.summary || {};
+  const blitzListHtml =
+    blitzTop.length > 0
+      ? blitzTop
+          .map(
+            (t) => `
+    <div style="background:#101010;padding:10px;border-radius:8px;margin-top:8px;font-size:0.88rem;">
+      <div style="font-weight:800;color:#fef08a;">${esc(t.customerName || "—")}</div>
+      <div style="margin-top:4px;">$${esc(String(t.amount ?? 0))} · <span style="text-transform:capitalize;">${esc(String(t.type || ""))}</span></div>
+      <div style="margin-top:4px;opacity:0.82;font-size:0.78rem;line-height:1.35;">${esc(t.reason || "")}</div>
+    </div>`
+          )
+          .join("")
+      : `<p style="opacity:0.72;font-size:0.85rem;margin:0;">No qualifying targets (need critical/high, ≥ $200).</p>`;
+  const cashBlitzPanelHtml = `
+  <section style="${CARD};border:2px solid #ca8a04;background:#141008;">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 6px;color:#fde047;">💰 CASH BLITZ</h2>
+    <p style="margin:0 0 10px;font-size:0.78rem;line-height:1.45;opacity:0.85;">Immediate revenue push — capped follow-ups &amp; draft invoices only (same guardrails as auto-execution).</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.84rem;margin-bottom:4px;">
+      <div style="background:#101010;padding:10px;border-radius:8px;">
+        <div style="opacity:0.65;font-size:0.7rem;">Total targets</div>
+        <div style="font-size:1rem;font-weight:900;color:#fef08a;">${esc(String(blitzSum.totalTargets ?? 0))}</div>
+      </div>
+      <div style="background:#101010;padding:10px;border-radius:8px;">
+        <div style="opacity:0.65;font-size:0.7rem;">Total value</div>
+        <div style="font-size:1rem;font-weight:900;color:#fef08a;">$${esc(String(blitzSum.totalValue ?? 0))}</div>
+      </div>
+    </div>
+    ${blitzListHtml}
+    <button type="button" id="app-cash-blitz-run" style="${BTN_FULL}">Run Cash Blitz</button>
+    <p id="app-cash-blitz-msg" style="font-size:0.8rem;opacity:0.78;margin:8px 0 0;min-height:1em;"></p>
+  </section>`;
   let goalsPayload = null;
   try {
     goalsPayload = await getGoalsStatus();
@@ -1185,6 +1225,20 @@ router.get("/app", async (req, res) => {
         })
         .catch(function(){ if(aeMsg) aeMsg.textContent='Request failed'; aeRun.disabled=false; });
     });
+    var cbRun=document.getElementById('app-cash-blitz-run');
+    var cbMsg=document.getElementById('app-cash-blitz-msg');
+    if(cbRun) cbRun.addEventListener('click',function(){
+      if(cbMsg) cbMsg.textContent='Running cash blitz…';
+      cbRun.disabled=true;
+      postJSON('/cash/blitz',{})
+        .then(function(d){
+          var s=d&&d.summary?d.summary:{};
+          if(cbMsg) cbMsg.textContent=(d&&d.success)?('Done · follow-ups '+(s.followupsSent||0)+' · invoices '+(s.invoicesCreated||0)):(String((d&&d.error)||'Blocked or failed').slice(0,180));
+          cbRun.disabled=false;
+          if(d&&d.success) location.reload();
+        })
+        .catch(function(){ if(cbMsg) cbMsg.textContent='Request failed'; cbRun.disabled=false; });
+    });
     var rbRun=document.getElementById('app-runbook-run');
     var rbRunMsg=document.getElementById('app-runbook-run-msg');
     if(rbRun) rbRun.addEventListener('click',function(){
@@ -1257,6 +1311,7 @@ router.get("/app", async (req, res) => {
   <title>Command Center — Cheeky</title>
 </head>
 <body style="margin:0;padding:14px;padding-bottom:max(24px,env(safe-area-inset-bottom));font-family:system-ui,-apple-system,sans-serif;background:#0a0a0a;color:#e8e8e8;max-width:520px;margin-left:auto;margin-right:auto;">
+  ${cashBlitzPanelHtml}
   ${nextActionsPanelHtml}
   <h1 style="font-size:1.35rem;margin:8px 0 4px;color:#f0ff44;font-weight:900;">Cheeky Tees</h1>
   <p style="margin:0 0 12px;font-size:0.92rem;opacity:0.75;">Command Center</p>
