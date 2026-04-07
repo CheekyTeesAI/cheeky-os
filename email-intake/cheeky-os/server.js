@@ -13,6 +13,8 @@ const { initializeSquareIntegration } = require("./integrations/square");
 const cheekyRouter = require("./routes");
 const revenueRouter = require("./routes/revenue");
 const mobileDashboardRouter = require("./routes/mobileDashboard");
+const dashboardNextRouter = require("./routes/dashboardNext");
+const squareDraftRouter = require("./routes/squareDraft");
 
 /** Bundle 1 requires 3001; override with CHEEKY_OS_PORT only (not generic PORT). */
 const PORT = Number(process.env.CHEEKY_OS_PORT || 3001);
@@ -29,10 +31,21 @@ app.get("/health", (_req, res) => {
   });
 });
 
+app.get("/system/health", (_req, res) => {
+  res.json({
+    status: "ok",
+    service: "cheeky-os",
+    port: PORT,
+    time: new Date().toISOString(),
+  });
+});
+
 app.use(express.json());
 
 app.use("/cheeky", cheekyRouter);
 app.use("/revenue", revenueRouter);
+app.use("/dashboard", dashboardNextRouter);
+app.use("/square", squareDraftRouter);
 app.use("/", mobileDashboardRouter);
 
 app.use((err, req, res, _next) => {
@@ -50,8 +63,12 @@ async function main() {
   app.listen(PORT, HOST, () => {
     console.log(`[cheeky-os] listening on http://${HOST}:${PORT}`);
     console.log(`[cheeky-os] health: http://127.0.0.1:${PORT}/health`);
+    console.log(`[cheeky-os] system/health: http://127.0.0.1:${PORT}/system/health`);
     console.log(`[cheeky-os] reactivation: http://127.0.0.1:${PORT}/revenue/reactivation`);
     console.log(`[cheeky-os] followups: http://127.0.0.1:${PORT}/revenue/followups`);
+    console.log(`[cheeky-os] scripts: http://127.0.0.1:${PORT}/revenue/scripts`);
+    console.log(`[cheeky-os] next-action: http://127.0.0.1:${PORT}/dashboard/next-action`);
+    console.log(`[cheeky-os] draft-invoice: POST http://127.0.0.1:${PORT}/square/create-draft-invoice`);
     console.log(`[cheeky-os] mobile: http://127.0.0.1:${PORT}/dashboard/today/mobile`);
     console.log(`[cheeky-os] legacy mount: http://127.0.0.1:${PORT}/cheeky/health`);
   });

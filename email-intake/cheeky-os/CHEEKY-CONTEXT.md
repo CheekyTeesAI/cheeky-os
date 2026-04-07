@@ -16,6 +16,10 @@ Default listen: **`0.0.0.0:3001`** (override with `CHEEKY_OS_PORT` only; generic
 | GET | `/revenue/reactivation` | `hot` / `warm` / `cold` buckets (Prisma customers → else Square customers) |
 | GET | `/revenue/followups` | `unpaidInvoices` + `staleEstimates` (Square read-only) |
 | GET | `/dashboard/today/mobile` | HTML mobile dashboard (inline CSS) |
+| GET | `/system/health` | Same JSON as `/health` (Bundle 2 checklist) |
+| GET | `/dashboard/next-action` | One recommended sales action (followups + reactivation) |
+| POST | `/square/create-draft-invoice` | Create Square invoice draft only (`SHARE_MANUALLY`, not published/sent) |
+| GET | `/revenue/scripts` | Static outreach message templates (JSON) |
 | (existing) | `/cheeky/*` | Full Cheeky OS router (e.g. `/cheeky/health`) |
 
 ## Schema changes
@@ -29,13 +33,17 @@ None in this bundle.
 - **Unpaid invoices** depend on Square `invoices/search` and `invoice_states`; sandbox accounts may return none while **stale open orders** still populate.
 - **Stale “estimates”** are implemented as **Square `orders/search` with state `OPEN`** and `created_at` older than 5 days (read-only proxy for stale quotes).
 
-## Files added (Bundle 1)
+## Files added (Bundle 1 + 2)
 
 - `cheeky-os/server.js`
-- `cheeky-os/routes/revenue.js`
+- `cheeky-os/routes/revenue.js` (Bundle 2: `/scripts`)
 - `cheeky-os/routes/mobileDashboard.js`
+- `cheeky-os/routes/dashboardNext.js` (Bundle 2)
+- `cheeky-os/routes/squareDraft.js` (Bundle 2)
 - `cheeky-os/services/reactivationBuckets.js`
 - `cheeky-os/services/revenueFollowups.js`
+- `cheeky-os/services/nextAction.js` (Bundle 2)
+- `cheeky-os/services/squareDraftInvoice.js` (Bundle 2)
 - `cheeky-os/CHEEKY-CONTEXT.md`
 
 ## Integration tweak
