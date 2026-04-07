@@ -42,6 +42,7 @@ const { nextActionsSectionHtml } = require("./nextActions");
 const { getLastAutoExecutionSnapshot } = require("../services/autoExecutionService");
 const { getCashBlitzPayload } = require("../services/cashBlitzService");
 const { getReactivationTargets } = require("../services/reactivationTargetsService");
+const { getRecentLeads } = require("../services/leadRecentQueue");
 
 const router = Router();
 
@@ -98,6 +99,25 @@ function sevColor(sev) {
   if (u === "HIGH") return "#f97316";
   if (u === "MEDIUM") return "#fde047";
   return "#94a3b8";
+}
+
+function leadQualityColor(q) {
+  const u = String(q || "").toLowerCase();
+  if (u === "high") return "#4ade80";
+  if (u === "medium") return "#fde047";
+  return "#94a3b8";
+}
+
+/**
+ * @param {string} phone
+ * @returns {string}
+ */
+function telHref(phone) {
+  const d = String(phone || "").replace(/\D/g, "");
+  if (d.length === 10) return "tel:+1" + d;
+  if (d.length === 11 && d.startsWith("1")) return "tel:+" + d;
+  if (d.length >= 10) return "tel:+" + d;
+  return "";
 }
 
 const CARD =
@@ -288,6 +308,71 @@ router.get("/app", async (req, res) => {
     ${blitzListHtml}
     <button type="button" id="app-cash-blitz-run" style="${BTN_FULL}">Run Cash Blitz</button>
     <p id="app-cash-blitz-msg" style="font-size:0.8rem;opacity:0.78;margin:8px 0 0;min-height:1em;"></p>
+  </section>`;
+  const recentInbound = getRecentLeads(5);
+  const linkMini =
+    "font-size:0.78rem;font-weight:700;padding:6px 10px;border-radius:6px;border:1px solid #3b82f6;background:#172554;color:#93c5fd;text-decoration:none;display:inline-block;";
+  const inboundListHtml =
+    recentInbound.length > 0
+      ? recentInbound
+          .map((L) => {
+            const msg = String(L.message || "");
+            const prev =
+              msg.length > 88 ? msg.slice(0, 88).trim() + "…" : msg || "—";
+            const hasPh = !!String(L.phone || "").trim();
+            const hasEm = !!String(L.email || "").trim();
+            const contactHint = [
+              hasPh ? "phone" : "no phone",
+              hasEm ? "email" : "no email",
+            ].join(" · ");
+            const th = telHref(String(L.phone || ""));
+            const mail =
+              hasEm && L.email
+                ? "mailto:" + encodeURIComponent(String(L.email).trim())
+                : "";
+            const nameDisp = esc(L.leadName || "—");
+            const nameAttr = esc(String(L.leadName || "").trim());
+            const qcol = leadQualityColor(L.quality);
+            return `
+    <div style="background:#101010;padding:10px;border-radius:8px;margin-top:8px;font-size:0.84rem;">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap;">
+        <div style="font-weight:800;color:#7dd3fc;">${nameDisp}</div>
+        <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;color:${qcol};">${esc(
+          String(L.quality || "")
+        )}</div>
+      </div>
+      <div style="margin-top:4px;opacity:0.88;font-size:0.78rem;">${esc(
+        String(L.company || "").trim() || "—"
+      )} · <span style="text-transform:capitalize;">${esc(String(L.source || ""))}</span></div>
+      <div style="margin-top:4px;opacity:0.8;font-size:0.74rem;line-height:1.35;">${esc(prev)}</div>
+      <div style="margin-top:4px;font-size:0.72rem;opacity:0.75;">${esc(contactHint)}</div>
+      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+        ${
+          th
+            ? `<a href="${esc(th)}" style="${linkMini}">Call Now</a>`
+            : `<span style="font-size:0.72rem;opacity:0.5;">Call Now</span>`
+        }
+        ${
+          mail
+            ? `<a href="${esc(mail)}" style="${linkMini.replace("#172554", "#14532d").replace("#3b82f6", "#22c55e").replace("#93c5fd", "#bbf7d0")}">Email</a>`
+            : `<span style="font-size:0.72rem;opacity:0.5;">Email</span>`
+        }
+        <button type="button" class="app-prep-msg" data-type="new_lead" data-name="${nameAttr}" data-amount="0" data-days="0" style="${linkMini.replace(
+          "text-decoration:none",
+          "text-decoration:none;cursor:pointer;font:inherit"
+        ).replace("display:inline-block", "display:inline-block;cursor:pointer")}">Prepare Reply</button>
+        <a href="/capture/founder" style="${linkMini.replace("#172554", "#422006").replace("#3b82f6", "#f97316").replace("#93c5fd", "#fed7aa")}">Capture Review</a>
+        <pre class="app-prep-out" style="display:none;flex:1 1 100%;margin:4px 0 0;padding:8px;background:#0a0a0a;border-radius:6px;font-size:0.76rem;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #333;box-sizing:border-box;"></pre>
+      </div>
+    </div>`;
+          })
+          .join("")
+      : `<p style="opacity:0.72;font-size:0.85rem;margin:0;">No inbound leads captured yet.</p>`;
+  const inboundLeadsPanelHtml = `
+  <section style="${CARD};border:2px solid #0284c7;background:#0c1520;">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 6px;color:#7dd3fc;">📥 INBOUND LEADS</h2>
+    <p style="margin:0 0 10px;font-size:0.78rem;line-height:1.45;opacity:0.85;">Website / ads — capture only (no auto-send). POST JSON to <code style="font-size:0.7rem;">/leads/capture</code>.</p>
+    ${inboundListHtml}
   </section>`;
   let reactPayload = { customers: [], summary: { critical: 0, high: 0, medium: 0, low: 0 } };
   try {
@@ -1376,6 +1461,7 @@ router.get("/app", async (req, res) => {
 </head>
 <body style="margin:0;padding:14px;padding-bottom:max(24px,env(safe-area-inset-bottom));font-family:system-ui,-apple-system,sans-serif;background:#0a0a0a;color:#e8e8e8;max-width:520px;margin-left:auto;margin-right:auto;">
   ${cashBlitzPanelHtml}
+  ${inboundLeadsPanelHtml}
   ${reactivationPanelHtml}
   ${nextActionsPanelHtml}
   <h1 style="font-size:1.35rem;margin:8px 0 4px;color:#f0ff44;font-weight:900;">Cheeky Tees</h1>

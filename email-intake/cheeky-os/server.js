@@ -44,6 +44,7 @@ const { router: goalsRouter } = require("./routes/goals");
 const { router: nextActionsRouter } = require("./routes/nextActions");
 const autoExecutionRouter = require("./routes/autoExecution");
 const reactivationRouter = require("./routes/reactivation");
+const leadsRouter = require("./routes/leads");
 
 /** Bundle 1 requires 3001; override with CHEEKY_OS_PORT only (not generic PORT). */
 const PORT = Number(process.env.CHEEKY_OS_PORT || 3001);
@@ -105,6 +106,7 @@ app.use("/goals", goalsRouter);
 app.use("/next", nextActionsRouter);
 app.use("/auto", autoExecutionRouter);
 app.use("/reactivation", reactivationRouter);
+app.use("/leads", leadsRouter);
 app.use(appCenterRouter);
 app.use("/", mobileDashboardRouter);
 
@@ -131,6 +133,9 @@ async function main() {
     console.log(`[cheeky-os] reactivation: http://127.0.0.1:${PORT}/revenue/reactivation`);
     console.log(
       `[cheeky-os] reactivation targets: http://127.0.0.1:${PORT}/reactivation/targets · POST /reactivation/run`
+    );
+    console.log(
+      `[cheeky-os] leads: POST http://127.0.0.1:${PORT}/leads/capture · GET http://127.0.0.1:${PORT}/leads/recent`
     );
     console.log(`[cheeky-os] followups: http://127.0.0.1:${PORT}/revenue/followups`);
     console.log(`[cheeky-os] scripts: http://127.0.0.1:${PORT}/revenue/scripts`);
