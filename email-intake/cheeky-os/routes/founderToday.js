@@ -20,6 +20,8 @@ const { getApprovedExceptions } = require("../services/exceptionQueueService");
 const { approvedOverridesSectionHtml } = require("./exceptions");
 const { getRecentEvents } = require("../services/actionLedgerService");
 const { actionLedgerSectionHtml } = require("./ledger");
+const { getFounderKpiSnapshot } = require("../services/kpiService");
+const { founderKpiSnapshotSectionHtml } = require("./scorecard");
 
 const router = Router();
 
@@ -635,6 +637,14 @@ router.get("/today", async (_req, res) => {
     approvedOverrides = [];
   }
 
+  let kpi = null;
+  try {
+    kpi = await getFounderKpiSnapshot();
+  } catch (_) {
+    kpi = null;
+  }
+  const kpiPanelHtml = founderKpiSnapshotSectionHtml(esc, kpi || {});
+
   let ledgerEvents = [];
   try {
     ledgerEvents = getRecentEvents(10);
@@ -691,6 +701,7 @@ router.get("/today", async (_req, res) => {
   <title>Founder — Today</title>
 </head>
 <body style="margin:0;padding:16px;padding-bottom:max(28px,env(safe-area-inset-bottom));font-family:system-ui,-apple-system,sans-serif;background:#0a0c10;color:#e8eaed;max-width:560px;margin-left:auto;margin-right:auto;">
+  ${kpiPanelHtml}
   ${activeAlertsPanelHtml()}
   ${cashPrioritiesSectionHtml(esc, cashPriorities)}
   ${depositPrioritiesSectionHtml(esc, depositPriorities)}

@@ -33,6 +33,8 @@ const { getApprovedExceptions } = require("../services/exceptionQueueService");
 const { approvedOverridesSectionHtml } = require("./exceptions");
 const { getRecentEvents } = require("../services/actionLedgerService");
 const { actionLedgerSectionHtml } = require("./ledger");
+const { getFounderKpiSnapshot } = require("../services/kpiService");
+const { founderKpiSnapshotSectionHtml } = require("./scorecard");
 
 const router = Router();
 
@@ -227,6 +229,13 @@ router.get("/app", async (req, res) => {
     approvedOverrides = [];
   }
   const approvedOverridesPanelHtml = approvedOverridesSectionHtml(esc, approvedOverrides);
+  let kpi = null;
+  try {
+    kpi = await getFounderKpiSnapshot();
+  } catch (_) {
+    kpi = null;
+  }
+  const kpiPanelHtml = founderKpiSnapshotSectionHtml(esc, kpi || {});
   let ledgerEvents = [];
   try {
     ledgerEvents = getRecentEvents(10);
@@ -1188,6 +1197,7 @@ router.get("/app", async (req, res) => {
   <h1 style="font-size:1.35rem;margin:8px 0 4px;color:#f0ff44;font-weight:900;">Cheeky Tees</h1>
   <p style="margin:0 0 12px;font-size:0.92rem;opacity:0.75;">Command Center</p>
   ${topBar}
+  ${kpiPanelHtml}
   ${cashPrioritiesPanelHtml}
   ${depositPrioritiesPanelHtml}
   ${approvedOverridesPanelHtml}
