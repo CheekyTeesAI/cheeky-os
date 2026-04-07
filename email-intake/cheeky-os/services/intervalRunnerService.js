@@ -4,6 +4,7 @@
 
 const { runSystemCheck } = require("./systemCheckService");
 const { runFollowupExecutor } = require("./followupExecutorService");
+const { runInvoiceExecutor } = require("./invoiceExecutorService");
 
 const state = {
   isRunning: false,
@@ -34,6 +35,13 @@ function tick() {
       })
       .catch((err) => {
         console.error("[intervalRunner] followupExecutor", err.message || err);
+      })
+      .then(() => runInvoiceExecutor())
+      .then((ix) => {
+        console.log("[intervalRunner] invoiceExecutor", ix);
+      })
+      .catch((err) => {
+        console.error("[intervalRunner] invoiceExecutor", err.message || err);
       });
   } catch (err) {
     console.error("[intervalRunner] tick", err.message || err);
