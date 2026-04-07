@@ -8,6 +8,7 @@ const { getRevenueFollowups } = require("./revenueFollowups");
 const { scoreFollowupOpportunities } = require("./followupScoringService");
 const { evaluateFollowupAutomation } = require("./followupAutomationService");
 const { prepareMessage } = require("./messagePrepService");
+const { canRun } = require("./autopilotGuardService");
 
 const STATE_FILE = path.join(__dirname, "..", "data", "followup-auto-state.json");
 
@@ -114,6 +115,12 @@ function saveState(s) {
  */
 async function runFollowupExecutor() {
   const out = { sent: 0, skipped: 0, errors: [] };
+  const gate = canRun("followup_send");
+  if (!gate.allowed) {
+    out.errors.push(gate.reason);
+    console.warn("[followupExecutor] blocked:", gate.reason);
+    return out;
+  }
   const state = loadState();
 
   try {

@@ -11,6 +11,7 @@ const {
 } = require("./paymentGateService");
 const { getMemory } = require("./orderMemoryService");
 const { analyzeJob } = require("./jobIntelligenceService");
+const { canRun } = require("./autopilotGuardService");
 
 const PRODUCTION_FACING = ["READY", "PRINTING", "QC"];
 
@@ -40,6 +41,12 @@ function gateAllowsProduction(nextNorm, row) {
  */
 async function runProductionExecutor() {
   const out = { advanced: 0, skipped: 0, errors: [] };
+  const gate = canRun("production_move");
+  if (!gate.allowed) {
+    out.errors.push(gate.reason);
+    console.warn("[productionExecutor] blocked:", gate.reason);
+    return out;
+  }
   let consecutiveErrors = 0;
 
   const prisma = getPrisma();

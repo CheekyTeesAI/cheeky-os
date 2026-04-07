@@ -9,6 +9,7 @@ const { getRevenueFollowups } = require("./revenueFollowups");
 const { scoreFollowupOpportunities } = require("./followupScoringService");
 const { evaluateInvoiceAutomation } = require("./invoiceAutomationService");
 const { createDraftInvoice } = require("./squareDraftInvoice");
+const { canRun } = require("./autopilotGuardService");
 
 const INVOICE_STATE_FILE = path.join(
   __dirname,
@@ -116,6 +117,12 @@ function priorityToConfidence(priority) {
  */
 async function runInvoiceExecutor() {
   const out = { created: 0, skipped: 0, errors: [] };
+  const gate = canRun("invoice_create");
+  if (!gate.allowed) {
+    out.errors.push(gate.reason);
+    console.warn("[invoiceExecutor] blocked:", gate.reason);
+    return out;
+  }
   const state = loadInvoiceState();
   const smsByPhone = loadFollowupSmsStateByPhone();
 

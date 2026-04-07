@@ -15,6 +15,7 @@ const { runSystemCheck } = require("../services/systemCheckService");
 const { buildSalesLoop } = require("../services/salesLoopService");
 const { readLastOperatorRun } = require("../services/salesOperatorService");
 const { readLastRunbookRun } = require("../services/runbookService");
+const { getState: getAutopilotState } = require("../services/autopilotGuardService");
 const {
   readRecentEntries,
   readRecentNextStepEntries,
@@ -194,6 +195,41 @@ router.get("/app", async (req, res) => {
     return "Manual review";
   }
   const slTop = (salesLoop.candidates || []).slice(0, 5);
+  const autopilotState = getAutopilotState();
+  const autopilotPanelHtml = `
+  <section style="${CARD};border:2px solid ${
+    autopilotState.killSwitchActive ? "#ef4444" : "#2a2a2a"
+  };">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 10px;color:${
+      autopilotState.killSwitchActive ? "#fda4af" : "#fca5a5"
+    };">🛑 AUTOPILOT CONTROL</h2>
+    <p style="margin:0 0 10px;font-size:0.78rem;opacity:0.78;line-height:1.45;">Safe Mode blocks outbound and production mutations until intentionally enabled.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.84rem;">
+      <div style="background:#101010;padding:10px;border-radius:8px;">
+        <div style="opacity:0.65;font-size:0.7rem;">Autopilot</div>
+        <div style="font-size:1rem;font-weight:900;color:${autopilotState.autopilotEnabled ? "#22c55e" : "#f87171"};">${esc(autopilotState.autopilotEnabled ? "ENABLED" : "DISABLED")}</div>
+      </div>
+      <div style="background:#101010;padding:10px;border-radius:8px;">
+        <div style="opacity:0.65;font-size:0.7rem;">Kill Switch</div>
+        <div style="font-size:1rem;font-weight:900;color:${autopilotState.killSwitchActive ? "#ef4444" : "#22c55e"};">${esc(autopilotState.killSwitchActive ? "ACTIVE" : "INACTIVE")}</div>
+      </div>
+      <div style="background:#101010;padding:10px;border-radius:8px;">
+        <div style="opacity:0.65;font-size:0.7rem;">Safe Mode</div>
+        <div style="font-size:1rem;font-weight:900;color:${autopilotState.safeMode ? "#f97316" : "#22c55e"};">${esc(autopilotState.safeMode ? "ON" : "OFF")}</div>
+      </div>
+      <div style="background:#101010;padding:10px;border-radius:8px;">
+        <div style="opacity:0.65;font-size:0.7rem;">Changed By</div>
+        <div style="font-size:0.95rem;font-weight:700;">${esc(String(autopilotState.lastChangedBy || "system"))}</div>
+      </div>
+    </div>
+    <p style="margin:8px 0 0;font-size:0.75rem;opacity:0.7;">Last Changed: ${esc(String(autopilotState.lastChangedAt || "—"))}</p>
+    <button type="button" id="app-autopilot-enable" style="${BTN_FULL}">Enable Autopilot</button>
+    <button type="button" id="app-autopilot-disable" style="${BTN_SEC}">Disable Autopilot</button>
+    <button type="button" id="app-autopilot-kill" style="display:block;width:100%;box-sizing:border-box;min-height:50px;padding:14px 16px;margin-top:10px;border-radius:8px;font-weight:900;font-size:1rem;border:1px solid #ef4444;background:#7f1d1d;color:#fee2e2;text-align:center;cursor:pointer;">ACTIVATE KILL SWITCH</button>
+    <button type="button" id="app-autopilot-restore" style="${BTN_SEC}">Restore System</button>
+    <p id="app-autopilot-msg" style="font-size:0.8rem;opacity:0.78;margin:8px 0 0;min-height:1em;"></p>
+  </section>`;
+
   const salesLoopHtml = `
   <section style="${CARD}">
     <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 12px;color:#f0ff44;">💰 SALES LOOP</h2>
@@ -992,6 +1028,52 @@ router.get("/app", async (req, res) => {
         })
         .catch(function(){ if(opRunMsg) opRunMsg.textContent='Failed'; opRun.disabled=false; });
     });
+    function postAutopilot(url){
+      var by='Patrick';
+      return postJSON(url,{changedBy:by});
+    }
+    var apMsg=document.getElementById('app-autopilot-msg');
+    function apSet(t){ if(apMsg) apMsg.textContent=t||''; }
+    var apEnable=document.getElementById('app-autopilot-enable');
+    if(apEnable) apEnable.addEventListener('click',function(){
+      apSet('Enabling autopilot…');
+      apEnable.disabled=true;
+      postAutopilot('/autopilot/enable').then(function(d){
+        apSet((d&&d.success)?'Autopilot enabled':'Failed');
+        apEnable.disabled=false;
+        location.reload();
+      }).catch(function(){ apSet('Request failed'); apEnable.disabled=false; });
+    });
+    var apDisable=document.getElementById('app-autopilot-disable');
+    if(apDisable) apDisable.addEventListener('click',function(){
+      apSet('Disabling autopilot…');
+      apDisable.disabled=true;
+      postAutopilot('/autopilot/disable').then(function(d){
+        apSet((d&&d.success)?'Autopilot disabled':'Failed');
+        apDisable.disabled=false;
+        location.reload();
+      }).catch(function(){ apSet('Request failed'); apDisable.disabled=false; });
+    });
+    var apKill=document.getElementById('app-autopilot-kill');
+    if(apKill) apKill.addEventListener('click',function(){
+      apSet('Activating kill switch…');
+      apKill.disabled=true;
+      postAutopilot('/autopilot/kill').then(function(d){
+        apSet((d&&d.success)?'Kill switch ACTIVE':'Failed');
+        apKill.disabled=false;
+        location.reload();
+      }).catch(function(){ apSet('Request failed'); apKill.disabled=false; });
+    });
+    var apRestore=document.getElementById('app-autopilot-restore');
+    if(apRestore) apRestore.addEventListener('click',function(){
+      apSet('Restoring system…');
+      apRestore.disabled=true;
+      postAutopilot('/autopilot/restore').then(function(d){
+        apSet((d&&d.success)?'Kill switch cleared':'Failed');
+        apRestore.disabled=false;
+        location.reload();
+      }).catch(function(){ apSet('Request failed'); apRestore.disabled=false; });
+    });
     var rbRun=document.getElementById('app-runbook-run');
     var rbRunMsg=document.getElementById('app-runbook-run-msg');
     if(rbRun) rbRun.addEventListener('click',function(){
@@ -1067,6 +1149,7 @@ router.get("/app", async (req, res) => {
   <h1 style="font-size:1.35rem;margin:8px 0 4px;color:#f0ff44;font-weight:900;">Cheeky Tees</h1>
   <p style="margin:0 0 12px;font-size:0.92rem;opacity:0.75;">Command Center</p>
   ${topBar}
+  ${autopilotPanelHtml}
   ${salesLoopHtml}
   ${operatorPanelHtml}
   ${runbookPanelHtml}

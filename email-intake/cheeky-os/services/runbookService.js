@@ -9,6 +9,7 @@ const { runSalesOperatorCycle } = require("./salesOperatorService");
 const { runInvoiceExecutor } = require("./invoiceExecutorService");
 const { runProductionExecutor } = require("./productionExecutorService");
 const { getActiveAlertsSorted } = require("./alertStoreService");
+const { canRun } = require("./autopilotGuardService");
 
 const LAST_RUN_FILE = path.join(__dirname, "..", "data", "runbook-last-run.json");
 
@@ -48,6 +49,21 @@ async function executeDailyRunbook() {
     productionMoves: 0,
     alerts: 0,
   };
+  const gate = canRun("full_runbook_execute");
+  if (!gate.allowed) {
+    const out = {
+      steps: [{ step: "runbook_guard", ok: false, reason: gate.reason }],
+      summary,
+      events: [`Runbook blocked: ${gate.reason}`],
+    };
+    writeLastRunbookRun({
+      at: new Date().toISOString(),
+      steps: out.steps,
+      summary: out.summary,
+      events: out.events,
+    });
+    return out;
+  }
 
   try {
     await runSystemCheck();

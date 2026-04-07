@@ -6,6 +6,7 @@ const { runSystemCheck } = require("./systemCheckService");
 const { runFollowupExecutor } = require("./followupExecutorService");
 const { runInvoiceExecutor } = require("./invoiceExecutorService");
 const { runProductionExecutor } = require("./productionExecutorService");
+const { canRun } = require("./autopilotGuardService");
 
 const state = {
   isRunning: false,
@@ -37,14 +38,28 @@ function tick() {
       .catch((err) => {
         console.error("[intervalRunner] followupExecutor", err.message || err);
       })
-      .then(() => runInvoiceExecutor())
+      .then(() => {
+        const g = canRun("invoice_create");
+        if (!g.allowed) {
+          console.warn("[intervalRunner] invoiceExecutor blocked:", g.reason);
+          return { created: 0, skipped: 0, errors: [g.reason] };
+        }
+        return runInvoiceExecutor();
+      })
       .then((ix) => {
         console.log("[intervalRunner] invoiceExecutor", ix);
       })
       .catch((err) => {
         console.error("[intervalRunner] invoiceExecutor", err.message || err);
       })
-      .then(() => runProductionExecutor())
+      .then(() => {
+        const g = canRun("production_move");
+        if (!g.allowed) {
+          console.warn("[intervalRunner] productionExecutor blocked:", g.reason);
+          return { advanced: 0, skipped: 0, errors: [g.reason] };
+        }
+        return runProductionExecutor();
+      })
       .then((px) => {
         console.log("[intervalRunner] productionExecutor", px);
       })
