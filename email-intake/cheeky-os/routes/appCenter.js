@@ -14,6 +14,7 @@ const { prepareMessage } = require("../services/messagePrepService");
 const { runSystemCheck } = require("../services/systemCheckService");
 const { buildSalesLoop } = require("../services/salesLoopService");
 const { readLastOperatorRun } = require("../services/salesOperatorService");
+const { readLastRunbookRun } = require("../services/runbookService");
 const {
   readRecentEntries,
   readRecentNextStepEntries,
@@ -339,6 +340,61 @@ router.get("/app", async (req, res) => {
     </div>
     <button type="button" id="app-operator-run" style="${BTN_FULL}">Run Sales Operator</button>
     <p id="app-operator-run-msg" style="font-size:0.8rem;opacity:0.75;margin:8px 0 0;min-height:1em;"></p>
+  </section>`;
+
+  const lastRb = readLastRunbookRun();
+  const rbSum = (lastRb && lastRb.summary) || {};
+  const rbEvents = Array.isArray(lastRb && lastRb.events) ? lastRb.events : [];
+  const rbEventsShow = rbEvents.slice(0, 5);
+  const runbookPanelHtml = `
+  <section style="${CARD}">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 10px;color:#fcd34d;">⚙️ DAILY RUNBOOK</h2>
+    <p style="margin:0 0 12px;font-size:0.82rem;opacity:0.75;line-height:1.45;">Runs full daily cycle: system check → sales operator → invoice executor → production → alert review. Does not send SMS/alerts automatically.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.85rem;margin-bottom:12px;">
+      <div style="background:#101010;padding:10px;border-radius:8px;">
+        <div style="opacity:0.65;font-size:0.7rem;">Follow-ups</div>
+        <div style="font-size:1.15rem;font-weight:800;color:#86efac;">${esc(
+    String(rbSum.followups ?? 0)
+  )}</div>
+      </div>
+      <div style="background:#101010;padding:10px;border-radius:8px;">
+        <div style="opacity:0.65;font-size:0.7rem;">Draft invoices</div>
+        <div style="font-size:1.15rem;font-weight:800;color:#fde047;">${esc(
+    String(rbSum.invoices ?? 0)
+  )}</div>
+      </div>
+      <div style="background:#101010;padding:10px;border-radius:8px;">
+        <div style="opacity:0.65;font-size:0.7rem;">Production moves</div>
+        <div style="font-size:1.15rem;font-weight:800;color:#7dd3fc;">${esc(
+    String(rbSum.productionMoves ?? 0)
+  )}</div>
+      </div>
+      <div style="background:#101010;padding:10px;border-radius:8px;">
+        <div style="opacity:0.65;font-size:0.7rem;">Active alerts</div>
+        <div style="font-size:1.15rem;font-weight:800;color:#fb923c;">${esc(
+    String(rbSum.alerts ?? 0)
+  )}</div>
+      </div>
+    </div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:0.72rem;font-weight:800;opacity:0.7;margin-bottom:6px;letter-spacing:0.04em;">LAST EVENTS (5)</div>
+      ${
+        rbEventsShow.length === 0
+          ? `<p style="margin:0;opacity:0.6;font-size:0.88rem;">No runbook run yet — tap below.</p>`
+          : rbEventsShow
+              .map(
+                (ev) =>
+                  `<p style="margin:6px 0 0;font-size:0.84rem;line-height:1.4;opacity:0.9;">• ${esc(
+                    String(ev).length > 140
+                      ? String(ev).slice(0, 137) + "…"
+                      : String(ev)
+                  )}</p>`
+              )
+              .join("")
+      }
+    </div>
+    <button type="button" id="app-runbook-run" style="${BTN_FULL}">Run Full System</button>
+    <p id="app-runbook-run-msg" style="font-size:0.8rem;opacity:0.75;margin:8px 0 0;min-height:1em;"></p>
   </section>`;
 
   const recentIngest = readRecentEntries().entries.slice(0, 5);
@@ -936,6 +992,19 @@ router.get("/app", async (req, res) => {
         })
         .catch(function(){ if(opRunMsg) opRunMsg.textContent='Failed'; opRun.disabled=false; });
     });
+    var rbRun=document.getElementById('app-runbook-run');
+    var rbRunMsg=document.getElementById('app-runbook-run-msg');
+    if(rbRun) rbRun.addEventListener('click',function(){
+      if(rbRunMsg) rbRunMsg.textContent='Running full runbook…';
+      rbRun.disabled=true;
+      postJSON('/runbook/run',{})
+        .then(function(d){
+          if(rbRunMsg) rbRunMsg.textContent=(d&&d.success)?'Done — refreshing…':((d&&d.error)||'Failed');
+          rbRun.disabled=false;
+          if(d&&d.success) location.reload();
+        })
+        .catch(function(){ if(rbRunMsg) rbRunMsg.textContent='Failed'; rbRun.disabled=false; });
+    });
     var aiForm=document.getElementById('app-auto-invoice-form');
     var aiMsg=document.getElementById('app-auto-invoice-msg');
     if(aiForm) aiForm.addEventListener('submit',function(ev){
@@ -1000,6 +1069,7 @@ router.get("/app", async (req, res) => {
   ${topBar}
   ${salesLoopHtml}
   ${operatorPanelHtml}
+  ${runbookPanelHtml}
   ${responsesPanelHtml}
   ${nextStepsPanelHtml}
   ${autoInvoicePanelHtml}
