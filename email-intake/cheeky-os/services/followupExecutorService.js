@@ -8,11 +8,71 @@ const { getRevenueFollowups } = require("./revenueFollowups");
 const { scoreFollowupOpportunities } = require("./followupScoringService");
 const { evaluateFollowupAutomation } = require("./followupAutomationService");
 const { prepareMessage } = require("./messagePrepService");
-const { sendOutboundSms } = require("./smsService");
 
 const STATE_FILE = path.join(__dirname, "..", "data", "followup-auto-state.json");
 
 const MAX_SENDS_PER_RUN = 3;
+const SMS_MAX_LEN = 300;
+
+/**
+ * Twilio outbound to customer E.164 — same REST + env vars as smsService (Bundle 23); smsService left unchanged.
+ * @param {string} toE164
+ * @param {string} body
+ * @returns {Promise<{ ok: boolean, error?: string }>}
+ */
+async function sendFollowupSms(toE164, body) {
+  const sid = String(process.env.TWILIO_ACCOUNT_SID || "").trim();
+  const token = String(process.env.TWILIO_AUTH_TOKEN || "").trim();
+  const from = String(
+    process.env.TWILIO_FROM ||
+      process.env.TWILIO_PHONE_NUMBER ||
+      process.env.TWILIO_NUMBER ||
+      ""
+  ).trim();
+  const to = String(toE164 || "").trim();
+
+  if (!sid || !token) {
+    return { ok: false, error: "TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN not set" };
+  }
+  if (!from) {
+    return { ok: false, error: "TWILIO_FROM (or TWILIO_PHONE_NUMBER) not set" };
+  }
+  if (!to) {
+    return { ok: false, error: "to (customer E.164) required" };
+  }
+
+  let text = String(body || "").trim();
+  if (!text) {
+    return { ok: false, error: "body required" };
+  }
+  if (text.length > SMS_MAX_LEN) {
+    text = text.slice(0, SMS_MAX_LEN - 3).trim() + "...";
+  }
+
+  const params = new URLSearchParams({
+    To: to,
+    From: from,
+    Body: text,
+  });
+
+  const auth = Buffer.from(`${sid}:${token}`).toString("base64");
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(sid)}/Messages.json`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: "Basic " + auth,
+      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+    },
+    body: params.toString(),
+  });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    return { ok: false, error: txt.slice(0, 400) };
+  }
+  return { ok: true };
+}
 
 /**
  * @param {unknown} raw
@@ -103,7 +163,7 @@ async function runFollowupExecutor() {
         daysOld: row.daysOld,
       });
 
-      const sendResult = await sendOutboundSms({ to: key, body: message });
+      const sendResult = await sendFollowupSms(key, message);
       if (!sendResult.ok) {
         out.errors.push(String(sendResult.error || "send_failed"));
         break;
