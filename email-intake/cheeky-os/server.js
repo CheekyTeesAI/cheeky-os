@@ -108,6 +108,9 @@ async function main() {
     console.log(`[cheeky-os] next-action: http://127.0.0.1:${PORT}/dashboard/next-action`);
     console.log(`[cheeky-os] draft-invoice: POST http://127.0.0.1:${PORT}/square/create-draft-invoice`);
     console.log(`[cheeky-os] sales/command-center: http://127.0.0.1:${PORT}/sales/command-center`);
+    console.log(
+      `[cheeky-os] sales loop: GET http://127.0.0.1:${PORT}/sales/loop · POST http://127.0.0.1:${PORT}/sales/run`
+    );
     console.log(`[cheeky-os] mobile: http://127.0.0.1:${PORT}/dashboard/today/mobile`);
     console.log(
       `[cheeky-os] capture quick-entry: POST http://127.0.0.1:${PORT}/capture/quick-entry`

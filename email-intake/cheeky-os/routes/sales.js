@@ -7,6 +7,10 @@ const { getRevenueFollowups } = require("../services/revenueFollowups");
 const { getReactivationBuckets } = require("../services/reactivationBuckets");
 const { buildNextAction } = require("../services/nextAction");
 const { getScriptSet } = require("../services/scriptTemplates");
+const {
+  buildSalesLoop,
+  runSalesAutomationCycle,
+} = require("../services/salesLoopService");
 
 const router = Router();
 const TOP = 5;
@@ -51,6 +55,40 @@ router.get("/command-center", async (_req, res) => {
       unpaidInvoices: [],
       hotReactivation: [],
       scriptSet: scripts,
+    });
+  }
+});
+
+router.get("/loop", async (_req, res) => {
+  try {
+    const data = await buildSalesLoop();
+    return res.json(data);
+  } catch (err) {
+    console.error("[sales/loop]", err.message || err);
+    return res.json({
+      candidates: [],
+      summary: {
+        messageReadyCount: 0,
+        invoiceReadyCount: 0,
+        highPriorityCount: 0,
+      },
+    });
+  }
+});
+
+router.post("/run", async (_req, res) => {
+  try {
+    const out = await runSalesAutomationCycle();
+    return res.json(out);
+  } catch (err) {
+    console.error("[sales/run]", err.message || err);
+    return res.json({
+      success: false,
+      processed: 0,
+      followupsSent: 0,
+      draftInvoicesCreated: 0,
+      skipped: 0,
+      errors: [err instanceof Error ? err.message : String(err)],
     });
   }
 });

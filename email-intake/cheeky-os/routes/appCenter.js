@@ -12,6 +12,7 @@ const { scoreFollowupOpportunities } = require("../services/followupScoringServi
 const { getProductionQueue } = require("../services/orderStatusEngine");
 const { prepareMessage } = require("../services/messagePrepService");
 const { runSystemCheck } = require("../services/systemCheckService");
+const { buildSalesLoop } = require("../services/salesLoopService");
 
 const router = Router();
 
@@ -96,20 +97,30 @@ router.get("/app", async (req, res) => {
   let rev = { unpaidInvoices: [], staleEstimates: [] };
   let followupRows = [];
   let queue = { ready: [], printing: [], qc: [] };
+  let salesLoop = {
+    candidates: [],
+    summary: {
+      messageReadyCount: 0,
+      invoiceReadyCount: 0,
+      highPriorityCount: 0,
+    },
+  };
 
   try {
-    const [cp, sum, actPack, revenue, q] = await Promise.all([
+    const [cp, sum, actPack, revenue, q, sl] = await Promise.all([
       getCopilotTodayPayload(),
       getDailySummary(),
       collectAutomationActions(10),
       getRevenueFollowups(),
       getProductionQueue(),
+      buildSalesLoop(),
     ]);
     copilot = cp || copilot;
     summary = sum || summary;
     actions = (actPack && actPack.actions) || [];
     rev = revenue || rev;
     queue = q || queue;
+    salesLoop = sl && sl.candidates ? sl : salesLoop;
   } catch (err) {
     console.error("[app] data load", err.message || err);
   }
@@ -166,6 +177,107 @@ router.get("/app", async (req, res) => {
 
   const copilotMsg = String(copilot.message || "").trim()
     || "Review summary and actions below.";
+
+  const slSum = salesLoop.summary || {};
+  function salesActionHint(ra) {
+    const x = String(ra || "");
+    if (x === "create_draft_invoice") return "Draft invoice ready";
+    if (x === "send_followup") return "Follow up now";
+    return "Manual review";
+  }
+  const slTop = (salesLoop.candidates || []).slice(0, 5);
+  const salesLoopHtml = `
+  <section style="${CARD}">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 12px;color:#f0ff44;">💰 SALES LOOP</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:0.88rem;margin-bottom:12px;">
+      <div style="background:#101010;padding:10px;border-radius:8px;text-align:center;">
+        <div style="opacity:0.7;font-size:0.72rem;">Message Ready</div>
+        <div style="font-size:1.25rem;font-weight:800;color:#86efac;">${esc(
+          String(slSum.messageReadyCount ?? 0)
+        )}</div>
+      </div>
+      <div style="background:#101010;padding:10px;border-radius:8px;text-align:center;">
+        <div style="opacity:0.7;font-size:0.72rem;">Invoice Ready</div>
+        <div style="font-size:1.25rem;font-weight:800;color:#fde047;">${esc(
+          String(slSum.invoiceReadyCount ?? 0)
+        )}</div>
+      </div>
+      <div style="background:#101010;padding:10px;border-radius:8px;text-align:center;">
+        <div style="opacity:0.7;font-size:0.72rem;">High Priority</div>
+        <div style="font-size:1.25rem;font-weight:800;color:#fb923c;">${esc(
+          String(slSum.highPriorityCount ?? 0)
+        )}</div>
+      </div>
+    </div>
+    <button type="button" id="app-sales-run" style="${BTN_FULL}">Run Sales Cycle</button>
+    <p id="app-sales-run-msg" style="font-size:0.8rem;opacity:0.75;margin:8px 0 0;min-height:1em;"></p>
+    ${
+      slTop.length === 0
+        ? `<p style="margin:12px 0 0;opacity:0.65;font-size:0.9rem;">No candidates.</p>`
+        : slTop
+            .map((c) => {
+              if (!c || typeof c !== "object") return "";
+              const pri = String(c.priority || "").toUpperCase();
+              const pcol = sevColor(pri);
+              const hp =
+                pri === "CRITICAL" || pri === "HIGH"
+                  ? "border:2px solid " + pcol + ";"
+                  : "border:1px solid #333;";
+              const ch = [
+                c.phone ? "Phone" : "",
+                c.email ? "Email" : "",
+              ]
+                .filter(Boolean)
+                .join(" · ");
+              const chan = ch || "No channel";
+              const hint = salesActionHint(c.recommendedAction);
+              const prepType =
+                c.recommendedAction === "create_draft_invoice"
+                  ? "invoice"
+                  : "followup";
+              const cn = String(c.customerName || "").trim();
+              const cid = String(c.customerId || "").trim();
+              const amt = Number(c.amount) || 0;
+              let invBtn = "";
+              if (c.invoiceReady && cid && amt >= 200) {
+                const payloadAttr = esc(
+                  JSON.stringify({
+                    amount: amt,
+                    description: cn.slice(0, 200),
+                  })
+                );
+                invBtn = `<form class="app-exec-form" style="margin-top:8px;">
+            <input type="hidden" name="approved" value="true"/>
+            <input type="hidden" name="actionType" value="invoice"/>
+            <input type="hidden" name="orderId" value=""/>
+            <input type="hidden" name="customerId" value="${esc(cid)}"/>
+            <input type="hidden" name="payload" value="${payloadAttr}"/>
+            <button type="submit" style="${BTN_SEC}">Create Draft Invoice</button>
+          </form>`;
+              }
+              return `<div style="margin-top:12px;padding:12px;border-radius:8px;background:#101010;${hp}">
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+            <strong style="font-size:1.02rem;line-height:1.3;">${esc(cn || "—")}</strong>
+            <span style="font-size:0.65rem;font-weight:900;color:${pcol};white-space:nowrap;">${esc(pri || "—")}</span>
+          </div>
+          <p style="margin:6px 0 0;font-size:0.88rem;">$${esc(String(Math.round(amt)))} · ${esc(String(c.daysOld ?? ""))}d · <span style="opacity:0.85;">${esc(
+                String(c.recommendedAction || "")
+              )}</span></p>
+          <p style="margin:4px 0 0;font-size:0.78rem;opacity:0.75;">${esc(chan)}</p>
+          <p style="margin:6px 0 0;font-size:0.82rem;font-weight:700;color:#a3e635;">${esc(hint)}</p>
+          <button type="button" class="app-prep-msg" style="${BTN_SEC}"
+            data-type="${esc(prepType)}"
+            data-name="${esc(cn)}"
+            data-amount="${esc(String(amt))}"
+            data-days="${esc(String(c.daysOld ?? 0))}"
+          >Prepare Message</button>
+          <pre class="app-prep-out" style="display:none;margin-top:8px;padding:10px;border-radius:8px;background:#0a0a0a;border:1px solid #333;font-size:0.85rem;white-space:pre-wrap;word-break:break-word;color:#ddd;"></pre>
+          ${invBtn}
+        </div>`;
+            })
+            .join("")
+    }
+  </section>`;
 
   const copilotHtml = `
   <section style="${CARD}">
@@ -502,6 +614,34 @@ router.get("/app", async (req, res) => {
         }).catch(function(){ msg('Network error'); if(btn) btn.disabled=false; });
       });
     });
+    var salesRun=document.getElementById('app-sales-run');
+    var salesRunMsg=document.getElementById('app-sales-run-msg');
+    if(salesRun) salesRun.addEventListener('click',function(){
+      if(salesRunMsg) salesRunMsg.textContent='Running cycle…';
+      salesRun.disabled=true;
+      fetch('/sales/run',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(salesRunMsg) salesRunMsg.textContent='SMS: '+(d.followupsSent||0)+' · Drafts: '+(d.draftInvoicesCreated||0)+(d.errors&&d.errors.length?' · see console':'');
+          salesRun.disabled=false;
+          if(d&&(d.followupsSent||d.draftInvoicesCreated)) location.reload();
+        })
+        .catch(function(){ if(salesRunMsg) salesRunMsg.textContent='Failed'; salesRun.disabled=false; });
+    });
+    document.querySelectorAll('.app-prep-msg').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var out=btn.parentElement&&btn.parentElement.querySelector('.app-prep-out');
+        if(out){ out.style.display='block'; out.textContent='Loading…'; }
+        postJSON('/automation/prepare-message',{
+          type:btn.getAttribute('data-type')||'followup',
+          customerName:btn.getAttribute('data-name')||'',
+          amount:Number(btn.getAttribute('data-amount')||0),
+          daysOld:Number(btn.getAttribute('data-days')||0)
+        }).then(function(d){
+          if(out) out.textContent=d.message||(d.error||JSON.stringify(d));
+        }).catch(function(){ if(out) out.textContent='Request failed'; });
+      });
+    });
   })();
   </script>`;
 
@@ -517,6 +657,7 @@ router.get("/app", async (req, res) => {
   <h1 style="font-size:1.35rem;margin:8px 0 4px;color:#f0ff44;font-weight:900;">Cheeky Tees</h1>
   <p style="margin:0 0 12px;font-size:0.92rem;opacity:0.75;">Command Center</p>
   ${topBar}
+  ${salesLoopHtml}
   ${copilotHtml}
   ${summaryHtml}
   ${actionsHtml}
