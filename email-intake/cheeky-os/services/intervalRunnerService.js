@@ -15,25 +15,29 @@ const state = {
 let timerId = null;
 
 function tick() {
-  runSystemCheck()
-    .then((out) => {
-      state.lastRun = out.timestamp || new Date().toISOString();
-      console.log("[intervalRunner] systemCheck", {
-        lastRun: state.lastRun,
-        shouldNotify: !!out.shouldNotify,
+  try {
+    runSystemCheck()
+      .then((out) => {
+        state.lastRun = out.timestamp || new Date().toISOString();
+        console.log("[intervalRunner] systemCheck", {
+          lastRun: state.lastRun,
+          shouldNotify: !!out.shouldNotify,
+        });
+      })
+      .catch((err) => {
+        console.error("[intervalRunner] systemCheck", err.message || err);
+        state.lastRun = new Date().toISOString();
+      })
+      .then(() => runFollowupExecutor())
+      .then((fx) => {
+        console.log("[intervalRunner] followupExecutor", fx);
+      })
+      .catch((err) => {
+        console.error("[intervalRunner] followupExecutor", err.message || err);
       });
-    })
-    .catch((err) => {
-      console.error("[intervalRunner] systemCheck", err.message || err);
-      state.lastRun = new Date().toISOString();
-    })
-    .then(() => runFollowupExecutor())
-    .then((fx) => {
-      console.log("[intervalRunner] followupExecutor", fx);
-    })
-    .catch((err) => {
-      console.error("[intervalRunner] followupExecutor", err.message || err);
-    });
+  } catch (err) {
+    console.error("[intervalRunner] tick", err.message || err);
+  }
 }
 
 function start() {

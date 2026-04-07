@@ -15,7 +15,8 @@ const MAX_SENDS_PER_RUN = 3;
 const SMS_MAX_LEN = 300;
 
 /**
- * Twilio outbound to customer E.164 — same REST + env vars as smsService (Bundle 23); smsService left unchanged.
+ * Twilio outbound to customer E.164 — same REST + env as smsService.sendSMSAlert (Bundle 23).
+ * smsService has no customer-`To` API; this path stays here so smsService.js stays frozen.
  * @param {string} toE164
  * @param {string} body
  * @returns {Promise<{ ok: boolean, error?: string }>}
