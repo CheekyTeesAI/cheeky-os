@@ -54,6 +54,41 @@ function systemCheckPanelHtml() {
   );
 }
 
+function automationIntervalPanelHtml() {
+  const btnOn =
+    "min-width:200px;padding:14px 16px;margin:8px 8px 0 0;border-radius:12px;font-weight:800;font-size:0.92rem;border:1px solid #14532d;background:#166534;color:#ecfdf5;cursor:pointer;min-height:48px;";
+  const btnOff =
+    "min-width:200px;padding:14px 16px;margin:8px 8px 0 0;border-radius:12px;font-weight:800;font-size:0.92rem;border:1px solid #991b1b;background:#7f1d1d;color:#fee2e2;cursor:pointer;min-height:48px;";
+  return (
+    '<section style="margin:0 0 18px 0;padding:16px;border-radius:16px;background:#14161f;border:1px solid #475569;">' +
+    '<h2 style="font-size:1.02rem;margin:0 0 12px;color:#cbd5e1;font-weight:800;">⚙️ AUTOMATION STATUS</h2>' +
+    '<p style="margin:0 0 10px;font-size:0.88rem;line-height:1.45;color:#94a3b8;">Timed system checks (in-memory). <code style="background:#1e293b;padding:2px 6px;border-radius:6px;">GET /system/status</code></p>' +
+    '<div style="font-size:0.95rem;line-height:1.55;"><span style="opacity:0.8;">Status:</span> <strong id="auto-int-running" style="color:#f8fafc;">—</strong></div>' +
+    '<div style="font-size:0.9rem;margin-top:6px;"><span style="opacity:0.8;">Last run:</span> <span id="auto-int-last" style="color:#e2e8f0;">—</span></div>' +
+    '<div style="font-size:0.9rem;margin-top:6px;"><span style="opacity:0.8;">Interval:</span> <span id="auto-int-interval" style="color:#e2e8f0;">—</span></div>' +
+    '<div style="margin-top:12px;display:flex;flex-wrap:wrap;">' +
+    '<button type="button" id="auto-int-start" onclick="if(window.cheekyAutoStart)window.cheekyAutoStart();" style="' +
+    btnOn +
+    '">Start Automation</button>' +
+    '<button type="button" id="auto-int-stop" onclick="if(window.cheekyAutoStop)window.cheekyAutoStop();" style="' +
+    btnOff +
+    '">Stop Automation</button></div>' +
+    '<div id="auto-int-msg" style="margin-top:10px;font-size:0.85rem;color:#94a3b8;"></div>' +
+    "<script>(function(){function fmtMin(ms){var m=Math.max(1,Math.round((ms||300000)/60000));return m+' minute'+(m===1?'':'s');}" +
+    "function paint(d){var r=document.getElementById('auto-int-running');var l=document.getElementById('auto-int-last');var i=document.getElementById('auto-int-interval');" +
+    "if(r)r.textContent=d&&d.isRunning?'RUNNING':'STOPPED';" +
+    "if(l)l.textContent=d&&d.lastRun?new Date(d.lastRun).toLocaleString():'\\u2014';" +
+    "if(i)i.textContent=fmtMin(d&&d.intervalMs);}" +
+    "function refresh(){fetch('/system/status').then(function(x){return x.json();}).then(paint).catch(function(){});}" +
+    "window.cheekyAutoStart=function(){var m=document.getElementById('auto-int-msg');if(m)m.textContent='Starting\\u2026';" +
+    "fetch('/system/start',{method:'POST'}).then(function(x){return x.json();}).then(function(j){if(m)m.textContent=(j&&j.message)||'';refresh();}).catch(function(){if(m)m.textContent='Start failed.';});};" +
+    "window.cheekyAutoStop=function(){var m=document.getElementById('auto-int-msg');if(m)m.textContent='Stopping\\u2026';" +
+    "fetch('/system/stop',{method:'POST'}).then(function(x){return x.json();}).then(function(j){if(m)m.textContent=(j&&j.message)||'';refresh();}).catch(function(){if(m)m.textContent='Stop failed.';});};" +
+    "refresh();setInterval(refresh,8000);})();<\/script>" +
+    "</section>"
+  );
+}
+
 function copilotHtml(cp) {
   const msg =
     String((cp && cp.message) || "").trim() ||
@@ -538,6 +573,7 @@ router.get("/today", async (_req, res) => {
 </head>
 <body style="margin:0;padding:16px;padding-bottom:max(28px,env(safe-area-inset-bottom));font-family:system-ui,-apple-system,sans-serif;background:#0a0c10;color:#e8eaed;max-width:560px;margin-left:auto;margin-right:auto;">
   ${systemCheckPanelHtml()}
+  ${automationIntervalPanelHtml()}
   ${copilotHtml(copilot)}
   ${todaySummaryHtml(summary)}
   <h1 style="font-size:1.5rem;margin:8px 0 6px;color:#7dd3fc;">Founder — Today</h1>

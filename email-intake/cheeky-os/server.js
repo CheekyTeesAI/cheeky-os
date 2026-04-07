@@ -95,6 +95,9 @@ async function main() {
     console.log(`[cheeky-os] health: http://127.0.0.1:${PORT}/health`);
     console.log(`[cheeky-os] system/health: http://127.0.0.1:${PORT}/system/health`);
     console.log(`[cheeky-os] system check: GET http://127.0.0.1:${PORT}/system/check`);
+    console.log(
+      `[cheeky-os] system automation: GET http://127.0.0.1:${PORT}/system/status · POST /system/start · POST /system/stop`
+    );
     console.log(`[cheeky-os] reactivation: http://127.0.0.1:${PORT}/revenue/reactivation`);
     console.log(`[cheeky-os] followups: http://127.0.0.1:${PORT}/revenue/followups`);
     console.log(`[cheeky-os] scripts: http://127.0.0.1:${PORT}/revenue/scripts`);
