@@ -1,5 +1,5 @@
 /**
- * Bundle 35 — autopilot guard control endpoints.
+ * Bundle 35 — autopilot guard control endpoints + engine run/tick (single router).
  */
 
 const { Router } = require("express");
@@ -10,6 +10,9 @@ const {
   activateKillSwitch,
   deactivateKillSwitch,
 } = require("../services/autopilotGuardService");
+const runAutopilot = require("../autopilot/engine");
+const { logger } = require("../utils/logger");
+const { recordLedgerEventSafe } = require("../services/actionLedgerService");
 
 const router = Router();
 
@@ -22,41 +25,64 @@ router.get("/status", (_req, res) => {
 });
 
 router.post("/enable", (req, res) => {
+  const actor = actorFromBody(req.body);
+  recordLedgerEventSafe({
+    type: "autopilot",
+    action: "autopilot_enable",
+    status: "success",
+    reason: `Enabled by ${actor}`,
+    meta: { actor },
+  });
   return res.json({
     success: true,
-    state: enableAutopilot(actorFromBody(req.body)),
+    state: enableAutopilot(actor),
   });
 });
 
 router.post("/disable", (req, res) => {
+  const actor = actorFromBody(req.body);
+  recordLedgerEventSafe({
+    type: "autopilot",
+    action: "autopilot_disable",
+    status: "success",
+    reason: `Disabled by ${actor}`,
+    meta: { actor },
+  });
   return res.json({
     success: true,
-    state: disableAutopilot(actorFromBody(req.body)),
+    state: disableAutopilot(actor),
   });
 });
 
 router.post("/kill", (req, res) => {
+  const actor = actorFromBody(req.body);
+  recordLedgerEventSafe({
+    type: "autopilot",
+    action: "autopilot_kill_switch",
+    status: "blocked",
+    reason: `Kill switch activated by ${actor}`,
+    meta: { actor },
+  });
   return res.json({
     success: true,
-    state: activateKillSwitch(actorFromBody(req.body)),
+    state: activateKillSwitch(actor),
   });
 });
 
 router.post("/restore", (req, res) => {
+  const actor = actorFromBody(req.body);
+  recordLedgerEventSafe({
+    type: "autopilot",
+    action: "autopilot_restore",
+    status: "success",
+    reason: `Kill switch cleared by ${actor}`,
+    meta: { actor },
+  });
   return res.json({
     success: true,
-    state: deactivateKillSwitch(actorFromBody(req.body)),
+    state: deactivateKillSwitch(actor),
   });
 });
-
-module.exports = router;
-console.log("🔥 USING THIS FILE: square-client.js");
-const { Router } = require("express");
-const runAutopilot = require("../autopilot/engine");
-const { logger } = require("../utils/logger");
-
-const router = Router();
-console.log("[LIVE ROUTE FILE] autopilot loaded from:", __filename);
 
 async function handleAutopilotRun(req, res, source) {
   const base = process.env.BASE_URL || process.env.API_BASE_URL || "http://localhost:3000";

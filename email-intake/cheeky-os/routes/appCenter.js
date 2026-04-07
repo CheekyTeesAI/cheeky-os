@@ -23,7 +23,16 @@ const {
   readRecentReplyDraftEntries,
 } = require("./responses");
 const { pricingRiskSectionHtml } = require("./pricing");
-const { buildCashPrioritiesPayload, cashPrioritiesSectionHtml } = require("./cash");
+const {
+  buildCashPrioritiesPayload,
+  cashPrioritiesSectionHtml,
+  buildDepositPrioritiesPayload,
+  depositPrioritiesSectionHtml,
+} = require("./cash");
+const { getApprovedExceptions } = require("../services/exceptionQueueService");
+const { approvedOverridesSectionHtml } = require("./exceptions");
+const { getRecentEvents } = require("../services/actionLedgerService");
+const { actionLedgerSectionHtml } = require("./ledger");
 
 const router = Router();
 
@@ -118,8 +127,9 @@ router.get("/app", async (req, res) => {
   };
 
   let cashPriorities = { opportunities: [], summary: {} };
+  let depositPriorities = { opportunities: [], summary: {} };
   try {
-    const [cp, sum, actPack, revenue, q, sl, cashPri] = await Promise.all([
+    const [cp, sum, actPack, revenue, q, sl, cashPri, depPri] = await Promise.all([
       getCopilotTodayPayload(),
       getDailySummary(),
       collectAutomationActions(10),
@@ -127,6 +137,7 @@ router.get("/app", async (req, res) => {
       getProductionQueue(),
       buildSalesLoop(),
       buildCashPrioritiesPayload(),
+      buildDepositPrioritiesPayload(),
     ]);
     copilot = cp || copilot;
     summary = sum || summary;
@@ -136,6 +147,8 @@ router.get("/app", async (req, res) => {
     salesLoop = sl && sl.candidates ? sl : salesLoop;
     cashPriorities =
       cashPri && Array.isArray(cashPri.opportunities) ? cashPri : cashPriorities;
+    depositPriorities =
+      depPri && Array.isArray(depPri.opportunities) ? depPri : depositPriorities;
   } catch (err) {
     console.error("[app] data load", err.message || err);
   }
@@ -204,6 +217,23 @@ router.get("/app", async (req, res) => {
   const cashPrioritiesPanelHtml = cashPrioritiesSectionHtml(esc, cashPriorities, {
     appPrepareMessage: true,
   });
+  const depositPrioritiesPanelHtml = depositPrioritiesSectionHtml(esc, depositPriorities, {
+    appPrepareMessage: true,
+  });
+  let approvedOverrides = [];
+  try {
+    approvedOverrides = getApprovedExceptions();
+  } catch (_) {
+    approvedOverrides = [];
+  }
+  const approvedOverridesPanelHtml = approvedOverridesSectionHtml(esc, approvedOverrides);
+  let ledgerEvents = [];
+  try {
+    ledgerEvents = getRecentEvents(10);
+  } catch (_) {
+    ledgerEvents = [];
+  }
+  const actionLedgerPanelHtml = actionLedgerSectionHtml(esc, ledgerEvents);
   const autopilotState = getAutopilotState();
   const autopilotPanelHtml = `
   <section style="${CARD};border:2px solid ${
@@ -1159,6 +1189,9 @@ router.get("/app", async (req, res) => {
   <p style="margin:0 0 12px;font-size:0.92rem;opacity:0.75;">Command Center</p>
   ${topBar}
   ${cashPrioritiesPanelHtml}
+  ${depositPrioritiesPanelHtml}
+  ${approvedOverridesPanelHtml}
+  ${actionLedgerPanelHtml}
   ${autopilotPanelHtml}
   ${pricingRiskSectionHtml(esc)}
   ${salesLoopHtml}

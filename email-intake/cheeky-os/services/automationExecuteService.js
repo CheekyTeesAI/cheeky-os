@@ -10,7 +10,14 @@ const {
   evaluatePaymentGate,
   captureOrderToGateInput,
 } = require("./paymentGateService");
+const { addException } = require("./exceptionQueueService");
+const {
+  evaluateExceptionOverride,
+  recordOverrideUse,
+} = require("./exceptionOverrideService");
+const { canRun } = require("./autopilotGuardService");
 const { getPrisma } = require("../marketing/prisma-client");
+const { recordLedgerEventSafe } = require("./actionLedgerService");
 
 const PRODUCTION_FACING = ["READY", "PRINTING", "QC"];
 
@@ -126,20 +133,113 @@ async function runAutomationExecute(raw) {
     }
 
     const nextNorm = "PRINTING";
+    const customerName = String(row.customerName || "").trim();
+    let overrideApplied = false;
+    /** @type {string[]} */
+    const overrideBits = [];
+
     if (PRODUCTION_FACING.includes(nextNorm)) {
-      const gate = evaluatePaymentGate(captureOrderToGateInput(row));
-      if (!gate.allowedToProduce) {
+      try {
+        const autoGate = canRun("production_move");
+        if (!autoGate.allowed) {
+          const rsn = String(autoGate.reason || "").toLowerCase();
+          if (rsn.includes("kill switch")) {
+            return {
+              status: 200,
+              json: { success: false, error: autoGate.reason },
+            };
+          }
+          const ovrA = evaluateExceptionOverride({
+            orderId: id,
+            customerName,
+            exceptionType: "automation",
+            actionType: "automation_execute",
+            reason: autoGate.reason || "",
+          });
+          if (!ovrA.overrideAllowed) {
+            return {
+              status: 200,
+              json: { success: false, error: autoGate.reason },
+            };
+          }
+          recordOverrideUse(ovrA.matchedExceptionId);
+          overrideApplied = true;
+          overrideBits.push("Founder approved automation exception");
+        }
+      } catch (_) {
         return {
           status: 200,
-          json: {
-            success: false,
-            error:
-              gate.reason ||
-              "Order cannot move to PRINTING until payment/deposit is confirmed",
-            gateStatus: gate.gateStatus,
-            flags: gate.flags,
-          },
+          json: { success: false, error: "automation guard check failed" },
         };
+      }
+
+      const gate = evaluatePaymentGate(captureOrderToGateInput(row));
+      if (!gate.allowedToProduce) {
+        try {
+          let ovr = evaluateExceptionOverride({
+            orderId: id,
+            customerName,
+            exceptionType: "payment",
+            actionType: "production_move",
+            reason: gate.reason || "",
+          });
+          if (!ovr.overrideAllowed) {
+            ovr = evaluateExceptionOverride({
+              orderId: id,
+              customerName,
+              exceptionType: "production",
+              actionType: "production_move",
+              reason: gate.reason || "",
+            });
+          }
+          if (ovr.overrideAllowed) {
+            recordOverrideUse(ovr.matchedExceptionId);
+            overrideApplied = true;
+            overrideBits.push("Founder approved payment/production exception");
+          } else {
+            addException({
+              type: "payment",
+              orderId: id,
+              customerName,
+              severity: gate.gateStatus === "blocked" ? "high" : "medium",
+              reason:
+                gate.reason ||
+                "Automation production move blocked by payment/deposit gate",
+            });
+            return {
+              status: 200,
+              json: {
+                success: false,
+                error:
+                  gate.reason ||
+                  "Order cannot move to PRINTING until payment/deposit is confirmed",
+                gateStatus: gate.gateStatus,
+                flags: gate.flags,
+              },
+            };
+          }
+        } catch (_) {
+          addException({
+            type: "payment",
+            orderId: id,
+            customerName,
+            severity: gate.gateStatus === "blocked" ? "high" : "medium",
+            reason:
+              gate.reason ||
+              "Automation production move blocked by payment/deposit gate",
+          });
+          return {
+            status: 200,
+            json: {
+              success: false,
+              error:
+                gate.reason ||
+                "Order cannot move to PRINTING until payment/deposit is confirmed",
+              gateStatus: gate.gateStatus,
+              flags: gate.flags,
+            },
+          };
+        }
       }
     }
 
@@ -150,12 +250,29 @@ async function runAutomationExecute(raw) {
         json: { success: false, error: result.error || "status update failed" },
       };
     }
+    if (overrideApplied) {
+      recordLedgerEventSafe({
+        type: "override",
+        action: "production_automation_override_applied",
+        status: "success",
+        customerName,
+        orderId: id,
+        reason: overrideBits.join(" · "),
+        meta: { actionType: "production" },
+      });
+    }
     return {
       status: 200,
       json: {
         success: true,
         actionType: "production",
         executed: true,
+        ...(overrideApplied
+          ? {
+              overrideApplied: true,
+              overrideReason: overrideBits.join(" · "),
+            }
+          : {}),
         result: { status: result.status },
       },
     };

@@ -12,6 +12,8 @@ const {
 const { getMemory } = require("./orderMemoryService");
 const { analyzeJob } = require("./jobIntelligenceService");
 const { canRun } = require("./autopilotGuardService");
+const { addException } = require("./exceptionQueueService");
+const { recordLedgerEventSafe } = require("./actionLedgerService");
 
 const PRODUCTION_FACING = ["READY", "PRINTING", "QC"];
 
@@ -45,6 +47,20 @@ async function runProductionExecutor() {
   if (!gate.allowed) {
     out.errors.push(gate.reason);
     console.warn("[productionExecutor] blocked:", gate.reason);
+    const r = String(gate.reason || "").toLowerCase();
+    addException({
+      type: "automation",
+      customerName: "",
+      orderId: "",
+      severity: r.includes("kill switch") ? "critical" : "high",
+      reason: `Production automation blocked: ${gate.reason}`,
+    });
+    recordLedgerEventSafe({
+      type: "production",
+      action: "production_executor_blocked",
+      status: "blocked",
+      reason: String(gate.reason || "autopilot blocked"),
+    });
     return out;
   }
   let consecutiveErrors = 0;
@@ -52,6 +68,12 @@ async function runProductionExecutor() {
   const prisma = getPrisma();
   if (!prisma || !prisma.captureOrder) {
     out.errors.push("database_not_available");
+    recordLedgerEventSafe({
+      type: "production",
+      action: "production_executor_blocked",
+      status: "blocked",
+      reason: "database_not_available",
+    });
     return out;
   }
 
@@ -100,6 +122,14 @@ async function runProductionExecutor() {
       const gate = gateAllowsProduction(decision.nextStatus, row);
       if (!gate.ok) {
         out.skipped++;
+        recordLedgerEventSafe({
+          type: "production",
+          action: "production_advance_skipped",
+          status: "skipped",
+          customerName: row.customerName,
+          orderId: row.id,
+          reason: String(gate.reason || "payment_gate"),
+        });
         continue;
       }
 
@@ -112,11 +142,28 @@ async function runProductionExecutor() {
           `${row.id}: ${result.error || "update_failed"}`
         );
         consecutiveErrors++;
+        recordLedgerEventSafe({
+          type: "production",
+          action: "production_advance_failed",
+          status: "blocked",
+          customerName: row.customerName,
+          orderId: row.id,
+          reason: String(result.error || "update_failed"),
+        });
         continue;
       }
 
       consecutiveErrors = 0;
       out.advanced++;
+      recordLedgerEventSafe({
+        type: "production",
+        action: "production_order_advanced",
+        status: "success",
+        customerName: row.customerName,
+        orderId: row.id,
+        reason: String(decision.reason || ""),
+        meta: { from: row.status, to: result.status },
+      });
       console.log("[productionExecutor] advanced", {
         orderId: row.id,
         from: row.status,
@@ -125,7 +172,14 @@ async function runProductionExecutor() {
       });
     }
   } catch (err) {
-    out.errors.push(String(err && err.message ? err.message : err));
+    const msg = String(err && err.message ? err.message : err);
+    out.errors.push(msg);
+    recordLedgerEventSafe({
+      type: "production",
+      action: "production_executor_error",
+      status: "blocked",
+      reason: msg,
+    });
   }
 
   return out;

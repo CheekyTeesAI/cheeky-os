@@ -10,7 +10,16 @@ const { getDailySummary } = require("../services/dailySummaryService");
 const { getCopilotTodayPayload } = require("../services/copilotService");
 const { getActiveAlertsSorted } = require("../services/alertStoreService");
 const { pricingRiskSectionHtml } = require("./pricing");
-const { buildCashPrioritiesPayload, cashPrioritiesSectionHtml } = require("./cash");
+const {
+  buildCashPrioritiesPayload,
+  cashPrioritiesSectionHtml,
+  buildDepositPrioritiesPayload,
+  depositPrioritiesSectionHtml,
+} = require("./cash");
+const { getApprovedExceptions } = require("../services/exceptionQueueService");
+const { approvedOverridesSectionHtml } = require("./exceptions");
+const { getRecentEvents } = require("../services/actionLedgerService");
+const { actionLedgerSectionHtml } = require("./ledger");
 
 const router = Router();
 
@@ -611,6 +620,29 @@ router.get("/today", async (_req, res) => {
     cashPriorities = { opportunities: [], summary: {} };
   }
 
+  let depositPriorities = { opportunities: [], summary: {} };
+  try {
+    depositPriorities = await buildDepositPrioritiesPayload();
+  } catch (err) {
+    console.error("[founder/today] deposit priorities:", err.message || err);
+    depositPriorities = { opportunities: [], summary: {} };
+  }
+
+  let approvedOverrides = [];
+  try {
+    approvedOverrides = getApprovedExceptions();
+  } catch (_) {
+    approvedOverrides = [];
+  }
+
+  let ledgerEvents = [];
+  try {
+    ledgerEvents = getRecentEvents(10);
+  } catch (_) {
+    ledgerEvents = [];
+  }
+  const actionLedgerPanelHtml = actionLedgerSectionHtml(esc, ledgerEvents);
+
   const next = data.next || {};
   const sa = (data.systemActions || [])
     .slice()
@@ -661,6 +693,9 @@ router.get("/today", async (_req, res) => {
 <body style="margin:0;padding:16px;padding-bottom:max(28px,env(safe-area-inset-bottom));font-family:system-ui,-apple-system,sans-serif;background:#0a0c10;color:#e8eaed;max-width:560px;margin-left:auto;margin-right:auto;">
   ${activeAlertsPanelHtml()}
   ${cashPrioritiesSectionHtml(esc, cashPriorities)}
+  ${depositPrioritiesSectionHtml(esc, depositPriorities)}
+  ${approvedOverridesSectionHtml(esc, approvedOverrides)}
+  ${actionLedgerPanelHtml}
   ${systemCheckPanelHtml()}
   ${automationIntervalPanelHtml()}
   ${copilotHtml(copilot)}

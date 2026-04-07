@@ -36,6 +36,8 @@ const autopilotRouter = require("./routes/autopilot");
 const pricingRouter = require("./routes/pricing");
 const { router: responsesRouter } = require("./routes/responses");
 const { router: cashRouter } = require("./routes/cash");
+const { router: exceptionsRouter } = require("./routes/exceptions");
+const { router: ledgerRouter } = require("./routes/ledger");
 
 /** Bundle 1 requires 3001; override with CHEEKY_OS_PORT only (not generic PORT). */
 const PORT = Number(process.env.CHEEKY_OS_PORT || 3001);
@@ -89,6 +91,8 @@ app.use("/runbook", runbookRouter);
 app.use("/autopilot", autopilotRouter);
 app.use("/pricing", pricingRouter.router);
 app.use("/cash", cashRouter);
+app.use("/exceptions", exceptionsRouter);
+app.use("/ledger", ledgerRouter);
 app.use(appCenterRouter);
 app.use("/", mobileDashboardRouter);
 
@@ -147,6 +151,12 @@ async function main() {
     );
     console.log(
       `[cheeky-os] cash priorities: GET http://127.0.0.1:${PORT}/cash/priorities`
+    );
+    console.log(
+      `[cheeky-os] deposit priorities: GET http://127.0.0.1:${PORT}/cash/deposits`
+    );
+    console.log(
+      `[cheeky-os] exceptions: GET http://127.0.0.1:${PORT}/exceptions/pending · POST /exceptions/approve · POST /exceptions/reject`
     );
     console.log(`[cheeky-os] mobile: http://127.0.0.1:${PORT}/dashboard/today/mobile`);
     console.log(

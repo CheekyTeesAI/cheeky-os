@@ -6,6 +6,12 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const { evaluatePricingGuard } = require("../services/pricingGuardService");
+const { addException } = require("../services/exceptionQueueService");
+const {
+  evaluateExceptionOverride,
+  recordOverrideUse,
+} = require("../services/exceptionOverrideService");
+const { recordLedgerEventSafe } = require("../services/actionLedgerService");
 
 const router = express.Router();
 
@@ -111,6 +117,11 @@ function pricingRiskSectionHtml(esc) {
         ? `<div style="margin-top:6px;font-size:0.72rem;opacity:0.75;">Flags: ${flagsShow}</div>`
         : ""
     }
+    ${
+      row.overrideApplied
+        ? `<div style="margin-top:8px;font-size:0.72rem;font-weight:900;color:#4ade80;letter-spacing:0.04em;">Founder Override Applied</div>`
+        : ""
+    }
   </div>`;
     })
     .filter(Boolean)
@@ -129,10 +140,77 @@ router.post("/check", (req, res) => {
   try {
     const body = req.body && typeof req.body === "object" ? req.body : {};
     const result = evaluatePricingGuard(body);
+    const orderId = String(body.orderId != null ? body.orderId : "").trim();
+    const customerName = String(body.customerName != null ? body.customerName : "").trim();
+
+    let overrideApplied = false;
+    let overrideReason = "";
+    let matchedOverrideId = "";
+
+    if (result.pricingStatus === "review" || result.pricingStatus === "blocked") {
+      try {
+        const ovr = evaluateExceptionOverride({
+          orderId,
+          customerName,
+          exceptionType: "pricing",
+          actionType: "pricing_check",
+          reason: result.reason ? String(result.reason) : "",
+        });
+        if (ovr.overrideAllowed) {
+          recordOverrideUse(ovr.matchedExceptionId);
+          overrideApplied = true;
+          overrideReason = "Founder approved pricing exception";
+          matchedOverrideId = ovr.matchedExceptionId;
+          recordLedgerEventSafe({
+            type: "override",
+            action: "pricing_override_applied",
+            status: "success",
+            customerName,
+            orderId,
+            reason: overrideReason,
+            meta: { matchedOverrideId },
+          });
+        } else {
+          addException({
+            type: "pricing",
+            customerName,
+            orderId,
+            severity: result.pricingStatus === "blocked" ? "critical" : "high",
+            reason: result.reason
+              ? String(result.reason)
+              : `Pricing guard: ${result.pricingStatus}`,
+          });
+        }
+      } catch (_) {
+        addException({
+          type: "pricing",
+          customerName,
+          orderId,
+          severity: result.pricingStatus === "blocked" ? "critical" : "high",
+          reason: result.reason
+            ? String(result.reason)
+            : `Pricing guard: ${result.pricingStatus}`,
+        });
+      }
+    }
+
     const est = body.estimatedCost;
+    const resultOut = {
+      ...result,
+      ...(overrideApplied
+        ? {
+            overrideApplied: true,
+            overrideReason,
+            matchedOverrideId,
+            actionableWithOverride: true,
+          }
+        : {}),
+    };
+
     appendPricingCheck({
       at: new Date().toISOString(),
-      customerName: String(body.customerName != null ? body.customerName : "").trim(),
+      customerName,
+      orderId,
       quantity: Number(body.quantity) || 0,
       productType: String(body.productType != null ? body.productType : ""),
       printType: String(body.printType != null ? body.printType : ""),
@@ -148,10 +226,12 @@ router.post("/check", (req, res) => {
       pricingStatus: result.pricingStatus,
       reason: result.reason,
       flags: result.flags,
+      overrideApplied,
+      overrideReason: overrideApplied ? overrideReason : "",
     });
     return res.json({
       success: true,
-      result,
+      result: resultOut,
     });
   } catch (err) {
     console.error("[pricing/check]", err.message || err);

@@ -4,12 +4,23 @@
 
 const { Router } = require("express");
 const { executeDailyRunbook } = require("../services/runbookService");
+const { recordLedgerEventSafe } = require("../services/actionLedgerService");
 
 const router = Router();
 
 router.post("/run", async (_req, res) => {
   try {
-    const { summary, events } = await executeDailyRunbook();
+    const out = await executeDailyRunbook();
+    const { summary, events, steps } = out;
+    const anyFail =
+      Array.isArray(steps) && steps.some((s) => s && s.ok === false);
+    recordLedgerEventSafe({
+      type: "runbook",
+      action: "runbook_completed",
+      status: anyFail ? "info" : "success",
+      reason: `followups:${summary.followups} invoices:${summary.invoices} production:${summary.productionMoves} alerts:${summary.alerts}`,
+      meta: { stepCount: Array.isArray(steps) ? steps.length : 0, eventCount: Array.isArray(events) ? events.length : 0 },
+    });
     return res.json({
       success: true,
       summary,
@@ -17,6 +28,12 @@ router.post("/run", async (_req, res) => {
     });
   } catch (err) {
     console.error("[runbook/run]", err.message || err);
+    recordLedgerEventSafe({
+      type: "runbook",
+      action: "runbook_completed",
+      status: "blocked",
+      reason: err instanceof Error ? err.message : String(err || "runbook error"),
+    });
     return res.json({
       success: false,
       summary: {
