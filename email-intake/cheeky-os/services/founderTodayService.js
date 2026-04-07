@@ -10,6 +10,7 @@ const {
   evaluatePaymentGate,
   captureOrderToGateInput,
 } = require("./paymentGateService");
+const { getMemory } = require("./orderMemoryService");
 
 async function fetchCaptureOrders() {
   const prisma = getPrisma();
@@ -32,9 +33,72 @@ async function fetchCaptureOrders() {
  *   urgentFollowups: object[],
  *   readyForProduction: object[],
  *   highRisk: object[],
- *   queue: { ready: object[], printing: object[], qc: object[] }
+ *   queue: { ready: object[], printing: object[], qc: object[] },
+ *   jobMemory: object[]
  * }>}
  */
+function buildJobMemoryRows(orders, paymentBlockers, readyForProduction, queue) {
+  const byId = new Map(orders.map((o) => [o.id, o]));
+  const ids = [];
+  const pushId = (id) => {
+    const s = String(id || "").trim();
+    if (s && !ids.includes(s)) ids.push(s);
+  };
+
+  for (const b of paymentBlockers) pushId(b.orderId);
+  for (const r of readyForProduction) pushId(r.orderId);
+  for (const x of [
+    ...(queue.ready || []),
+    ...(queue.printing || []),
+    ...(queue.qc || []),
+  ]) {
+    pushId(x.orderId);
+  }
+
+  for (const o of orders) {
+    if (ids.length >= 10) break;
+    pushId(o.id);
+  }
+
+  const slice = ids.slice(0, 10);
+  const rows = [];
+  for (const id of slice) {
+    const o = byId.get(id);
+    if (!o) continue;
+    const mem = getMemory(o);
+    const notes = Array.isArray(mem.notes) ? mem.notes : [];
+    const decisions = Array.isArray(mem.decisions) ? mem.decisions : [];
+    const flags = Array.isArray(mem.flags) ? mem.flags : [];
+    const latestNote = notes.length ? notes[notes.length - 1] : null;
+    const latestDecision = decisions.length
+      ? decisions[decisions.length - 1]
+      : null;
+    const highFlags = flags.filter(
+      (f) => f && String(f.severity || "").toLowerCase() === "high"
+    );
+    const hasMemory =
+      notes.length > 0 ||
+      decisions.length > 0 ||
+      flags.length > 0 ||
+      (Array.isArray(mem.history) && mem.history.length > 0);
+
+    rows.push({
+      orderId: id,
+      customerName: o.customerName,
+      product: o.product,
+      quantity: o.quantity,
+      status: String(o.status || "")
+        .trim()
+        .toUpperCase(),
+      latestNote,
+      latestDecision,
+      highFlags,
+      hasMemory,
+    });
+  }
+  return rows;
+}
+
 async function getFounderDashboardPayload() {
   const [next, auto, queue, orders] = await Promise.all([
     getNextAction(),
@@ -67,6 +131,7 @@ async function getFounderDashboardPayload() {
 
     if (gate.allowedToProduce && st === "READY") {
       readyForProduction.push({
+        orderId: o.id,
         customerName: o.customerName,
         product: o.product,
         quantity: o.quantity,
@@ -97,8 +162,16 @@ async function getFounderDashboardPayload() {
     )
     .slice(0, 5);
 
+  const jobMemory = buildJobMemoryRows(
+    orders,
+    paymentBlockers,
+    readyForProduction,
+    queue
+  );
+
   return {
     next,
+    jobMemory,
     paymentBlockers,
     urgentFollowups,
     readyForProduction,

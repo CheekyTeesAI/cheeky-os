@@ -50,6 +50,7 @@ model CaptureOrder {
   depositReceived Boolean       @default(false)
   balanceDue      Float         @default(0)
   paymentNotes    String        @default("")
+  memoryJson      String        @default("{}")
   createdAt       DateTime      @default(now())
   tasks           CaptureTask[]
 }

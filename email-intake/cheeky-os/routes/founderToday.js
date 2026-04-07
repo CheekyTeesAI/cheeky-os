@@ -115,6 +115,36 @@ function cardQueueItem(item, label) {
   </div>`;
 }
 
+function cardJobMemory(j) {
+  const note = j.latestNote;
+  const dec = j.latestDecision;
+  const hf = j.highFlags || [];
+  const noteTxt =
+    note && note.text ? esc(String(note.text)) : "—";
+  const decTxt =
+    dec && dec.text ? esc(String(dec.text)) : "—";
+  const flagsTxt = hf.length
+    ? hf.map((f) => esc(String((f && f.label) || ""))).join(", ")
+    : "—";
+  const memHint = j.hasMemory
+    ? ""
+    : `<div style="opacity:0.7;font-size:0.88rem;margin-top:10px;font-style:italic;">No stored context yet</div>`;
+  return `
+  <div style="background:#12161f;border:1px solid #334155;border-radius:14px;padding:16px;margin-bottom:12px;">
+    <div style="font-size:0.7rem;color:#64748b;margin-bottom:6px;word-break:break-all;">${esc(
+      j.orderId || ""
+    )}</div>
+    <div style="font-weight:800;font-size:1.05rem;">${esc(j.customerName)}</div>
+    <div style="margin-top:6px;font-size:0.92rem;">${esc(j.product || "")} × ${esc(
+    String(j.quantity ?? 0)
+  )} · <span style="opacity:0.85;">${esc(j.status || "")}</span></div>
+    <div style="margin-top:10px;font-size:0.9rem;line-height:1.45;"><span style="color:#7dd3fc;">Latest note:</span> ${noteTxt}</div>
+    <div style="margin-top:6px;font-size:0.9rem;line-height:1.45;"><span style="color:#a78bfa;">Latest decision:</span> ${decTxt}</div>
+    <div style="margin-top:6px;font-size:0.9rem;line-height:1.45;"><span style="color:#f87171;">High-severity flags:</span> ${flagsTxt}</div>
+    ${memHint}
+  </div>`;
+}
+
 router.get("/today", async (_req, res) => {
   let data;
   try {
@@ -131,10 +161,12 @@ router.get("/today", async (_req, res) => {
       readyForProduction: [],
       highRisk: [],
       queue: { ready: [], printing: [], qc: [] },
+      jobMemory: [],
     };
   }
 
   const next = data.next || {};
+  const jm = data.jobMemory || [];
   const pb = data.paymentBlockers || [];
   const uf = data.urgentFollowups || [];
   const rf = data.readyForProduction || [];
@@ -162,6 +194,10 @@ router.get("/today", async (_req, res) => {
     ? progParts.join("")
     : `<p style="opacity:0.6;">Nothing in print or QC.</p>`;
 
+  const jmHtml = jm.length
+    ? jm.map(cardJobMemory).join("")
+    : `<p style="opacity:0.6;">No orders in memory preview.</p>`;
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -181,6 +217,12 @@ router.get("/today", async (_req, res) => {
   </div>
 
   ${cardNext(next)}
+
+  <section style="margin-bottom:22px;">
+    <h2 style="font-size:1.05rem;color:#e2e8f0;margin:0 0 8px;">Job memory / context</h2>
+    <p style="opacity:0.75;font-size:0.88rem;margin:0 0 12px;line-height:1.45;">Top orders by priority (blockers → ready → production → recent). Store context with <code style="background:#1e293b;padding:2px 6px;border-radius:6px;">POST /orders/add-note</code> (JSON: orderId, text, source).</p>
+    ${jmHtml}
+  </section>
 
   <section style="margin-bottom:22px;">
     <h2 style="font-size:1.05rem;color:#fca5a5;margin:0 0 12px;">Payment / deposit blockers</h2>

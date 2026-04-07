@@ -19,6 +19,7 @@ const salesRouter = require("./routes/sales");
 const captureRouter = require("./routes/capture");
 const ordersCaptureRouter = require("./routes/ordersCapture");
 const ordersStatusRouter = require("./routes/ordersStatus");
+const ordersMemoryRouter = require("./routes/ordersMemory");
 const productionRouter = require("./routes/production");
 const alertsRouter = require("./routes/alerts");
 const opsTodayRouter = require("./routes/opsToday");
@@ -58,6 +59,7 @@ app.use("/sales", salesRouter);
 app.use("/capture", captureRouter);
 app.use("/orders", ordersCaptureRouter);
 app.use("/orders", ordersStatusRouter);
+app.use("/orders", ordersMemoryRouter);
 app.use("/production", productionRouter);
 app.use("/alerts", alertsRouter);
 app.use("/ops", opsTodayRouter);
@@ -111,6 +113,12 @@ async function main() {
     console.log(`[cheeky-os] alerts today: GET http://127.0.0.1:${PORT}/alerts/today`);
     console.log(`[cheeky-os] ops today: GET http://127.0.0.1:${PORT}/ops/today`);
     console.log(`[cheeky-os] founder today: GET http://127.0.0.1:${PORT}/founder/today`);
+    console.log(
+      `[cheeky-os] orders add-note: POST http://127.0.0.1:${PORT}/orders/add-note`
+    );
+    console.log(
+      `[cheeky-os] orders add-decision: POST http://127.0.0.1:${PORT}/orders/add-decision`
+    );
     console.log(`[cheeky-os] legacy mount: http://127.0.0.1:${PORT}/cheeky/health`);
   });
 }

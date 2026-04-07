@@ -1,0 +1,1 @@
+ALTER TABLE "CaptureOrder" ADD COLUMN "memoryJson" TEXT NOT NULL DEFAULT '{}';
