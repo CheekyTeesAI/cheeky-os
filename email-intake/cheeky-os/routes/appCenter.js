@@ -39,6 +39,7 @@ const { getGoalsStatus } = require("../services/goalsService");
 const { goalsTrackerSectionHtml } = require("./goals");
 const { getNextActionsPayload } = require("../services/gapDetectorService");
 const { nextActionsSectionHtml } = require("./nextActions");
+const { getLastAutoExecutionSnapshot } = require("../services/autoExecutionService");
 
 const router = Router();
 
@@ -294,6 +295,34 @@ router.get("/app", async (req, res) => {
     <button type="button" id="app-autopilot-kill" style="display:block;width:100%;box-sizing:border-box;min-height:50px;padding:14px 16px;margin-top:10px;border-radius:8px;font-weight:900;font-size:1rem;border:1px solid #ef4444;background:#7f1d1d;color:#fee2e2;text-align:center;cursor:pointer;">ACTIVATE KILL SWITCH</button>
     <button type="button" id="app-autopilot-restore" style="${BTN_SEC}">Restore System</button>
     <p id="app-autopilot-msg" style="font-size:0.8rem;opacity:0.78;margin:8px 0 0;min-height:1em;"></p>
+  </section>`;
+
+  const lastAutoExec = getLastAutoExecutionSnapshot();
+  const autoExecutionPanelHtml = `
+  <section style="${CARD};border:2px solid #7c3aed;background:#1a1025;">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 8px;color:#e9d5ff;">⚡ AUTO EXECUTION</h2>
+    <p style="margin:0 0 12px;font-size:0.78rem;line-height:1.45;opacity:0.88;color:#fecdd3;">System will execute limited actions automatically under guardrails.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.84rem;margin-bottom:10px;">
+      <div style="background:#101010;padding:10px;border-radius:8px;">
+        <div style="opacity:0.65;font-size:0.7rem;">Autopilot</div>
+        <div style="font-size:1rem;font-weight:900;color:${autopilotState.autopilotEnabled ? "#22c55e" : "#f87171"};">${esc(autopilotState.autopilotEnabled ? "ON" : "OFF")}</div>
+      </div>
+      <div style="background:#101010;padding:10px;border-radius:8px;">
+        <div style="opacity:0.65;font-size:0.7rem;">Safe Mode</div>
+        <div style="font-size:1rem;font-weight:900;color:${autopilotState.safeMode ? "#f97316" : "#22c55e"};">${esc(autopilotState.safeMode ? "ON" : "OFF")}</div>
+      </div>
+    </div>
+    <div style="font-size:0.72rem;font-weight:800;opacity:0.75;margin-bottom:6px;letter-spacing:0.04em;">LAST RUN SUMMARY</div>
+    <div style="background:#101010;padding:10px;border-radius:8px;font-size:0.88rem;line-height:1.55;">
+      <div>Follow-ups sent: <strong style="color:#86efac;">${esc(String(lastAutoExec.summary.followupsSent))}</strong></div>
+      <div>Invoices created: <strong style="color:#fde047;">${esc(String(lastAutoExec.summary.invoicesCreated))}</strong></div>
+      <div>Production moves: <strong style="color:#7dd3fc;">${esc(String(lastAutoExec.summary.productionMoves))}</strong></div>
+    </div>
+    <p style="margin:8px 0 0;font-size:0.72rem;opacity:0.65;">Last run: ${esc(
+    lastAutoExec.at ? new Date(lastAutoExec.at).toLocaleString() : "—"
+  )} · Status: ${esc(lastAutoExec.success ? "OK" : "—")}</p>
+    <button type="button" id="app-auto-exec-run" style="display:block;width:100%;box-sizing:border-box;min-height:50px;padding:14px 16px;margin-top:12px;border-radius:8px;font-weight:900;font-size:1rem;border:1px solid #a78bfa;background:#6d28d9;color:#f5f3ff;cursor:pointer;">Run Auto Execution</button>
+    <p id="app-auto-exec-msg" style="font-size:0.78rem;opacity:0.78;margin:8px 0 0;min-height:1em;"></p>
   </section>`;
 
   const salesLoopHtml = `
@@ -1140,6 +1169,22 @@ router.get("/app", async (req, res) => {
         location.reload();
       }).catch(function(){ apSet('Request failed'); apRestore.disabled=false; });
     });
+    var aeRun=document.getElementById('app-auto-exec-run');
+    var aeMsg=document.getElementById('app-auto-exec-msg');
+    if(aeRun) aeRun.addEventListener('click',function(){
+      if(aeMsg) aeMsg.textContent='Running auto execution…';
+      aeRun.disabled=true;
+      postJSON('/auto/run',{})
+        .then(function(d){
+          if(aeMsg){
+            var s=d&&d.summary?d.summary:{};
+            aeMsg.textContent=(d&&d.success)?('Done · follow-ups '+(s.followupsSent||0)+' · invoices '+(s.invoicesCreated||0)+' · production '+(s.productionMoves||0)):'Blocked or no work (check Autopilot / Safe Mode)';
+          }
+          aeRun.disabled=false;
+          location.reload();
+        })
+        .catch(function(){ if(aeMsg) aeMsg.textContent='Request failed'; aeRun.disabled=false; });
+    });
     var rbRun=document.getElementById('app-runbook-run');
     var rbRunMsg=document.getElementById('app-runbook-run-msg');
     if(rbRun) rbRun.addEventListener('click',function(){
@@ -1216,6 +1261,7 @@ router.get("/app", async (req, res) => {
   <h1 style="font-size:1.35rem;margin:8px 0 4px;color:#f0ff44;font-weight:900;">Cheeky Tees</h1>
   <p style="margin:0 0 12px;font-size:0.92rem;opacity:0.75;">Command Center</p>
   ${topBar}
+  ${autoExecutionPanelHtml}
   ${kpiPanelHtml}
   ${goalsPanelHtml}
   ${cashPrioritiesPanelHtml}
