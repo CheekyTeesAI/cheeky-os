@@ -89,6 +89,10 @@ async function main() {
       `[cheeky-os] capture quick-entry: POST http://127.0.0.1:${PORT}/capture/quick-entry`
     );
     console.log(
+      `[cheeky-os] capture verbal-brief: POST http://127.0.0.1:${PORT}/capture/verbal-brief`
+    );
+    console.log(`[cheeky-os] capture founder: GET http://127.0.0.1:${PORT}/capture/founder`);
+    console.log(
       `[cheeky-os] orders from capture: POST http://127.0.0.1:${PORT}/orders/create-from-capture`
     );
     console.log(
