@@ -28,6 +28,7 @@ const founderTodayRouter = require("./routes/founderToday");
 const automationRouter = require("./routes/automation");
 const summaryTodayRouter = require("./routes/summaryToday");
 const copilotTodayRouter = require("./routes/copilotToday");
+const systemCheckRouter = require("./routes/systemCheck");
 
 /** Bundle 1 requires 3001; override with CHEEKY_OS_PORT only (not generic PORT). */
 const PORT = Number(process.env.CHEEKY_OS_PORT || 3001);
@@ -52,6 +53,9 @@ app.get("/system/health", (_req, res) => {
     time: new Date().toISOString(),
   });
 });
+
+/** Bundle 19 — GET /system/check (keep after /system/health so health stays exact match). */
+app.use("/system", systemCheckRouter);
 
 app.use(express.json());
 
@@ -90,6 +94,7 @@ async function main() {
     console.log(`[cheeky-os] listening on http://${HOST}:${PORT}`);
     console.log(`[cheeky-os] health: http://127.0.0.1:${PORT}/health`);
     console.log(`[cheeky-os] system/health: http://127.0.0.1:${PORT}/system/health`);
+    console.log(`[cheeky-os] system check: GET http://127.0.0.1:${PORT}/system/check`);
     console.log(`[cheeky-os] reactivation: http://127.0.0.1:${PORT}/revenue/reactivation`);
     console.log(`[cheeky-os] followups: http://127.0.0.1:${PORT}/revenue/followups`);
     console.log(`[cheeky-os] scripts: http://127.0.0.1:${PORT}/revenue/scripts`);

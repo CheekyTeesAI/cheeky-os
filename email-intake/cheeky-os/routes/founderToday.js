@@ -27,6 +27,33 @@ const BTN_SUBMIT =
 const INPUT =
   "width:100%;box-sizing:border-box;padding:10px 12px;margin-top:4px;border-radius:10px;border:1px solid #475569;background:#0f1419;color:#e2e8f0;font-size:1rem;";
 
+function systemCheckPanelHtml() {
+  const btnStyle =
+    "min-width:220px;padding:14px 18px;border-radius:12px;font-weight:800;font-size:0.95rem;border:1px solid #166534;background:#14532d;color:#bbf7d0;cursor:pointer;min-height:48px;";
+  return (
+    '<section style="margin:0 0 18px 0;padding:16px;border-radius:16px;background:#0c1a14;border:1px solid #22c55e;">' +
+    '<h2 style="font-size:1.02rem;margin:0 0 10px;color:#86efac;font-weight:800;">⚡ RUN SYSTEM CHECK</h2>' +
+    '<p style="margin:0 0 12px;font-size:0.88rem;opacity:0.88;line-height:1.4;color:#d1fae5;">Full snapshot: <code style="background:#052e16;padding:2px 6px;border-radius:6px;">GET /system/check</code> · reloads this page with fresh data.</p>' +
+    '<button type="button" id="sys-check-btn" onclick="if(window.cheekyRunSystemCheck)window.cheekyRunSystemCheck();" style="' +
+    btnStyle +
+    '">Refresh System</button>' +
+    '<div id="sys-check-status" style="margin-top:10px;font-size:0.88rem;color:#a7f3d0;"></div>' +
+    '<div id="sys-check-last" style="margin-top:8px;font-size:0.82rem;color:#6ee7b7;">Last updated: —</div>' +
+    "<script>(function(){var k='cheeky_os_last_system_check';var el=document.getElementById('sys-check-last');" +
+    "function disp(t){if(!el)return;el.textContent=t?'Last updated: '+new Date(t).toLocaleString():'Last updated: \\u2014';}" +
+    "try{disp(localStorage.getItem(k));}catch(e){disp('');}" +
+    "window.cheekyRunSystemCheck=function(){" +
+    "var btn=document.getElementById('sys-check-btn');var st=document.getElementById('sys-check-status');" +
+    "if(btn)btn.disabled=true;if(st)st.textContent='Running check\\u2026';" +
+    "fetch('/system/check').then(function(r){return r.json();}).then(function(d){" +
+    "var ts=d&&d.timestamp||(new Date()).toISOString();try{localStorage.setItem(k,ts);}catch(e){}" +
+    "if(st)st.textContent='OK \\u00b7 '+(d&&d.actions&&d.actions.length||0)+' actions \\u00b7 '+(d&&d.alerts&&d.alerts.length||0)+' alerts';" +
+    "if(btn)btn.disabled=false;location.reload();}).catch(function(){" +
+    "if(st)st.textContent='Check failed \\u2014 try again.';if(btn)btn.disabled=false;});};})();<\/script>" +
+    "</section>"
+  );
+}
+
 function copilotHtml(cp) {
   const msg =
     String((cp && cp.message) || "").trim() ||
@@ -510,6 +537,7 @@ router.get("/today", async (_req, res) => {
   <title>Founder — Today</title>
 </head>
 <body style="margin:0;padding:16px;padding-bottom:max(28px,env(safe-area-inset-bottom));font-family:system-ui,-apple-system,sans-serif;background:#0a0c10;color:#e8eaed;max-width:560px;margin-left:auto;margin-right:auto;">
+  ${systemCheckPanelHtml()}
   ${copilotHtml(copilot)}
   ${todaySummaryHtml(summary)}
   <h1 style="font-size:1.5rem;margin:8px 0 6px;color:#7dd3fc;">Founder — Today</h1>
