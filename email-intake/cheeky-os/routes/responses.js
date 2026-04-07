@@ -2,6 +2,7 @@
  * Bundle 29 — POST /responses/ingest (interpretation + optional order memory + recent queue).
  * Bundle 30 — POST /responses/queue-next-step (interpretation + next-step action + optional history).
  * Bundle 32 — POST /responses/auto-invoice (guarded draft only, no send/charge).
+ * Bundle 33 — POST /responses/prepare-reply (reply draft text only, no send).
  */
 
 const express = require("express");
@@ -19,6 +20,7 @@ const {
 } = require("../services/nextStepTriggerService");
 const { evaluateAutoInvoiceGuard } = require("../services/autoInvoiceGuardService");
 const { createDraftInvoice } = require("../services/squareDraftInvoice");
+const { buildReplyDraft } = require("../services/replyDraftService");
 
 const router = express.Router();
 
@@ -52,6 +54,12 @@ const AUTO_INVOICE_THROTTLE_FILE = path.join(
   "..",
   "data",
   "response-auto-invoice-throttle.json"
+);
+const REPLY_DRAFT_RECENT_FILE = path.join(
+  __dirname,
+  "..",
+  "data",
+  "response-reply-draft-recent.json"
 );
 const MAX_RECENT = 50;
 const INVOICE_EXISTS_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
@@ -230,6 +238,41 @@ function appendAutoInvoiceRecent(entry) {
 function readRecentAutoInvoiceEntries() {
   try {
     const txt = fs.readFileSync(AUTO_INVOICE_RECENT_FILE, "utf8");
+    const j = JSON.parse(txt);
+    if (j && Array.isArray(j.entries)) return { entries: j.entries };
+  } catch (_) {}
+  return { entries: [] };
+}
+
+/**
+ * @param {object} entry
+ */
+function appendReplyDraftRecent(entry) {
+  let data = { entries: [] };
+  try {
+    const txt = fs.readFileSync(REPLY_DRAFT_RECENT_FILE, "utf8");
+    const j = JSON.parse(txt);
+    if (j && Array.isArray(j.entries)) data = { entries: j.entries };
+  } catch (_) {}
+  data.entries.unshift(entry);
+  if (data.entries.length > MAX_RECENT) {
+    data.entries = data.entries.slice(0, MAX_RECENT);
+  }
+  const dir = path.dirname(REPLY_DRAFT_RECENT_FILE);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    REPLY_DRAFT_RECENT_FILE,
+    JSON.stringify(data, null, 2),
+    "utf8"
+  );
+}
+
+/**
+ * @returns {{ entries: object[] }}
+ */
+function readRecentReplyDraftEntries() {
+  try {
+    const txt = fs.readFileSync(REPLY_DRAFT_RECENT_FILE, "utf8");
     const j = JSON.parse(txt);
     if (j && Array.isArray(j.entries)) return { entries: j.entries };
   } catch (_) {}
@@ -428,6 +471,56 @@ router.post("/queue-next-step", async (req, res) => {
   }
 });
 
+router.post("/prepare-reply", async (req, res) => {
+  try {
+    const body = req.body || {};
+    const customerName = String(body.customerName != null ? body.customerName : "").trim();
+    const message = String(body.message != null ? body.message : "").trim();
+    const amount = Number(body.amount);
+
+    if (!customerName) {
+      return res.json({
+        success: false,
+        error: "customerName is required",
+      });
+    }
+    if (!message) {
+      return res.json({
+        success: false,
+        error: "message is required",
+      });
+    }
+
+    const interpretation = interpretCustomerResponse({ customerName, message });
+    const { draft, intent } = buildReplyDraft({
+      customerName,
+      intent: interpretation.intent,
+      amount: Number.isFinite(amount) ? amount : 0,
+    });
+
+    appendReplyDraftRecent({
+      at: new Date().toISOString(),
+      customerName,
+      intent,
+      draft,
+      amount: Number.isFinite(amount) ? amount : 0,
+    });
+
+    return res.json({
+      success: true,
+      customerName,
+      intent,
+      draft,
+    });
+  } catch (err) {
+    console.error("[responses/prepare-reply]", err.message || err);
+    return res.json({
+      success: false,
+      error: err instanceof Error ? err.message : "failed",
+    });
+  }
+});
+
 router.post("/auto-invoice", async (req, res) => {
   const body = req.body || {};
   const customerName = String(body.customerName != null ? body.customerName : "").trim();
@@ -617,4 +710,5 @@ module.exports = {
   readRecentEntries,
   readRecentNextStepEntries,
   readRecentAutoInvoiceEntries,
+  readRecentReplyDraftEntries,
 };

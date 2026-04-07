@@ -18,6 +18,7 @@ const {
   readRecentEntries,
   readRecentNextStepEntries,
   readRecentAutoInvoiceEntries,
+  readRecentReplyDraftEntries,
 } = require("./responses");
 
 const router = Router();
@@ -516,6 +517,63 @@ router.get("/app", async (req, res) => {
     <p id="app-auto-invoice-msg" style="font-size:0.78rem;opacity:0.78;margin:8px 0 0;min-height:1em;"></p>
   </section>`;
 
+  function replyDraftSortKey(intent) {
+    const i = String(intent || "");
+    if (i === "ready_to_pay") return 0;
+    if (i === "needs_revision") return 1;
+    if (i === "question") return 2;
+    if (i === "interested") return 3;
+    if (i === "not_now") return 4;
+    return 5;
+  }
+  const replyDraftRows = readRecentReplyDraftEntries()
+    .entries.slice()
+    .sort((a, b) => {
+      const da = replyDraftSortKey(a && a.intent);
+      const db = replyDraftSortKey(b && b.intent);
+      if (da !== db) return da - db;
+      const ta = String((a && a.at) || "");
+      const tb = String((b && b.at) || "");
+      return tb.localeCompare(ta);
+    })
+    .slice(0, 5);
+  function replyDraftBorder(intent) {
+    const i = String(intent || "");
+    if (i === "ready_to_pay")
+      return "border:2px solid #22c55e;box-shadow:0 0 10px rgba(34,197,94,0.18);";
+    if (i === "needs_revision")
+      return "border:2px solid #f97316;box-shadow:0 0 8px rgba(249,115,22,0.15);";
+    if (i === "question") return "border:2px solid #38bdf8;";
+    return "border:1px solid #333;";
+  }
+  const replyDraftsPanelHtml = `<section style="${CARD}">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 10px;color:#e9d5ff;">💬 REPLY DRAFTS</h2>
+    <p style="margin:0 0 12px;font-size:0.78rem;opacity:0.72;line-height:1.45;">Copy-only — nothing is sent automatically. From <code style="background:#1a1a1a;padding:2px 6px;border-radius:4px;font-size:0.76rem;">POST /responses/prepare-reply</code>.</p>
+    ${
+      replyDraftRows.length === 0
+        ? `<p style="margin:0;opacity:0.65;font-size:0.88rem;">No drafts yet. Run prepare-reply or use the API.</p>`
+        : replyDraftRows
+            .map((row) => {
+              if (!row || typeof row !== "object") return "";
+              const intent = String(row.intent || "");
+              const draft = String(row.draft || "");
+              return `<div style="margin-top:12px;padding:12px;border-radius:8px;background:#101010;${replyDraftBorder(intent)}">
+          <strong style="font-size:0.98rem;">${esc(
+            String(row.customerName || "—")
+          )}</strong>
+          <div style="font-size:0.68rem;font-weight:800;margin-top:5px;color:#c4b5fd;letter-spacing:0.04em;">${esc(
+            intent
+          )}</div>
+          <pre class="reply-draft-text" style="margin:10px 0 0;font-family:system-ui,sans-serif;font-size:0.88rem;line-height:1.45;white-space:pre-wrap;word-break:break-word;color:#e8e8e8;">${esc(
+            draft
+          )}</pre>
+          <button type="button" class="app-copy-reply" style="${BTN_SEC}margin-top:8px;">Copy Reply</button>
+        </div>`;
+            })
+            .join("")
+    }
+  </section>`;
+
   const copilotHtml = `
   <section style="${CARD}">
     <h2 style="font-size:1rem;font-weight:800;margin:0 0 12px;color:#f0ff44;">🧠 COPILOT SAYS</h2>
@@ -896,6 +954,21 @@ router.get("/app", async (req, res) => {
         location.reload();
       }).catch(function(){ if(aiMsg) aiMsg.textContent='Request failed'; });
     });
+    document.querySelectorAll('.app-copy-reply').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var wrap=btn.parentElement;
+        var pre=wrap&&wrap.querySelector('.reply-draft-text');
+        var t=pre?pre.textContent:'';
+        function ok(){ if(btn) btn.textContent='Copied'; setTimeout(function(){ btn.textContent='Copy Reply'; },1500); }
+        if(navigator.clipboard&&navigator.clipboard.writeText){
+          navigator.clipboard.writeText(t).then(ok).catch(function(){
+            try{ var ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); ok(); }catch(e){}
+          });
+        } else {
+          try{ var ta2=document.createElement('textarea'); ta2.value=t; document.body.appendChild(ta2); ta2.select(); document.execCommand('copy'); document.body.removeChild(ta2); ok(); }catch(e){}
+        }
+      });
+    });
     document.querySelectorAll('.app-prep-msg').forEach(function(btn){
       btn.addEventListener('click',function(){
         var out=btn.parentElement&&btn.parentElement.querySelector('.app-prep-out');
@@ -930,6 +1003,7 @@ router.get("/app", async (req, res) => {
   ${responsesPanelHtml}
   ${nextStepsPanelHtml}
   ${autoInvoicePanelHtml}
+  ${replyDraftsPanelHtml}
   ${copilotHtml}
   ${summaryHtml}
   ${actionsHtml}
