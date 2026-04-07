@@ -161,6 +161,34 @@ async function getProductionQueue() {
   }
 }
 
+/**
+ * Bundle 7 — one SQLite read for alerts + ops panel (READY / PRINTING / QC with createdAt).
+ * @returns {Promise<Array<{ id: string, status: string, customerName: string, product: string, quantity: number, printType: string, dueDate: string, createdAt: Date }>>}
+ */
+async function getActiveProductionOrdersForAlerts() {
+  const prisma = getPrisma();
+  if (!prisma || !prisma.captureOrder) return [];
+
+  try {
+    return await prisma.captureOrder.findMany({
+      where: { status: { in: ["READY", "PRINTING", "QC"] } },
+      select: {
+        id: true,
+        status: true,
+        customerName: true,
+        product: true,
+        quantity: true,
+        printType: true,
+        dueDate: true,
+        createdAt: true,
+      },
+    });
+  } catch (err) {
+    console.error("[orderStatusEngine] alerts queue:", err.message || err);
+    return [];
+  }
+}
+
 module.exports = {
   ORDER_STATUSES,
   QUEUE_STATUSES,
@@ -169,6 +197,7 @@ module.exports = {
   canTransition,
   updateCaptureOrderStatus,
   getProductionQueue,
+  getActiveProductionOrdersForAlerts,
   toQueueItem,
   sortOrdersForQueue,
 };
