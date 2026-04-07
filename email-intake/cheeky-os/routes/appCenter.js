@@ -13,6 +13,7 @@ const { getProductionQueue } = require("../services/orderStatusEngine");
 const { prepareMessage } = require("../services/messagePrepService");
 const { runSystemCheck } = require("../services/systemCheckService");
 const { buildSalesLoop } = require("../services/salesLoopService");
+const { readRecentEntries } = require("./responses");
 
 const router = Router();
 
@@ -277,6 +278,56 @@ router.get("/app", async (req, res) => {
             })
             .join("")
     }
+  </section>`;
+
+  const recentIngest = readRecentEntries().entries.slice(0, 5);
+  function responseActionHint(intent) {
+    const i = String(intent || "");
+    if (i === "ready_to_pay") return "Create Draft Invoice";
+    if (i === "needs_revision") return "Review Revision Request";
+    if (i === "question") return "Respond with Clarification";
+    return "";
+  }
+  const responsesPanelHtml =
+    recentIngest.length === 0
+      ? `<section style="${CARD}">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 10px;color:#7dd3fc;">📥 CUSTOMER RESPONSES</h2>
+    <p style="margin:0;opacity:0.65;font-size:0.9rem;line-height:1.45;">No ingested replies yet. Use <code style="background:#1a1a1a;padding:2px 6px;border-radius:4px;font-size:0.82rem;">POST /responses/ingest</code>.</p>
+  </section>`
+      : `<section style="${CARD}">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 12px;color:#7dd3fc;">📥 CUSTOMER RESPONSES</h2>
+    ${recentIngest
+      .map((row) => {
+        if (!row || typeof row !== "object") return "";
+        const intent = String(row.intent || "");
+        const isPay = intent === "ready_to_pay";
+        const border = isPay
+          ? "border:2px solid #22c55e;box-shadow:0 0 12px rgba(34,197,94,0.2);"
+          : "border:1px solid #333;";
+        const hint = responseActionHint(intent);
+        return `<div style="margin-top:10px;padding:12px;border-radius:8px;background:#101010;${border}">
+        <strong style="font-size:1rem;line-height:1.3;">${esc(
+          String(row.customerName || "—")
+        )}</strong>
+        <div style="font-size:0.72rem;font-weight:800;margin-top:6px;color:#a78bfa;letter-spacing:0.04em;">${esc(
+          intent
+        )}</div>
+        <p style="margin:8px 0 0;font-size:0.88rem;line-height:1.45;opacity:0.92;">${esc(
+          String(row.messagePreview || "")
+        )}</p>
+        <p style="margin:6px 0 0;font-size:0.82rem;opacity:0.78;">${esc(
+          String(row.recommendedNextStep || "")
+        )}</p>
+        ${
+          hint
+            ? `<p style="margin:8px 0 0;font-size:0.8rem;font-weight:800;color:#f0ff44;">${esc(
+                hint
+              )}</p>`
+            : ""
+        }
+      </div>`;
+      })
+      .join("")}
   </section>`;
 
   const copilotHtml = `
@@ -658,6 +709,7 @@ router.get("/app", async (req, res) => {
   <p style="margin:0 0 12px;font-size:0.92rem;opacity:0.75;">Command Center</p>
   ${topBar}
   ${salesLoopHtml}
+  ${responsesPanelHtml}
   ${copilotHtml}
   ${summaryHtml}
   ${actionsHtml}
