@@ -34,6 +34,88 @@ async function getAuthHeaders() {
   };
 }
 
+/** Max 15 enriched rows total (8 + 7). */
+const MAX_UNPAID_ROWS = 8;
+const MAX_STALE_ROWS = 7;
+const MAX_CUSTOMER_IDS = 15;
+
+function extractPrimaryEmail(primary) {
+  if (!primary || !primary.email_address) return "";
+  const e = primary.email_address;
+  if (typeof e === "string") return e.trim();
+  if (e && typeof e.email_address === "string") return e.email_address.trim();
+  return "";
+}
+
+function extractCustomerEmail(c) {
+  if (!c || !c.email_address) return "";
+  const e = c.email_address;
+  if (typeof e === "string") return e.trim();
+  if (e && typeof e.email_address === "string") return e.email_address.trim();
+  return "";
+}
+
+/**
+ * One Square HTTP call; caps IDs to MAX_CUSTOMER_IDS.
+ * @returns {Promise<Map<string, { displayName: string, phone: string, email: string }>>}
+ */
+async function batchRetrieveCustomersMap(baseUrl, headers, customerIds) {
+  const unique = [...new Set(customerIds.filter((id) => id && String(id).trim()))].slice(
+    0,
+    MAX_CUSTOMER_IDS
+  );
+  const map = new Map();
+  if (unique.length === 0) return map;
+
+  try {
+    const res = await fetch(baseUrl + "/customers/batch-retrieve", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ customer_ids: unique }),
+    });
+    if (!res.ok) return map;
+    const data = await res.json();
+    const list = Array.isArray(data.customers) ? data.customers : [];
+    for (const c of list) {
+      if (!c || !c.id) continue;
+      const name = [c.given_name, c.family_name].filter(Boolean).join(" ").trim();
+      map.set(c.id, {
+        displayName: name || "Unknown Customer",
+        phone: c.phone_number ? String(c.phone_number) : "",
+        email: extractCustomerEmail(c),
+      });
+    }
+  } catch (err) {
+    console.error("[revenueFollowups] batch-retrieve customers:", err.message || err);
+  }
+  return map;
+}
+
+function applyCustomerLookup(customerId, fallbackName, invoiceEmail, customerMap) {
+  const cid = customerId ? String(customerId).trim() : "";
+  const invMail = invoiceEmail ? String(invoiceEmail).trim() : "";
+  if (!cid) {
+    return {
+      customerName: fallbackName || "Unknown Customer",
+      phone: "",
+      email: invMail || "",
+    };
+  }
+  const info = customerMap.get(cid);
+  if (!info) {
+    return {
+      customerName: "Unknown Customer",
+      phone: "",
+      email: invMail || "",
+    };
+  }
+  return {
+    customerName: info.displayName || "Unknown Customer",
+    phone: info.phone || "",
+    email: (info.email && String(info.email)) || invMail || "",
+  };
+}
+
 /**
  * @returns {Promise<{ unpaidInvoices: object[], staleEstimates: object[] }>}
  */
@@ -81,6 +163,10 @@ async function getRevenueFollowups() {
           inv.scheduled_at ||
           "";
         const primary = inv.primary_recipient || {};
+        const customerId =
+          (primary.customer_id && String(primary.customer_id)) ||
+          (inv.customer_id && String(inv.customer_id)) ||
+          "";
         const customerName =
           [primary.given_name, primary.family_name].filter(Boolean).join(" ").trim() ||
           "Customer";
@@ -93,15 +179,19 @@ async function getRevenueFollowups() {
           {};
         unpaidInvoices.push({
           id: inv.id || "",
+          customerId,
           customerName,
+          invoiceEmail: extractPrimaryEmail(primary),
           amount: centsToAmount(amountMoney.amount),
           dueDate: due ? String(due) : "",
           daysPastDue: daysBetweenPast(due || inv.updated_at || inv.created_at),
+          createdAt: inv.created_at ? String(inv.created_at) : "",
         });
       }
       unpaidInvoices.sort(
         (a, b) => (b.daysPastDue || 0) - (a.daysPastDue || 0)
       );
+      unpaidInvoices.splice(MAX_UNPAID_ROWS);
     } else {
       const t = await invRes.text();
       console.error("[revenueFollowups] invoice search failed:", invRes.status, t.slice(0, 200));
@@ -148,12 +238,15 @@ async function getRevenueFollowups() {
           : "";
         staleEstimates.push({
           id: order.id || "",
+          customerId: order.customer_id ? String(order.customer_id) : "",
           customerName,
+          invoiceEmail: "",
           amount,
           createdAt: created ? String(created) : "",
           daysOld: daysBetweenPast(created),
         });
       }
+      staleEstimates.splice(MAX_STALE_ROWS);
     } else {
       const t = await ordRes.text();
       console.error("[revenueFollowups] orders search failed:", ordRes.status, t.slice(0, 200));
@@ -162,7 +255,53 @@ async function getRevenueFollowups() {
     console.error("[revenueFollowups] orders search error:", err.message || err);
   }
 
-  return { unpaidInvoices, staleEstimates };
+  const idList = [
+    ...unpaidInvoices.map((r) => r.customerId),
+    ...staleEstimates.map((r) => r.customerId),
+  ];
+  const customerMap = await batchRetrieveCustomersMap(baseUrl, headers, idList);
+
+  const unpaidOut = unpaidInvoices.map((r) => {
+    const { customerId, customerName: fb, invoiceEmail, ...rest } = r;
+    const { customerName, phone, email } = applyCustomerLookup(
+      customerId,
+      fb,
+      invoiceEmail,
+      customerMap
+    );
+    return {
+      id: rest.id || "",
+      customerId: customerId || "",
+      customerName,
+      phone,
+      email,
+      amount: rest.amount || "",
+      dueDate: rest.dueDate || "",
+      daysPastDue: Number(rest.daysPastDue) || 0,
+    };
+  });
+
+  const staleOut = staleEstimates.map((r) => {
+    const { customerId, customerName: fb, invoiceEmail, ...rest } = r;
+    const { customerName, phone, email } = applyCustomerLookup(
+      customerId,
+      fb,
+      invoiceEmail,
+      customerMap
+    );
+    return {
+      id: rest.id || "",
+      customerId: customerId || "",
+      customerName,
+      phone,
+      email,
+      amount: rest.amount || "",
+      createdAt: rest.createdAt || "",
+      daysOld: Number(rest.daysOld) || 0,
+    };
+  });
+
+  return { unpaidInvoices: unpaidOut, staleEstimates: staleOut };
 }
 
 module.exports = { getRevenueFollowups };

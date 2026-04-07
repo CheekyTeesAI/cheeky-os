@@ -15,6 +15,7 @@ const revenueRouter = require("./routes/revenue");
 const mobileDashboardRouter = require("./routes/mobileDashboard");
 const dashboardNextRouter = require("./routes/dashboardNext");
 const squareDraftRouter = require("./routes/squareDraft");
+const salesRouter = require("./routes/sales");
 
 /** Bundle 1 requires 3001; override with CHEEKY_OS_PORT only (not generic PORT). */
 const PORT = Number(process.env.CHEEKY_OS_PORT || 3001);
@@ -46,6 +47,7 @@ app.use("/cheeky", cheekyRouter);
 app.use("/revenue", revenueRouter);
 app.use("/dashboard", dashboardNextRouter);
 app.use("/square", squareDraftRouter);
+app.use("/sales", salesRouter);
 app.use("/", mobileDashboardRouter);
 
 app.use((err, req, res, _next) => {
@@ -69,6 +71,7 @@ async function main() {
     console.log(`[cheeky-os] scripts: http://127.0.0.1:${PORT}/revenue/scripts`);
     console.log(`[cheeky-os] next-action: http://127.0.0.1:${PORT}/dashboard/next-action`);
     console.log(`[cheeky-os] draft-invoice: POST http://127.0.0.1:${PORT}/square/create-draft-invoice`);
+    console.log(`[cheeky-os] sales/command-center: http://127.0.0.1:${PORT}/sales/command-center`);
     console.log(`[cheeky-os] mobile: http://127.0.0.1:${PORT}/dashboard/today/mobile`);
     console.log(`[cheeky-os] legacy mount: http://127.0.0.1:${PORT}/cheeky/health`);
   });
