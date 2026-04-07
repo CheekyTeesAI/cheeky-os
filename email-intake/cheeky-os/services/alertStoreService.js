@@ -103,6 +103,7 @@ function addAlert(partial) {
     severity,
     createdAt: new Date().toISOString(),
     resolved: false,
+    escalationLevel: 0,
   };
   store.alerts.push(row);
   while (store.alerts.length > MAX_ALERTS) {
@@ -134,6 +135,16 @@ function resolveAlert(id) {
   return false;
 }
 
+/**
+ * Mutate each unresolved alert in place (for escalation pass).
+ * @param {(a: object) => void} fn
+ */
+function mutateActiveAlerts(fn) {
+  for (const a of store.alerts) {
+    if (a && a.resolved !== true) fn(a);
+  }
+}
+
 const SEVERITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
 
 /**
@@ -144,12 +155,23 @@ function severityRank(s) {
 }
 
 /**
- * Active alerts sorted critical → low (then newest first).
+ * Bundle 24 — escalation level (high first), then critical → medium, then newest.
+ * @param {unknown} a
+ */
+function escalationRank(a) {
+  const n = Number(a && a.escalationLevel);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/**
  * @returns {object[]}
  */
 function getActiveAlertsSorted() {
   const list = getActiveAlerts();
   list.sort((a, b) => {
+    const eb = escalationRank(b);
+    const ea = escalationRank(a);
+    if (eb !== ea) return eb - ea;
     const d = severityRank(a.severity) - severityRank(b.severity);
     if (d !== 0) return d;
     return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
@@ -162,5 +184,6 @@ module.exports = {
   getActiveAlerts,
   getActiveAlertsSorted,
   resolveAlert,
+  mutateActiveAlerts,
   severityRank,
 };

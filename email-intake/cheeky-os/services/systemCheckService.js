@@ -9,7 +9,11 @@ const {
   buildCopilotGuidance,
   fallbackCopilot,
 } = require("./copilotService");
-const { addAlert, getActiveAlerts } = require("./alertStoreService");
+const { addAlert, getActiveAlerts, mutateActiveAlerts } = require("./alertStoreService");
+const {
+  evaluateEscalation,
+  buildEscalatedMessage,
+} = require("./escalationService");
 
 /** Last completed check’s active alert count (for shouldNotify). */
 let lastRunActiveAlertCount = 0;
@@ -89,6 +93,18 @@ async function runSystemCheck() {
     const summarySafe = summary || { counts: {}, highlights: {} };
     persistAlertsFromSummary(summarySafe);
 
+    mutateActiveAlerts((alert) => {
+      const { escalationLevel: computed } = evaluateEscalation(alert);
+      const prevRaw = Number(alert.escalationLevel);
+      const prev = Number.isFinite(prevRaw)
+        ? Math.min(2, Math.max(0, prevRaw))
+        : 0;
+      if (computed > prev) {
+        alert.message = buildEscalatedMessage(alert.message, computed);
+      }
+      alert.escalationLevel = computed;
+    });
+
     const stored = getActiveAlerts();
     const activeCount = stored.length;
     const shouldNotify = activeCount > 0 && activeCount > beforeCount;
@@ -106,6 +122,17 @@ async function runSystemCheck() {
   } catch (err) {
     console.error("[systemCheck]", err.message || err);
     const fb = fallbackCopilot();
+    mutateActiveAlerts((alert) => {
+      const { escalationLevel: computed } = evaluateEscalation(alert);
+      const prevRaw = Number(alert.escalationLevel);
+      const prev = Number.isFinite(prevRaw)
+        ? Math.min(2, Math.max(0, prevRaw))
+        : 0;
+      if (computed > prev) {
+        alert.message = buildEscalatedMessage(alert.message, computed);
+      }
+      alert.escalationLevel = computed;
+    });
     const stored = getActiveAlerts();
     const activeCount = stored.length;
     const shouldNotify = activeCount > 0 && activeCount > beforeCount;

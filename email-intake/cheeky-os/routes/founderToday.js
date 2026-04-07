@@ -59,18 +59,31 @@ function activeAlertsPanelHtml() {
       )
         .trim()
         .toUpperCase();
+      const escLv = Number(
+        /** @type {{ escalationLevel?: unknown }} */ (a).escalationLevel
+      );
+      const isEscalated = Number.isFinite(escLv) && escLv > 0;
+      const isUrgentEsc = Number.isFinite(escLv) && escLv >= 2;
       const crit = sev === "CRITICAL";
-      const band = crit
-        ? "background:#450a0a;border:2px solid #ef4444;box-shadow:0 0 0 1px rgba(239,68,68,0.25);"
-        : "background:#1e1b2e;border:1px solid #4c1d95;";
+      const band = isUrgentEsc
+        ? "background:#3f0a12;border:3px solid #f43f5e;box-shadow:0 0 12px rgba(244,63,94,0.35);"
+        : isEscalated
+          ? "background:#3a1520;border:2px solid #f97316;"
+          : crit
+            ? "background:#450a0a;border:2px solid #ef4444;box-shadow:0 0 0 1px rgba(239,68,68,0.25);"
+            : "background:#1e1b2e;border:1px solid #4c1d95;";
       const sevColor =
         crit ? "#fecaca" : sev === "HIGH" ? "#fdba74" : sev === "MEDIUM" ? "#fde68a" : "#94a3b8";
+      const escBadge = isEscalated
+        ? `<div style="font-size:0.68rem;font-weight:900;letter-spacing:0.06em;color:#fda4af;margin-bottom:8px;">🚨 ESCALATED${isUrgentEsc ? " · URGENT" : ""}</div>`
+        : "";
       const msg = esc(String(/** @type {{ message?: string }} */ (a).message || ""));
       const ca = String(/** @type {{ createdAt?: string }} */ (a).createdAt || "");
       const when = ca
         ? esc(new Date(ca).toLocaleString())
         : "";
       return `<div style="margin-bottom:10px;padding:12px;border-radius:12px;${band}">
+    ${escBadge}
     <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
       <span style="font-weight:700;font-size:0.95rem;line-height:1.35;color:#f8fafc;">${msg}</span>
       <span style="font-size:0.68rem;font-weight:800;color:${sevColor};white-space:nowrap;">${esc(sev || "—")}</span>
