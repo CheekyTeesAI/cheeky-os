@@ -142,6 +142,9 @@ async function main() {
     console.log(
       `[cheeky-os] retargeting: GET /retargeting/targets · POST /retargeting/run → http://127.0.0.1:${PORT}/retargeting/...`
     );
+    console.log(
+      `[cheeky-os] production routing: POST http://127.0.0.1:${PORT}/production/route`
+    );
     console.log(`[cheeky-os] followups: http://127.0.0.1:${PORT}/revenue/followups`);
     console.log(`[cheeky-os] scripts: http://127.0.0.1:${PORT}/revenue/scripts`);
     console.log(`[cheeky-os] next-action: http://127.0.0.1:${PORT}/dashboard/next-action`);

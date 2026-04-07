@@ -4,8 +4,67 @@
 
 const express = require("express");
 const { getProductionQueue } = require("../services/orderStatusEngine");
+const { computeRoutingDecision } = require("../services/routingService");
+const { getPrisma } = require("../marketing/prisma-client");
 
 const router = express.Router();
+
+/**
+ * @param {string} orderId
+ * @param {object} route
+ * @returns {Promise<boolean>}
+ */
+async function attachRoutingRecommendation(orderId, route) {
+  const id = String(orderId || "").trim();
+  if (!id || !route || typeof route !== "object") return false;
+  const prisma = getPrisma();
+  if (!prisma || !prisma.captureOrder) return false;
+  try {
+    const order = await prisma.captureOrder.findUnique({ where: { id } });
+    if (!order) return false;
+    let mem = {};
+    try {
+      mem = JSON.parse(order.memoryJson || "{}");
+    } catch (_) {
+      mem = {};
+    }
+    if (!mem || typeof mem !== "object" || Array.isArray(mem)) mem = {};
+    mem.routingRecommendation = {
+      ...route,
+      generatedAt: new Date().toISOString(),
+    };
+    await prisma.captureOrder.update({
+      where: { id },
+      data: { memoryJson: JSON.stringify(mem) },
+    });
+    return true;
+  } catch (err) {
+    console.error("[production/route] attach", err.message || err);
+    return false;
+  }
+}
+
+router.post("/route", async (req, res) => {
+  try {
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const route = computeRoutingDecision(body);
+    const orderId = String(body.orderId != null ? body.orderId : "").trim();
+    if (
+      orderId &&
+      (route.recommendedRoute === "in_house" ||
+        route.recommendedRoute === "vendor")
+    ) {
+      await attachRoutingRecommendation(orderId, route);
+    }
+    return res.json({ success: true, route });
+  } catch (err) {
+    console.error("[production/route]", err.message || err);
+    return res.status(500).json({
+      success: false,
+      error: "routing_failed",
+    });
+  }
+});
 
 router.get("/queue", async (_req, res) => {
   try {

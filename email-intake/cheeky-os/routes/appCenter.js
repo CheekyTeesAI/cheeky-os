@@ -49,6 +49,7 @@ const {
 } = require("../services/quickQuoteService");
 const { buildLeadConversionPayload } = require("../services/leadConversionService");
 const { getRetargetingTargets } = require("../services/retargetingTargetsService");
+const { getRecentRoutingPreviews } = require("../services/routingPreviewService");
 
 const router = Router();
 
@@ -605,6 +606,71 @@ router.get("/app", async (req, res) => {
     ${retargetListHtml}
     <button type="button" id="app-retargeting-run" style="${BTN_FULL}border-color:#e879f9;background:#fae8ff;color:#3b0764;">Run Retargeting Push</button>
     <p id="app-retargeting-msg" style="font-size:0.8rem;opacity:0.78;margin:8px 0 0;min-height:1em;"></p>
+  </section>`;
+  let routingPreviews = [];
+  try {
+    routingPreviews = await getRecentRoutingPreviews(5);
+  } catch (_) {
+    routingPreviews = [];
+  }
+  const prLink =
+    "font-size:0.74rem;font-weight:700;padding:8px 10px;border-radius:6px;border:1px solid #0ea5e9;background:#0c2744;color:#7dd3fc;text-decoration:none;display:inline-block;";
+  const routingListHtml =
+    routingPreviews.length > 0
+      ? routingPreviews
+          .map((r) => {
+            const mihPct = ((Number(r.marginInHouse) || 0) * 100).toFixed(1);
+            const mvPct = ((Number(r.marginVendor) || 0) * 100).toFixed(1);
+            const rr = String(r.recommendedRoute || "");
+            const routeDisp = esc(
+              rr === "in_house"
+                ? "In-house"
+                : rr === "vendor"
+                  ? "Vendor"
+                  : "Review"
+            );
+            const routeColor =
+              rr === "vendor"
+                ? "#7dd3fc"
+                : rr === "review"
+                  ? "#fde047"
+                  : "#86efac";
+            const rushHtml = r.rush
+              ? `<span style="margin-left:6px;font-size:0.65rem;font-weight:900;background:#7f1d1d;color:#fecaca;padding:2px 6px;border-radius:4px;">RUSH</span>`
+              : "";
+            const saveNote =
+              Number(r.vendorSavingsPctPoints) > 0 && rr === "vendor"
+                ? `<div style="margin-top:4px;font-size:0.72rem;color:#7dd3fc;">Vendor margin edge: +${esc(String(r.vendorSavingsPctPoints))} pts</div>`
+                : r.vendorBetterButRushed
+                  ? `<div style="margin-top:4px;font-size:0.72rem;color:#fdba74;">Rush → in-house; vendor margin was higher</div>`
+                  : "";
+            return `
+    <div class="pr-card" style="background:#101010;padding:10px;border-radius:8px;margin-top:8px;font-size:0.82rem;border:1px solid #164e63;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;flex-wrap:wrap;">
+        <div style="font-weight:800;color:#e0f2fe;">${esc(r.customerName || "—")}</div>
+        ${rushHtml}
+      </div>
+      <div style="margin-top:4px;font-size:0.76rem;opacity:0.88;">Qty <strong>${esc(String(r.quantity || 0))}</strong> · <span style="text-transform:uppercase;">${esc(
+        String(r.productionType || "")
+      )}</span></div>
+      <div style="margin-top:4px;font-size:0.78rem;">Route: <strong style="color:${routeColor};">${routeDisp}</strong></div>
+      <div style="margin-top:4px;font-size:0.74rem;opacity:0.9;">Margins: in-house <strong>${esc(mihPct)}%</strong> · vendor <strong>${esc(mvPct)}%</strong></div>
+      ${saveNote}
+      <div style="margin-top:6px;font-size:0.73rem;line-height:1.35;opacity:0.82;">${esc(r.reason || "")}</div>
+      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+        <a href="/production/mobile" style="${prLink}">Run In-House</a>
+        <span style="${prLink};opacity:0.85;border-style:dashed;cursor:default;background:#1e293b;color:#94a3b8;">Send to Vendor</span>
+        <a href="/capture/founder" style="${prLink.replace("#0c2744", "#422006").replace("#0ea5e9", "#f97316").replace("#7dd3fc", "#fed7aa")}">Review</a>
+      </div>
+    </div>`;
+          })
+          .join("")
+      : `<p style="opacity:0.72;font-size:0.85rem;margin:0;">No routing decisions available.</p>`;
+  const routingPanelHtml = `
+  <section style="${CARD};border:2px solid #0369a1;background:#0a1628;">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 6px;color:#7dd3fc;">🏭 PRODUCTION ROUTING</h2>
+    <p style="margin:0 0 10px;font-size:0.78rem;line-height:1.45;opacity:0.88;">Recommendations only (ballpark costs on recent capture jobs). <code style="font-size:0.68rem;">POST /production/route</code> · does not move workflow automatically.</p>
+    ${routingListHtml}
   </section>`;
   let reactPayload = { customers: [], summary: { critical: 0, high: 0, medium: 0, low: 0 } };
   try {
@@ -1763,6 +1829,7 @@ router.get("/app", async (req, res) => {
   ${quickQuotesPanelHtml}
   ${leadConversionPanelHtml}
   ${retargetingPanelHtml}
+  ${routingPanelHtml}
   ${reactivationPanelHtml}
   ${nextActionsPanelHtml}
   <h1 style="font-size:1.35rem;margin:8px 0 4px;color:#f0ff44;font-weight:900;">Cheeky Tees</h1>
