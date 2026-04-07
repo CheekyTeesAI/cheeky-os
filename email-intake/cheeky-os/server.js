@@ -33,6 +33,7 @@ const notificationsRouter = require("./routes/notifications");
 const appCenterRouter = require("./routes/appCenter");
 const runbookRouter = require("./routes/runbook");
 const autopilotRouter = require("./routes/autopilot");
+const pricingRouter = require("./routes/pricing");
 const { router: responsesRouter } = require("./routes/responses");
 
 /** Bundle 1 requires 3001; override with CHEEKY_OS_PORT only (not generic PORT). */
@@ -85,6 +86,7 @@ app.use("/notifications", notificationsRouter);
 app.use("/responses", responsesRouter);
 app.use("/runbook", runbookRouter);
 app.use("/autopilot", autopilotRouter);
+app.use("/pricing", pricingRouter.router);
 app.use(appCenterRouter);
 app.use("/", mobileDashboardRouter);
 
@@ -137,6 +139,9 @@ async function main() {
     );
     console.log(
       `[cheeky-os] autopilot: GET http://127.0.0.1:${PORT}/autopilot/status · POST /autopilot/enable · POST /autopilot/disable · POST /autopilot/kill · POST /autopilot/restore`
+    );
+    console.log(
+      `[cheeky-os] pricing: POST http://127.0.0.1:${PORT}/pricing/check`
     );
     console.log(`[cheeky-os] mobile: http://127.0.0.1:${PORT}/dashboard/today/mobile`);
     console.log(

@@ -9,6 +9,7 @@ const { prepareMessage } = require("../services/messagePrepService");
 const { getDailySummary } = require("../services/dailySummaryService");
 const { getCopilotTodayPayload } = require("../services/copilotService");
 const { getActiveAlertsSorted } = require("../services/alertStoreService");
+const { pricingRiskSectionHtml } = require("./pricing");
 
 const router = Router();
 
@@ -653,6 +654,7 @@ router.get("/today", async (_req, res) => {
   ${systemCheckPanelHtml()}
   ${automationIntervalPanelHtml()}
   ${copilotHtml(copilot)}
+  ${pricingRiskSectionHtml(esc)}
   ${todaySummaryHtml(summary)}
   <h1 style="font-size:1.5rem;margin:8px 0 6px;color:#7dd3fc;">Founder — Today</h1>
   <p style="opacity:0.85;margin:0 0 14px;font-size:0.95rem;">Daily command board</p>

@@ -22,6 +22,7 @@ const {
   readRecentAutoInvoiceEntries,
   readRecentReplyDraftEntries,
 } = require("./responses");
+const { pricingRiskSectionHtml } = require("./pricing");
 
 const router = Router();
 
@@ -1150,6 +1151,7 @@ router.get("/app", async (req, res) => {
   <p style="margin:0 0 12px;font-size:0.92rem;opacity:0.75;">Command Center</p>
   ${topBar}
   ${autopilotPanelHtml}
+  ${pricingRiskSectionHtml(esc)}
   ${salesLoopHtml}
   ${operatorPanelHtml}
   ${runbookPanelHtml}
