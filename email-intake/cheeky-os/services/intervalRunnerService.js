@@ -5,6 +5,7 @@
 const { runSystemCheck } = require("./systemCheckService");
 const { runFollowupExecutor } = require("./followupExecutorService");
 const { runInvoiceExecutor } = require("./invoiceExecutorService");
+const { runProductionExecutor } = require("./productionExecutorService");
 
 const state = {
   isRunning: false,
@@ -42,6 +43,13 @@ function tick() {
       })
       .catch((err) => {
         console.error("[intervalRunner] invoiceExecutor", err.message || err);
+      })
+      .then(() => runProductionExecutor())
+      .then((px) => {
+        console.log("[intervalRunner] productionExecutor", px);
+      })
+      .catch((err) => {
+        console.error("[intervalRunner] productionExecutor", err.message || err);
       });
   } catch (err) {
     console.error("[intervalRunner] tick", err.message || err);
