@@ -7,6 +7,7 @@ const { getFounderDashboardPayload } = require("../services/founderTodayService"
 const { priVal } = require("../services/automationActionsService");
 const { prepareMessage } = require("../services/messagePrepService");
 const { getDailySummary } = require("../services/dailySummaryService");
+const { getCopilotTodayPayload } = require("../services/copilotService");
 
 const router = Router();
 
@@ -25,6 +26,46 @@ const BTN_SUBMIT =
   "width:100%;box-sizing:border-box;padding:14px 16px;margin-top:10px;border-radius:12px;font-weight:800;font-size:0.95rem;border:1px solid #334155;background:#1e3a5f;color:#7dd3fc;cursor:pointer;min-height:48px;";
 const INPUT =
   "width:100%;box-sizing:border-box;padding:10px 12px;margin-top:4px;border-radius:10px;border:1px solid #475569;background:#0f1419;color:#e2e8f0;font-size:1rem;";
+
+function copilotHtml(cp) {
+  const msg =
+    String((cp && cp.message) || "").trim() ||
+    "Review follow-ups and blockers on the board below.";
+  const tops = Array.isArray(cp && cp.topActions)
+    ? /** @type {object[]} */ (cp.topActions).slice(0, 3)
+    : [];
+  const list = tops.length
+    ? tops
+        .map((t) => {
+          if (!t || typeof t !== "object") return "";
+          const label = String(
+            /** @type {{ label?: string }} */ (t).label || ""
+          ).trim();
+          const cn = String(
+            /** @type {{ customerName?: string }} */ (t).customerName || ""
+          ).trim();
+          const line =
+            [label, cn].filter(Boolean).join(" · ") ||
+            String(/** @type {{ type?: string }} */ (t).type || "").trim();
+          return line
+            ? `<li style="margin:8px 0;line-height:1.4;">${esc(line)}</li>`
+            : "";
+        })
+        .filter(Boolean)
+        .join("")
+    : "";
+  return `<section style="margin:0 0 18px 0;padding:18px;border-radius:16px;background:#1a1033;border:2px solid #a78bfa;">
+  <h2 style="font-size:1.05rem;margin:0 0 14px;color:#f5f3ff;font-weight:800;letter-spacing:0.02em;">🧠 COPILOT SAYS</h2>
+  <div style="font-size:1.12rem;line-height:1.55;color:#faf5ff;font-weight:650;white-space:pre-wrap;word-break:break-word;text-shadow:0 1px 0 rgba(0,0,0,0.35);">${esc(
+    msg
+  )}</div>
+  ${
+    list
+      ? `<ul style="margin:16px 0 0 0;padding-left:1.15rem;color:#ddd6fe;font-size:1rem;line-height:1.35;list-style:disc;">${list}</ul>`
+      : ""
+  }
+</section>`;
+}
 
 function todaySummaryHtml(sum) {
   const c = (sum && sum.counts) || {};
@@ -407,6 +448,20 @@ router.get("/today", async (_req, res) => {
     };
   }
 
+  let copilot;
+  try {
+    copilot = await getCopilotTodayPayload();
+  } catch (err) {
+    console.error("[founder/today] copilot:", err.message || err);
+    copilot = {
+      message:
+        "Review follow-ups and payment blockers first, then work through system actions.",
+      topActions: [],
+      alerts: [],
+      suggestions: [],
+    };
+  }
+
   const next = data.next || {};
   const sa = (data.systemActions || [])
     .slice()
@@ -455,6 +510,7 @@ router.get("/today", async (_req, res) => {
   <title>Founder — Today</title>
 </head>
 <body style="margin:0;padding:16px;padding-bottom:max(28px,env(safe-area-inset-bottom));font-family:system-ui,-apple-system,sans-serif;background:#0a0c10;color:#e8eaed;max-width:560px;margin-left:auto;margin-right:auto;">
+  ${copilotHtml(copilot)}
   ${todaySummaryHtml(summary)}
   <h1 style="font-size:1.5rem;margin:8px 0 6px;color:#7dd3fc;">Founder — Today</h1>
   <p style="opacity:0.85;margin:0 0 14px;font-size:0.95rem;">Daily command board</p>
