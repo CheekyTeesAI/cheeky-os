@@ -29,6 +29,7 @@ const automationRouter = require("./routes/automation");
 const summaryTodayRouter = require("./routes/summaryToday");
 const copilotTodayRouter = require("./routes/copilotToday");
 const systemCheckRouter = require("./routes/systemCheck");
+const notificationsRouter = require("./routes/notifications");
 
 /** Bundle 1 requires 3001; override with CHEEKY_OS_PORT only (not generic PORT). */
 const PORT = Number(process.env.CHEEKY_OS_PORT || 3001);
@@ -76,6 +77,7 @@ app.use("/founder", founderTodayRouter);
 app.use("/automation", automationRouter);
 app.use("/summary", summaryTodayRouter);
 app.use("/copilot", copilotTodayRouter);
+app.use("/notifications", notificationsRouter);
 app.use("/", mobileDashboardRouter);
 
 app.use((err, req, res, _next) => {
@@ -131,6 +133,9 @@ async function main() {
     console.log(`[cheeky-os] founder today: GET http://127.0.0.1:${PORT}/founder/today`);
     console.log(`[cheeky-os] summary today: GET http://127.0.0.1:${PORT}/summary/today`);
     console.log(`[cheeky-os] copilot today: GET http://127.0.0.1:${PORT}/copilot/today`);
+    console.log(
+      `[cheeky-os] notifications: POST http://127.0.0.1:${PORT}/notifications/send-alerts`
+    );
     console.log(
       `[cheeky-os] automation actions: GET http://127.0.0.1:${PORT}/automation/actions`
     );

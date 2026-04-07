@@ -11,6 +11,9 @@ const {
 } = require("./copilotService");
 const { addAlert, getActiveAlerts } = require("./alertStoreService");
 
+/** Last completed check’s active alert count (for shouldNotify). */
+let lastRunActiveAlertCount = 0;
+
 /**
  * @param {{ counts?: object }} summary
  */
@@ -61,10 +64,12 @@ function persistAlertsFromSummary(summary) {
  *   actions: object[],
  *   alerts: string[],
  *   copilotMessage: string,
- *   storedAlerts: object[]
+ *   storedAlerts: object[],
+ *   shouldNotify: boolean
  * }>}
  */
 async function runSystemCheck() {
+  const beforeCount = lastRunActiveAlertCount;
   try {
     const [summary, autoPack, auto] = await Promise.all([
       getDailySummary(),
@@ -84,17 +89,27 @@ async function runSystemCheck() {
     const summarySafe = summary || { counts: {}, highlights: {} };
     persistAlertsFromSummary(summarySafe);
 
+    const stored = getActiveAlerts();
+    const activeCount = stored.length;
+    const shouldNotify = activeCount > 0 && activeCount > beforeCount;
+    lastRunActiveAlertCount = activeCount;
+
     return {
       timestamp,
       summary: summarySafe,
       actions,
       alerts: Array.isArray(copilot.alerts) ? copilot.alerts : [],
       copilotMessage: String(copilot.message || ""),
-      storedAlerts: getActiveAlerts(),
+      storedAlerts: stored,
+      shouldNotify,
     };
   } catch (err) {
     console.error("[systemCheck]", err.message || err);
     const fb = fallbackCopilot();
+    const stored = getActiveAlerts();
+    const activeCount = stored.length;
+    const shouldNotify = activeCount > 0 && activeCount > beforeCount;
+    lastRunActiveAlertCount = activeCount;
     return {
       timestamp: new Date().toISOString(),
       summary: { counts: {}, highlights: {} },
@@ -103,7 +118,8 @@ async function runSystemCheck() {
       copilotMessage:
         fb.message ||
         "System check did not complete — verify services and try again.",
-      storedAlerts: getActiveAlerts(),
+      storedAlerts: stored,
+      shouldNotify,
     };
   }
 }

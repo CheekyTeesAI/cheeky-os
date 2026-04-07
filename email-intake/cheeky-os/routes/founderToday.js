@@ -30,11 +30,25 @@ const INPUT =
 
 function activeAlertsPanelHtml() {
   const items = getActiveAlertsSorted().slice(0, 5);
+  const mailBtnStyle =
+    "margin-top:14px;min-width:220px;padding:12px 16px;border-radius:12px;font-weight:800;font-size:0.9rem;border:1px solid #1d4ed8;background:#1e3a8a;color:#e0e7ff;cursor:pointer;min-height:48px;";
+  const alertEmailBlock =
+    '<button type="button" id="cheeky-send-alerts-btn" onclick="if(window.cheekySendAlertEmail)window.cheekySendAlertEmail();" style="' +
+    mailBtnStyle +
+    '">📩 SEND ALERT EMAIL</button>' +
+    '<div id="send-alerts-msg" style="margin-top:8px;font-size:0.82rem;color:#94a3b8;"></div>' +
+    "<script>window.cheekySendAlertEmail=function(){var m=document.getElementById('send-alerts-msg');var b=document.getElementById('cheeky-send-alerts-btn');if(b)b.disabled=true;if(m)m.textContent='Sending\\u2026';" +
+    "fetch('/notifications/send-alerts',{method:'POST'}).then(function(r){return r.json();}).then(function(j){" +
+    "if(m)m.textContent=j.sent?('Sent: '+j.count+' high/critical alert(s)'):(j.message||(j.error||'Done'));" +
+    "if(b)b.disabled=false;}).catch(function(){if(m)m.textContent='Request failed.';if(b)b.disabled=false;});};<\/script>";
   if (!items.length) {
     return (
       '<section style="margin:0 0 18px 0;padding:14px 16px;border-radius:16px;background:#0f172a;border:1px solid #334155;">' +
       '<h2 style="font-size:1.02rem;margin:0 0 8px;color:#fecaca;font-weight:800;">🚨 ACTIVE ALERTS</h2>' +
-      '<p style="margin:0;font-size:0.9rem;opacity:0.78;line-height:1.4;">No active alerts. Run <strong>Refresh System</strong> below to scan and populate.</p></section>'
+      '<p style="margin:0;font-size:0.9rem;opacity:0.78;line-height:1.4;">No active alerts. Run <strong>Refresh System</strong> below to scan and populate.</p>' +
+      '<p style="margin:10px 0 0;font-size:0.8rem;opacity:0.65;">Email sends <strong>high/critical</strong> only — needs <code style="background:#1e293b;padding:2px 5px;border-radius:4px;">RESEND_API_KEY</code> + recipient env.</p>' +
+      alertEmailBlock +
+      "</section>"
     );
   }
   const cards = items
@@ -71,6 +85,8 @@ function activeAlertsPanelHtml() {
     '<h2 style="font-size:1.02rem;margin:0 0 12px;color:#fecaca;font-weight:800;">🚨 ACTIVE ALERTS</h2>' +
     cards +
     '<p style="margin:12px 0 0;font-size:0.72rem;opacity:0.72;color:#94a3b8;line-height:1.35;">Resolve actions — API wiring in next bundle.</p>' +
+    '<p style="margin:10px 0 0;font-size:0.78rem;opacity:0.75;">Batch email: high/critical alerts only.</p>' +
+    alertEmailBlock +
     "</section>"
   );
 }
