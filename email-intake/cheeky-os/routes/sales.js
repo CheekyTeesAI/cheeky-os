@@ -11,6 +11,7 @@ const {
   buildSalesLoop,
   runSalesAutomationCycle,
 } = require("../services/salesLoopService");
+const { runSalesOperatorCycle } = require("../services/salesOperatorService");
 
 const router = Router();
 const TOP = 5;
@@ -89,6 +90,35 @@ router.post("/run", async (_req, res) => {
       draftInvoicesCreated: 0,
       skipped: 0,
       errors: [err instanceof Error ? err.message : String(err)],
+    });
+  }
+});
+
+/** Bundle 31 — full follow-up → response interpret → next-step (no auto-invoice). */
+router.post("/operator/run", async (req, res) => {
+  try {
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const responses = Array.isArray(body.responses) ? body.responses : undefined;
+    const { cycleSummary, events } = await runSalesOperatorCycle(
+      responses !== undefined ? { responses } : {}
+    );
+    return res.json({
+      success: true,
+      cycleSummary,
+      events,
+    });
+  } catch (err) {
+    console.error("[sales/operator/run]", err.message || err);
+    return res.json({
+      success: false,
+      cycleSummary: {
+        followupsSent: 0,
+        responsesProcessed: 0,
+        invoicesPrepared: 0,
+        queuedActions: 0,
+      },
+      events: [],
+      error: err instanceof Error ? err.message : String(err),
     });
   }
 });

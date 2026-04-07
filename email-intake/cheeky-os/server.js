@@ -114,6 +114,9 @@ async function main() {
       `[cheeky-os] sales loop: GET http://127.0.0.1:${PORT}/sales/loop · POST http://127.0.0.1:${PORT}/sales/run`
     );
     console.log(
+      `[cheeky-os] sales operator: POST http://127.0.0.1:${PORT}/sales/operator/run`
+    );
+    console.log(
       `[cheeky-os] responses: POST http://127.0.0.1:${PORT}/responses/ingest`
     );
     console.log(

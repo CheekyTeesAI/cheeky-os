@@ -13,6 +13,7 @@ const { getProductionQueue } = require("../services/orderStatusEngine");
 const { prepareMessage } = require("../services/messagePrepService");
 const { runSystemCheck } = require("../services/systemCheckService");
 const { buildSalesLoop } = require("../services/salesLoopService");
+const { readLastOperatorRun } = require("../services/salesOperatorService");
 const {
   readRecentEntries,
   readRecentNextStepEntries,
@@ -281,6 +282,61 @@ router.get("/app", async (req, res) => {
             })
             .join("")
     }
+  </section>`;
+
+  const lastOp = readLastOperatorRun();
+  const opSum = (lastOp && lastOp.cycleSummary) || {};
+  const opEvents = Array.isArray(lastOp && lastOp.events) ? lastOp.events : [];
+  const opEventsShow = opEvents.slice(0, 3);
+  const operatorPanelHtml = `
+  <section style="${CARD}">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 10px;color:#a7f3d0;">🤖 SALES OPERATOR</h2>
+    <p style="margin:0 0 12px;font-size:0.82rem;opacity:0.75;line-height:1.45;">Runs follow-up executor → interpret responses → next-step queue (no auto-invoice).</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.85rem;margin-bottom:12px;">
+      <div style="background:#101010;padding:10px;border-radius:8px;">
+        <div style="opacity:0.65;font-size:0.7rem;">Follow-ups sent</div>
+        <div style="font-size:1.15rem;font-weight:800;color:#86efac;">${esc(
+    String(opSum.followupsSent ?? 0)
+  )}</div>
+      </div>
+      <div style="background:#101010;padding:10px;border-radius:8px;">
+        <div style="opacity:0.65;font-size:0.7rem;">Responses processed</div>
+        <div style="font-size:1.15rem;font-weight:800;color:#7dd3fc;">${esc(
+    String(opSum.responsesProcessed ?? 0)
+  )}</div>
+      </div>
+      <div style="background:#101010;padding:10px;border-radius:8px;">
+        <div style="opacity:0.65;font-size:0.7rem;">Invoice-ready</div>
+        <div style="font-size:1.15rem;font-weight:800;color:#fde047;">${esc(
+    String(opSum.invoicesPrepared ?? 0)
+  )}</div>
+      </div>
+      <div style="background:#101010;padding:10px;border-radius:8px;">
+        <div style="opacity:0.65;font-size:0.7rem;">Actions queued</div>
+        <div style="font-size:1.15rem;font-weight:800;color:#fdba74;">${esc(
+    String(opSum.queuedActions ?? 0)
+  )}</div>
+      </div>
+    </div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:0.72rem;font-weight:800;opacity:0.7;margin-bottom:6px;letter-spacing:0.04em;">LAST EVENTS</div>
+      ${
+        opEventsShow.length === 0
+          ? `<p style="margin:0;opacity:0.6;font-size:0.88rem;">No run yet — tap below.</p>`
+          : opEventsShow
+              .map(
+                (ev) =>
+                  `<p style="margin:6px 0 0;font-size:0.84rem;line-height:1.4;opacity:0.9;">• ${esc(
+                    String(ev).length > 140
+                      ? String(ev).slice(0, 137) + "…"
+                      : String(ev)
+                  )}</p>`
+              )
+              .join("")
+      }
+    </div>
+    <button type="button" id="app-operator-run" style="${BTN_FULL}">Run Sales Operator</button>
+    <p id="app-operator-run-msg" style="font-size:0.8rem;opacity:0.75;margin:8px 0 0;min-height:1em;"></p>
   </section>`;
 
   const recentIngest = readRecentEntries().entries.slice(0, 5);
@@ -756,6 +812,19 @@ router.get("/app", async (req, res) => {
         })
         .catch(function(){ if(salesRunMsg) salesRunMsg.textContent='Failed'; salesRun.disabled=false; });
     });
+    var opRun=document.getElementById('app-operator-run');
+    var opRunMsg=document.getElementById('app-operator-run-msg');
+    if(opRun) opRun.addEventListener('click',function(){
+      if(opRunMsg) opRunMsg.textContent='Running operator…';
+      opRun.disabled=true;
+      postJSON('/sales/operator/run',{})
+        .then(function(d){
+          if(opRunMsg) opRunMsg.textContent=(d&&d.success)?'Done — refreshing…':((d&&d.error)||'Failed');
+          opRun.disabled=false;
+          if(d&&d.success) location.reload();
+        })
+        .catch(function(){ if(opRunMsg) opRunMsg.textContent='Failed'; opRun.disabled=false; });
+    });
     document.querySelectorAll('.app-prep-msg').forEach(function(btn){
       btn.addEventListener('click',function(){
         var out=btn.parentElement&&btn.parentElement.querySelector('.app-prep-out');
@@ -786,6 +855,7 @@ router.get("/app", async (req, res) => {
   <p style="margin:0 0 12px;font-size:0.92rem;opacity:0.75;">Command Center</p>
   ${topBar}
   ${salesLoopHtml}
+  ${operatorPanelHtml}
   ${responsesPanelHtml}
   ${nextStepsPanelHtml}
   ${copilotHtml}
