@@ -6,6 +6,7 @@ const { Router } = require("express");
 const { getReactivationBuckets } = require("../services/reactivationBuckets");
 const { getRevenueFollowups } = require("../services/revenueFollowups");
 const { getScriptSet } = require("../services/scriptTemplates");
+const { getAutoFollowupsResponse } = require("../services/autoFollowupsService");
 
 const router = Router();
 
@@ -26,6 +27,17 @@ router.get("/followups", async (_req, res) => {
   } catch (err) {
     console.error("[revenue] /followups failed:", err.message || err);
     return res.json({ unpaidInvoices: [], staleEstimates: [] });
+  }
+});
+
+/** Bundle 5 — scored follow-ups (reuses getRevenueFollowups once per request). */
+router.get("/auto-followups", async (_req, res) => {
+  try {
+    const data = await getAutoFollowupsResponse();
+    return res.json(data);
+  } catch (err) {
+    console.error("[revenue] /auto-followups failed:", err.message || err);
+    return res.json({ topActions: [] });
   }
 });
 

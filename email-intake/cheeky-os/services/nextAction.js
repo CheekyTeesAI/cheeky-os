@@ -5,6 +5,7 @@
 
 const { getRevenueFollowups } = require("./revenueFollowups");
 const { getReactivationBuckets } = require("./reactivationBuckets");
+const { scoreFollowupOpportunities } = require("./followupScoringService");
 
 function safeStr(v) {
   return v == null ? "" : String(v);
@@ -93,6 +94,34 @@ function buildNextAction(followups, buckets) {
 }
 
 /**
+ * Bundle 5 — prefer scored follow-ups before legacy next-action ordering.
+ * @param {{ unpaidInvoices?: object[], staleEstimates?: object[] }} followups
+ * @param {{ hot?: object[], warm?: object[], cold?: object[] }} buckets
+ */
+function buildNextActionWithPriority(followups, buckets) {
+  const scored = scoreFollowupOpportunities(
+    followups && followups.unpaidInvoices ? followups.unpaidInvoices : [],
+    followups && followups.staleEstimates ? followups.staleEstimates : []
+  );
+  if (scored.length > 0) {
+    const top = scored[0];
+    const name = safeStr(top.customerName) || "Unknown Customer";
+    return {
+      action: `Follow up ${name}`,
+      type: "followup",
+      target: {
+        name,
+        phone: safeStr(top.phone),
+        email: safeStr(top.email),
+        id: safeStr(top.id),
+      },
+      reason: `${top.priority} — ${top.reason}`,
+    };
+  }
+  return buildNextAction(followups, buckets);
+}
+
+/**
  * @returns {Promise<{
  *   action: string,
  *   type: string,
@@ -106,7 +135,7 @@ async function getNextAction() {
       getRevenueFollowups(),
       getReactivationBuckets(),
     ]);
-    return buildNextAction(followups, buckets);
+    return buildNextActionWithPriority(followups, buckets);
   } catch (err) {
     console.error("[nextAction] failed:", err.message || err);
     return {
@@ -118,4 +147,8 @@ async function getNextAction() {
   }
 }
 
-module.exports = { getNextAction, buildNextAction };
+module.exports = {
+  getNextAction,
+  buildNextAction,
+  buildNextActionWithPriority,
+};

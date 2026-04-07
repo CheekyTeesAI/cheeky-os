@@ -6,7 +6,8 @@
 const { Router } = require("express");
 const { getReactivationBuckets } = require("../services/reactivationBuckets");
 const { getRevenueFollowups } = require("../services/revenueFollowups");
-const { buildNextAction } = require("../services/nextAction");
+const { buildNextActionWithPriority } = require("../services/nextAction");
+const { scoreFollowupOpportunities } = require("../services/followupScoringService");
 const { getScriptSet } = require("../services/scriptTemplates");
 
 const router = Router();
@@ -113,6 +114,47 @@ function cardInvoice(i, scripts) {
     </div>`;
 }
 
+function priorityColor(p) {
+  const x = String(p || "").toLowerCase();
+  if (x === "critical") return "#ff5252";
+  if (x === "high") return "#ff9800";
+  if (x === "medium") return "#fff176";
+  return "#9e9e9e";
+}
+
+function cardUrgentFollowup(u) {
+  const name = displayName(u.customerName);
+  const col = priorityColor(u.priority);
+  const amt =
+    typeof u.amount === "number" && Number.isFinite(u.amount)
+      ? u.amount
+      : parseFloat(String(u.amount || "").replace(/[^0-9.-]/g, "")) || 0;
+  const phoneRaw = String(u.phone || "").replace(/\s/g, "");
+  const phoneHtml = phoneRaw
+    ? `<a href="tel:${esc(phoneRaw)}" style="color:#f0ff44;font-weight:600;font-size:1.02rem;">${esc(
+        u.phone
+      )}</a>`
+    : `<span style="opacity:0.5;">—</span>`;
+  const em = String(u.email || "").trim();
+  const emailHtml = em
+    ? `<a href="mailto:${esc(em)}" style="color:#f0ff44;font-weight:600;font-size:1.02rem;word-break:break-all;">${esc(
+        em
+      )}</a>`
+    : `<span style="opacity:0.5;">—</span>`;
+  return `
+  <div style="background:#1a1a1a;border-radius:16px;padding:18px;margin-bottom:12px;border:1px solid #333;">
+    <div style="font-weight:800;font-size:1.1rem;line-height:1.3;">${esc(name)}</div>
+    <div style="margin-top:8px;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.07em;color:${col};font-weight:800;">${esc(
+    u.priority || ""
+  )}</div>
+    <div style="margin-top:10px;font-size:1.05rem;">$${esc(String(Math.round(amt)))} · ${esc(
+    String(u.daysOld ?? "")
+  )} days old</div>
+    <div style="margin-top:14px;line-height:1.6;">${phoneHtml}</div>
+    <div style="margin-top:8px;line-height:1.6;">${emailHtml}</div>
+  </div>`;
+}
+
 function cardReactivation(c, scripts) {
   const name = displayName(c.name);
   const suggestion = fillScript(scripts.reactivation, c.name);
@@ -159,10 +201,20 @@ router.get("/dashboard/today/mobile", async (_req, res) => {
     hot = buckets.hot || [];
     warm = buckets.warm || [];
     cold = buckets.cold || [];
-    next = buildNextAction(followups, buckets);
+    next = buildNextActionWithPriority(followups, buckets);
   } catch (err) {
     console.error("[mobileDashboard] sales data load failed:", err.message || err);
   }
+
+  const urgentTop = scoreFollowupOpportunities(unpaidInvoices, staleEstimates).slice(0, 5);
+  const urgentHtml = urgentTop.length
+    ? urgentTop.map((u) => cardUrgentFollowup(u)).join("")
+    : `<p style="opacity:0.6;padding:8px 0;">No urgent follow-ups right now.</p>`;
+  const urgentSection = `
+  <section style="margin-bottom:22px;">
+    <h2 style="font-size:1.12rem;margin:0 0 14px;color:#ff6b6b;">🔥 URGENT FOLLOW-UPS</h2>
+    ${urgentHtml}
+  </section>`;
 
   const nextHtml = cardNextAction(next, scripts);
   const staleHtml = staleEstimates.length
@@ -191,6 +243,8 @@ router.get("/dashboard/today/mobile", async (_req, res) => {
 <body style="margin:0;padding:16px;font-family:system-ui,-apple-system,sans-serif;background:#0a0a0a;color:#e8e8e8;max-width:520px;margin-left:auto;margin-right:auto;">
   <h1 style="font-size:1.4rem;margin:8px 0 8px;color:#f0ff44;">Cheeky Tees — Sales</h1>
   <p style="opacity:0.75;margin:0 0 20px;font-size:0.95rem;">Tonight’s call list — tap Call or Email, copy the script.</p>
+
+  ${urgentSection}
 
   ${nextHtml}
 
