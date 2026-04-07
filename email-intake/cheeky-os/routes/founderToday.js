@@ -10,6 +10,7 @@ const { getDailySummary } = require("../services/dailySummaryService");
 const { getCopilotTodayPayload } = require("../services/copilotService");
 const { getActiveAlertsSorted } = require("../services/alertStoreService");
 const { pricingRiskSectionHtml } = require("./pricing");
+const { buildCashPrioritiesPayload, cashPrioritiesSectionHtml } = require("./cash");
 
 const router = Router();
 
@@ -602,6 +603,14 @@ router.get("/today", async (_req, res) => {
     };
   }
 
+  let cashPriorities = { opportunities: [], summary: {} };
+  try {
+    cashPriorities = await buildCashPrioritiesPayload();
+  } catch (err) {
+    console.error("[founder/today] cash priorities:", err.message || err);
+    cashPriorities = { opportunities: [], summary: {} };
+  }
+
   const next = data.next || {};
   const sa = (data.systemActions || [])
     .slice()
@@ -651,6 +660,7 @@ router.get("/today", async (_req, res) => {
 </head>
 <body style="margin:0;padding:16px;padding-bottom:max(28px,env(safe-area-inset-bottom));font-family:system-ui,-apple-system,sans-serif;background:#0a0c10;color:#e8eaed;max-width:560px;margin-left:auto;margin-right:auto;">
   ${activeAlertsPanelHtml()}
+  ${cashPrioritiesSectionHtml(esc, cashPriorities)}
   ${systemCheckPanelHtml()}
   ${automationIntervalPanelHtml()}
   ${copilotHtml(copilot)}

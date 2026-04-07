@@ -23,6 +23,7 @@ const {
   readRecentReplyDraftEntries,
 } = require("./responses");
 const { pricingRiskSectionHtml } = require("./pricing");
+const { buildCashPrioritiesPayload, cashPrioritiesSectionHtml } = require("./cash");
 
 const router = Router();
 
@@ -116,14 +117,16 @@ router.get("/app", async (req, res) => {
     },
   };
 
+  let cashPriorities = { opportunities: [], summary: {} };
   try {
-    const [cp, sum, actPack, revenue, q, sl] = await Promise.all([
+    const [cp, sum, actPack, revenue, q, sl, cashPri] = await Promise.all([
       getCopilotTodayPayload(),
       getDailySummary(),
       collectAutomationActions(10),
       getRevenueFollowups(),
       getProductionQueue(),
       buildSalesLoop(),
+      buildCashPrioritiesPayload(),
     ]);
     copilot = cp || copilot;
     summary = sum || summary;
@@ -131,6 +134,8 @@ router.get("/app", async (req, res) => {
     rev = revenue || rev;
     queue = q || queue;
     salesLoop = sl && sl.candidates ? sl : salesLoop;
+    cashPriorities =
+      cashPri && Array.isArray(cashPri.opportunities) ? cashPri : cashPriorities;
   } catch (err) {
     console.error("[app] data load", err.message || err);
   }
@@ -196,6 +201,9 @@ router.get("/app", async (req, res) => {
     return "Manual review";
   }
   const slTop = (salesLoop.candidates || []).slice(0, 5);
+  const cashPrioritiesPanelHtml = cashPrioritiesSectionHtml(esc, cashPriorities, {
+    appPrepareMessage: true,
+  });
   const autopilotState = getAutopilotState();
   const autopilotPanelHtml = `
   <section style="${CARD};border:2px solid ${
@@ -1150,6 +1158,7 @@ router.get("/app", async (req, res) => {
   <h1 style="font-size:1.35rem;margin:8px 0 4px;color:#f0ff44;font-weight:900;">Cheeky Tees</h1>
   <p style="margin:0 0 12px;font-size:0.92rem;opacity:0.75;">Command Center</p>
   ${topBar}
+  ${cashPrioritiesPanelHtml}
   ${autopilotPanelHtml}
   ${pricingRiskSectionHtml(esc)}
   ${salesLoopHtml}
