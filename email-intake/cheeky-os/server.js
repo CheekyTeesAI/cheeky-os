@@ -135,7 +135,7 @@ async function main() {
       `[cheeky-os] reactivation targets: http://127.0.0.1:${PORT}/reactivation/targets · POST /reactivation/run`
     );
     console.log(
-      `[cheeky-os] leads: http://127.0.0.1:${PORT}/leads/capture (POST) · /leads/recent (GET) · /leads/respond (POST)`
+      `[cheeky-os] leads: POST /leads/capture · GET /leads/recent · POST /leads/respond · POST /leads/convert → http://127.0.0.1:${PORT}/leads/...`
     );
     console.log(`[cheeky-os] followups: http://127.0.0.1:${PORT}/revenue/followups`);
     console.log(`[cheeky-os] scripts: http://127.0.0.1:${PORT}/revenue/scripts`);

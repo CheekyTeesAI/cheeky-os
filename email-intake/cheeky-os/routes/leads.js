@@ -10,6 +10,11 @@ const {
   computeQuickQuote,
   buildLeadQuoteResponseMessage,
 } = require("../services/quickQuoteService");
+const { buildLeadConversionPayload } = require("../services/leadConversionService");
+const {
+  createOrderFromCapture,
+  generateTasksForOrder,
+} = require("../services/capturePipelineService");
 
 const router = Router();
 
@@ -131,6 +136,66 @@ router.post("/respond", (req, res) => {
     return res.status(500).json({
       success: false,
       error: "lead_respond_failed",
+    });
+  }
+});
+
+/** Bundle 50 — quote + capture mapping; optional INTAKE order + default tasks. */
+router.post("/convert", async (req, res) => {
+  try {
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    if (!hasMinimalSignal(body)) {
+      return res.status(400).json({
+        success: false,
+        error:
+          "At least one of name, email, phone, message, or company is required",
+      });
+    }
+
+    const { quote, captureData } = buildLeadConversionPayload(body);
+    let orderCreated = false;
+    let orderId = "";
+
+    /** @type {string} */
+    let orderError = "";
+    if (body.createOrder === true && captureData.readyForCapture) {
+      const result = await createOrderFromCapture({
+        customer: captureData.customerName,
+        quantity: captureData.quantity,
+        product: captureData.product,
+        print: captureData.printType,
+        due: captureData.dueText,
+      });
+      if (result.success && result.orderId) {
+        orderCreated = true;
+        orderId = String(result.orderId).trim();
+        try {
+          await generateTasksForOrder(orderId, {
+            priority: "low",
+            riskLevel: "low",
+            riskFlags: [],
+          });
+        } catch (_) {}
+      } else {
+        orderError = String(result.error || "order_create_failed").trim();
+      }
+    }
+
+    return res.json({
+      success: true,
+      quote,
+      captureData,
+      order: {
+        created: orderCreated,
+        orderId,
+        ...(orderError ? { error: orderError } : {}),
+      },
+    });
+  } catch (err) {
+    console.error("[leads/convert]", err.message || err);
+    return res.status(500).json({
+      success: false,
+      error: "lead_convert_failed",
     });
   }
 });

@@ -47,6 +47,7 @@ const {
   computeQuickQuote,
   buildLeadQuoteResponseMessage,
 } = require("../services/quickQuoteService");
+const { buildLeadConversionPayload } = require("../services/leadConversionService");
 
 const router = Router();
 
@@ -447,6 +448,76 @@ router.get("/app", async (req, res) => {
     <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 6px;color:#facc15;">⚡ QUICK QUOTES</h2>
     <p style="margin:0 0 10px;font-size:0.78rem;line-height:1.45;opacity:0.85;"><strong>Ballpark only</strong> — not a guarantee. Draft replies only; nothing is sent automatically. API: <code style="font-size:0.7rem;">POST /leads/respond</code>.</p>
     ${quickQuotesListHtml}
+  </section>`;
+  const lcLink =
+    "font-size:0.74rem;font-weight:700;padding:8px 10px;border-radius:6px;border:1px solid #8b5cf6;background:#1e1b4b;color:#ddd6fe;text-decoration:none;display:inline-block;";
+  const leadConvListHtml =
+    recentInbound.length > 0
+      ? recentInbound
+          .map((L) => {
+            const { quote: lcQuote, captureData: cap } =
+              buildLeadConversionPayload({
+                name: String(L.leadName || ""),
+                email: String(L.email || ""),
+                phone: String(L.phone || ""),
+                company: String(L.company || ""),
+                message: String(L.message || ""),
+                source: String(L.source || "unknown"),
+              });
+            const fullMsg = buildLeadQuoteResponseMessage(
+              String(L.leadName || "").trim() || "there",
+              lcQuote
+            );
+            const payloadObj = {
+              name: String(L.leadName || ""),
+              email: String(L.email || ""),
+              phone: String(L.phone || ""),
+              company: String(L.company || ""),
+              message: String(L.message || ""),
+              source: String(L.source || "unknown"),
+            };
+            const payloadEnc = esc(
+              encodeURIComponent(JSON.stringify(payloadObj))
+            );
+            const msgPrev = esc(
+              String(L.message || "").length > 64
+                ? String(L.message || "").slice(0, 64).trim() + "…"
+                : String(L.message || "") || "—"
+            );
+            const th = telHref(String(L.phone || ""));
+            const readyLabel = cap.readyForCapture ? "Yes" : "No";
+            const readyColor = cap.readyForCapture ? "#4ade80" : "#f87171";
+            return `
+    <div class="lc-card" style="background:#101010;padding:10px;border-radius:8px;margin-top:8px;font-size:0.82rem;border:1px solid #4c1d95;">
+      <div style="font-weight:800;color:#c4b5fd;">${esc(L.leadName || "—")}</div>
+      <div style="margin-top:3px;font-size:0.74rem;opacity:0.85;text-transform:capitalize;">${esc(String(L.source || ""))}</div>
+      <div style="margin-top:4px;opacity:0.82;font-size:0.74rem;line-height:1.35;">${msgPrev}</div>
+      <div style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.72rem;">
+        <div><span style="opacity:0.6;">Est. qty</span> · <strong>${esc(String(lcQuote.estimatedQuantity))}</strong></div>
+        <div><span style="opacity:0.6;">Est. total</span> · <strong>$${esc(String(lcQuote.estimatedTotal))}</strong></div>
+        <div style="grid-column:1/-1;"><span style="opacity:0.6;">Ready</span> · <strong style="color:${readyColor};">${esc(readyLabel)}</strong>${cap.reason ? ` · ${esc(cap.reason)}` : ""}</div>
+      </div>
+      <p class="lc-order-msg" style="margin:6px 0 0;font-size:0.72rem;min-height:1em;color:#86efac;"></p>
+      <pre class="lc-quote-full" style="display:none;">${esc(fullMsg)}</pre>
+      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+        <button type="button" class="app-lc-convert" data-payload="${payloadEnc}" style="${lcLink};cursor:pointer;font:inherit;">Convert to Order</button>
+        <button type="button" class="app-lc-tasks" data-order-id="" disabled style="${lcLink};cursor:pointer;font:inherit;opacity:0.45;">Generate Tasks</button>
+        <button type="button" class="app-copy-quote" style="${lcLink.replace("#1e1b4b", "#422006").replace("#8b5cf6", "#eab308").replace("#ddd6fe", "#fef08a")};cursor:pointer;font:inherit;">Copy Quote Response</button>
+        ${
+          th
+            ? `<a href="${esc(th)}" style="${lcLink.replace("#1e1b4b", "#14532d").replace("#8b5cf6", "#22c55e").replace("#ddd6fe", "#bbf7d0")}">Call Lead</a>`
+            : ""
+        }
+      </div>
+    </div>`;
+          })
+          .join("")
+      : `<p style="opacity:0.72;font-size:0.85rem;margin:0;">No leads ready for conversion.</p>`;
+  const leadConversionPanelHtml = `
+  <section style="${CARD};border:2px solid #7c3aed;background:#16101f;">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 6px;color:#ddd6fe;">🔄 LEAD CONVERSION</h2>
+    <p style="margin:0 0 10px;font-size:0.78rem;line-height:1.45;opacity:0.88;"><strong>Estimates only.</strong> INTAKE orders are created only when you tap <em>Convert to Order</em> (not automatic). Default tasks run after a successful create. API: <code style="font-size:0.68rem;">POST /leads/convert</code>.</p>
+    ${leadConvListHtml}
   </section>`;
   let reactPayload = { customers: [], summary: { critical: 0, high: 0, medium: 0, low: 0 } };
   try {
@@ -1524,8 +1595,8 @@ router.get("/app", async (req, res) => {
     });
     document.querySelectorAll('.app-copy-quote').forEach(function(btn){
       btn.addEventListener('click',function(){
-        var card=btn.closest&&btn.closest('.qq-card');
-        var pre=card&&card.querySelector('.quote-response-full');
+        var card=(btn.closest&&btn.closest('.qq-card'))||(btn.closest&&btn.closest('.lc-card'));
+        var pre=card&&(card.querySelector('.quote-response-full')||card.querySelector('.lc-quote-full'));
         var t=pre?pre.textContent:'';
         function ok(){ if(btn) btn.textContent='Copied'; setTimeout(function(){ btn.textContent='Copy Response'; },1500); }
         if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -1535,6 +1606,44 @@ router.get("/app", async (req, res) => {
         } else {
           try{ var ta2=document.createElement('textarea'); ta2.value=t; document.body.appendChild(ta2); ta2.select(); document.execCommand('copy'); document.body.removeChild(ta2); ok(); }catch(e){}
         }
+      });
+    });
+    document.querySelectorAll('.app-lc-convert').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var raw=btn.getAttribute('data-payload')||'';
+        var wrap=btn.closest&&btn.closest('.lc-card');
+        var om=wrap&&wrap.querySelector('.lc-order-msg');
+        var tk=wrap&&wrap.querySelector('.app-lc-tasks');
+        var body=null;
+        try{ body=JSON.parse(decodeURIComponent(raw)); }catch(e){ body=null; }
+        if(!body){ if(om) om.textContent='Invalid payload'; return; }
+        if(om) om.textContent='Creating order…';
+        btn.disabled=true;
+        body.createOrder=true;
+        postJSON('/leads/convert',body)
+          .then(function(d){
+            btn.disabled=false;
+            if(d&&d.order&&d.order.created&&d.order.orderId){
+              if(om) om.textContent='Order INTAKE: '+d.order.orderId+' (tasks queued)';
+              if(tk){ tk.disabled=false; tk.setAttribute('data-order-id',d.order.orderId); }
+            } else if(om) om.textContent=(d&&d.captureData&&!d.captureData.readyForCapture)?('Not ready: '+(d.captureData.reason||'check fields')):((d&&d.order&&d.order.error)?String(d.order.error).slice(0,180):'Order not created');
+          })
+          .catch(function(){ btn.disabled=false; if(om) om.textContent='Request failed'; });
+      });
+    });
+    document.querySelectorAll('.app-lc-tasks').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var oid=String(btn.getAttribute('data-order-id')||'').trim();
+        var wrap=btn.closest&&btn.closest('.lc-card');
+        var om=wrap&&wrap.querySelector('.lc-order-msg');
+        if(!oid){ if(om) om.textContent='Convert lead first'; return; }
+        btn.disabled=true;
+        postJSON('/orders/generate-tasks',{orderId:oid,priority:'low',riskLevel:'low',riskFlags:[]})
+          .then(function(d){
+            btn.disabled=false;
+            if(om) om.textContent=(d&&d.success)?('Tasks: '+(d.tasksCreated||0)):'Tasks call failed';
+          })
+          .catch(function(){ btn.disabled=false; if(om) om.textContent='Request failed'; });
       });
     });
   })();
@@ -1552,6 +1661,7 @@ router.get("/app", async (req, res) => {
   ${cashBlitzPanelHtml}
   ${inboundLeadsPanelHtml}
   ${quickQuotesPanelHtml}
+  ${leadConversionPanelHtml}
   ${reactivationPanelHtml}
   ${nextActionsPanelHtml}
   <h1 style="font-size:1.35rem;margin:8px 0 4px;color:#f0ff44;font-weight:900;">Cheeky Tees</h1>
