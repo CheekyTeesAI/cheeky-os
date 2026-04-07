@@ -6,6 +6,7 @@ const { Router } = require("express");
 const { getFounderDashboardPayload } = require("../services/founderTodayService");
 const { priVal } = require("../services/automationActionsService");
 const { prepareMessage } = require("../services/messagePrepService");
+const { getDailySummary } = require("../services/dailySummaryService");
 
 const router = Router();
 
@@ -24,6 +25,44 @@ const BTN_SUBMIT =
   "width:100%;box-sizing:border-box;padding:14px 16px;margin-top:10px;border-radius:12px;font-weight:800;font-size:0.95rem;border:1px solid #334155;background:#1e3a5f;color:#7dd3fc;cursor:pointer;min-height:48px;";
 const INPUT =
   "width:100%;box-sizing:border-box;padding:10px 12px;margin-top:4px;border-radius:10px;border:1px solid #475569;background:#0f1419;color:#e2e8f0;font-size:1rem;";
+
+function todaySummaryHtml(sum) {
+  const c = (sum && sum.counts) || {};
+  const h = (sum && sum.highlights) || {};
+  const n = (x) => Number(x) || 0;
+  const line = (label, val) =>
+    `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:8px 0;font-size:0.95rem;"><span style="opacity:0.88;">${esc(
+      label
+    )}</span><span style="font-weight:800;font-size:1.02rem;color:#f8fafc;">${esc(
+      String(val)
+    )}</span></div>`;
+  const topA = String(h.topAction || "").trim() || "—";
+  const big = String(h.biggestOpportunity || "").trim() || "—";
+  const tc = String(h.topCustomer || "").trim();
+  return `<section style="margin:0 0 18px 0;padding:16px;border-radius:16px;background:#0f172a;border:1px solid #1e40af;">
+  <h2 style="font-size:1.08rem;margin:0 0 12px;color:#38bdf8;font-weight:800;">📊 TODAY SUMMARY</h2>
+  ${line("Urgent Follow-ups", n(c.urgentFollowups))}
+  ${line("Blocked Orders", n(c.blockedOrders))}
+  ${line("Ready to Print", n(c.readyToPrint))}
+  ${line("In Production", n(c.inProduction))}
+  ${line("High Risk Jobs", n(c.highRiskOrders))}
+  <div style="margin-top:14px;padding-top:12px;border-top:1px solid #334155;">
+    <div style="font-size:0.7rem;font-weight:800;color:#fb923c;margin-bottom:6px;letter-spacing:0.06em;">🔥 TOP ACTION</div>
+    <div style="font-size:1rem;font-weight:700;line-height:1.35;color:#e2e8f0;">${esc(topA)}</div>
+    ${
+      tc
+        ? `<div style="margin-top:4px;font-size:0.88rem;opacity:0.88;">${esc(
+            tc
+          )}</div>`
+        : ""
+    }
+  </div>
+  <div style="margin-top:12px;">
+    <div style="font-size:0.7rem;font-weight:800;color:#4ade80;margin-bottom:6px;letter-spacing:0.06em;">💰 BIGGEST OPPORTUNITY</div>
+    <div style="font-size:0.95rem;line-height:1.45;color:#dcfce7;">${esc(big)}</div>
+  </div>
+</section>`;
+}
 
 function actionExecuteJsonExample(a) {
   const t = String(a.type || "").toLowerCase();
@@ -357,6 +396,17 @@ router.get("/today", async (_req, res) => {
     };
   }
 
+  let summary;
+  try {
+    summary = await getDailySummary();
+  } catch (err) {
+    console.error("[founder/today] summary:", err.message || err);
+    summary = {
+      counts: {},
+      highlights: {},
+    };
+  }
+
   const next = data.next || {};
   const sa = (data.systemActions || [])
     .slice()
@@ -405,6 +455,7 @@ router.get("/today", async (_req, res) => {
   <title>Founder — Today</title>
 </head>
 <body style="margin:0;padding:16px;padding-bottom:max(28px,env(safe-area-inset-bottom));font-family:system-ui,-apple-system,sans-serif;background:#0a0c10;color:#e8eaed;max-width:560px;margin-left:auto;margin-right:auto;">
+  ${todaySummaryHtml(summary)}
   <h1 style="font-size:1.5rem;margin:8px 0 6px;color:#7dd3fc;">Founder — Today</h1>
   <p style="opacity:0.85;margin:0 0 14px;font-size:0.95rem;">Daily command board</p>
 
