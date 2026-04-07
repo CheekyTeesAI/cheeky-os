@@ -43,6 +43,7 @@ const { router: scorecardRouter } = require("./routes/scorecard");
 const { router: goalsRouter } = require("./routes/goals");
 const { router: nextActionsRouter } = require("./routes/nextActions");
 const autoExecutionRouter = require("./routes/autoExecution");
+const reactivationRouter = require("./routes/reactivation");
 
 /** Bundle 1 requires 3001; override with CHEEKY_OS_PORT only (not generic PORT). */
 const PORT = Number(process.env.CHEEKY_OS_PORT || 3001);
@@ -103,6 +104,7 @@ app.use(scorecardRouter);
 app.use("/goals", goalsRouter);
 app.use("/next", nextActionsRouter);
 app.use("/auto", autoExecutionRouter);
+app.use("/reactivation", reactivationRouter);
 app.use(appCenterRouter);
 app.use("/", mobileDashboardRouter);
 
@@ -127,6 +129,9 @@ async function main() {
       `[cheeky-os] system automation: GET http://127.0.0.1:${PORT}/system/status · POST /system/start · POST /system/stop`
     );
     console.log(`[cheeky-os] reactivation: http://127.0.0.1:${PORT}/revenue/reactivation`);
+    console.log(
+      `[cheeky-os] reactivation targets: http://127.0.0.1:${PORT}/reactivation/targets · POST /reactivation/run`
+    );
     console.log(`[cheeky-os] followups: http://127.0.0.1:${PORT}/revenue/followups`);
     console.log(`[cheeky-os] scripts: http://127.0.0.1:${PORT}/revenue/scripts`);
     console.log(`[cheeky-os] next-action: http://127.0.0.1:${PORT}/dashboard/next-action`);

@@ -41,6 +41,7 @@ const { getNextActionsPayload } = require("../services/gapDetectorService");
 const { nextActionsSectionHtml } = require("./nextActions");
 const { getLastAutoExecutionSnapshot } = require("../services/autoExecutionService");
 const { getCashBlitzPayload } = require("../services/cashBlitzService");
+const { getReactivationTargets } = require("../services/reactivationTargetsService");
 
 const router = Router();
 
@@ -287,6 +288,56 @@ router.get("/app", async (req, res) => {
     ${blitzListHtml}
     <button type="button" id="app-cash-blitz-run" style="${BTN_FULL}">Run Cash Blitz</button>
     <p id="app-cash-blitz-msg" style="font-size:0.8rem;opacity:0.78;margin:8px 0 0;min-height:1em;"></p>
+  </section>`;
+  let reactPayload = { customers: [], summary: { critical: 0, high: 0, medium: 0, low: 0 } };
+  try {
+    reactPayload = await getReactivationTargets(20);
+  } catch (_) {
+    reactPayload = { customers: [], summary: { critical: 0, high: 0, medium: 0, low: 0 } };
+  }
+  const reactTop = (reactPayload.customers || []).slice(0, 5);
+  const reactSum = reactPayload.summary || {};
+  const reactListHtml =
+    reactTop.length > 0
+      ? reactTop
+          .map(
+            (c) => `
+    <div style="background:#101010;padding:10px;border-radius:8px;margin-top:8px;font-size:0.88rem;">
+      <div style="font-weight:800;color:#86efac;">${esc(c.customerName || "—")}</div>
+      <div style="margin-top:4px;text-transform:capitalize;">${esc(String(c.reactivationPriority || ""))}</div>
+      <div style="margin-top:4px;opacity:0.82;font-size:0.78rem;line-height:1.35;">${esc(c.reason || "")}</div>
+      <div style="margin-top:4px;font-size:0.78rem;opacity:0.75;">${esc(
+        [c.phone ? c.phone : "", c.email ? c.email : ""].filter(Boolean).join(" · ") || "—"
+      )}</div>
+    </div>`
+          )
+          .join("")
+      : `<p style="opacity:0.72;font-size:0.85rem;margin:0;">No ranked targets (2019–2024 cohort + data required).</p>`;
+  const reactivationPanelHtml = `
+  <section style="${CARD};border:2px solid #15803d;background:#0f1a12;">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 6px;color:#86efac;">♻️ REACTIVATION TARGETS</h2>
+    <p style="margin:0 0 10px;font-size:0.78rem;line-height:1.45;opacity:0.85;">Past customers (last order 2019–2024). Push sends up to 3 SMS with 24h dedupe — requires Autopilot on &amp; Safe Mode off (same as follow-ups).</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.78rem;margin-bottom:6px;">
+      <div style="background:#101010;padding:10px;border-radius:8px;text-align:center;">
+        <div style="opacity:0.65;font-size:0.7rem;">Critical</div>
+        <div style="font-weight:800;color:#fecaca;">${esc(String(reactSum.critical ?? 0))}</div>
+      </div>
+      <div style="background:#101010;padding:10px;border-radius:8px;text-align:center;">
+        <div style="opacity:0.65;font-size:0.7rem;">High</div>
+        <div style="font-weight:800;color:#fdba74;">${esc(String(reactSum.high ?? 0))}</div>
+      </div>
+      <div style="background:#101010;padding:10px;border-radius:8px;text-align:center;">
+        <div style="opacity:0.65;font-size:0.7rem;">Medium</div>
+        <div style="font-weight:800;color:#fde047;">${esc(String(reactSum.medium ?? 0))}</div>
+      </div>
+      <div style="background:#101010;padding:10px;border-radius:8px;text-align:center;">
+        <div style="opacity:0.65;font-size:0.7rem;">Low</div>
+        <div style="font-weight:800;color:#94a3b8;">${esc(String(reactSum.low ?? 0))}</div>
+      </div>
+    </div>
+    ${reactListHtml}
+    <button type="button" id="app-reactivation-run" style="${BTN_FULL}">Run Reactivation Push</button>
+    <p id="app-reactivation-msg" style="font-size:0.8rem;opacity:0.78;margin:8px 0 0;min-height:1em;"></p>
   </section>`;
   let goalsPayload = null;
   try {
@@ -1239,6 +1290,19 @@ router.get("/app", async (req, res) => {
         })
         .catch(function(){ if(cbMsg) cbMsg.textContent='Request failed'; cbRun.disabled=false; });
     });
+    var rrRun=document.getElementById('app-reactivation-run');
+    var rrMsg=document.getElementById('app-reactivation-msg');
+    if(rrRun) rrRun.addEventListener('click',function(){
+      if(rrMsg) rrMsg.textContent='Running reactivation push…';
+      rrRun.disabled=true;
+      postJSON('/reactivation/run',{})
+        .then(function(d){
+          if(rrMsg) rrMsg.textContent=(d&&d.success)?('Done · contacted '+(d.contacted||0)):(String((d&&d.error)||'Blocked or failed').slice(0,180));
+          rrRun.disabled=false;
+          if(d&&d.success) location.reload();
+        })
+        .catch(function(){ if(rrMsg) rrMsg.textContent='Request failed'; rrRun.disabled=false; });
+    });
     var rbRun=document.getElementById('app-runbook-run');
     var rbRunMsg=document.getElementById('app-runbook-run-msg');
     if(rbRun) rbRun.addEventListener('click',function(){
@@ -1312,6 +1376,7 @@ router.get("/app", async (req, res) => {
 </head>
 <body style="margin:0;padding:14px;padding-bottom:max(24px,env(safe-area-inset-bottom));font-family:system-ui,-apple-system,sans-serif;background:#0a0a0a;color:#e8e8e8;max-width:520px;margin-left:auto;margin-right:auto;">
   ${cashBlitzPanelHtml}
+  ${reactivationPanelHtml}
   ${nextActionsPanelHtml}
   <h1 style="font-size:1.35rem;margin:8px 0 4px;color:#f0ff44;font-weight:900;">Cheeky Tees</h1>
   <p style="margin:0 0 12px;font-size:0.92rem;opacity:0.75;">Command Center</p>
