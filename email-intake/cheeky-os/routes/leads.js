@@ -6,6 +6,10 @@ const { Router } = require("express");
 const { normalizeInboundLead } = require("../services/leadIntakeService");
 const { pushLead, getRecentLeads } = require("../services/leadRecentQueue");
 const { recordLedgerEventSafe } = require("../services/actionLedgerService");
+const {
+  computeQuickQuote,
+  buildLeadQuoteResponseMessage,
+} = require("../services/quickQuoteService");
 
 const router = Router();
 
@@ -93,6 +97,41 @@ router.get("/recent", (_req, res) => {
   } catch (err) {
     console.error("[leads/recent]", err.message || err);
     return res.json({ leads: [] });
+  }
+});
+
+/** Bundle 49 — draft reply + ballpark quote only (no auto-send). */
+router.post("/respond", (req, res) => {
+  try {
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const name = trim(body.name);
+    const message = trim(body.message);
+    if (!message) {
+      return res.status(400).json({
+        success: false,
+        error: "message is required",
+      });
+    }
+
+    const quote = computeQuickQuote({
+      message,
+      quantity: body.quantity != null ? body.quantity : null,
+      printType: trim(body.printType),
+      productType: trim(body.productType),
+    });
+    const reply = buildLeadQuoteResponseMessage(name || "there", quote);
+
+    return res.json({
+      success: true,
+      quote,
+      message: reply,
+    });
+  } catch (err) {
+    console.error("[leads/respond]", err.message || err);
+    return res.status(500).json({
+      success: false,
+      error: "lead_respond_failed",
+    });
   }
 });
 

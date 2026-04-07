@@ -43,6 +43,10 @@ const { getLastAutoExecutionSnapshot } = require("../services/autoExecutionServi
 const { getCashBlitzPayload } = require("../services/cashBlitzService");
 const { getReactivationTargets } = require("../services/reactivationTargetsService");
 const { getRecentLeads } = require("../services/leadRecentQueue");
+const {
+  computeQuickQuote,
+  buildLeadQuoteResponseMessage,
+} = require("../services/quickQuoteService");
 
 const router = Router();
 
@@ -118,6 +122,20 @@ function telHref(phone) {
   if (d.length === 11 && d.startsWith("1")) return "tel:+" + d;
   if (d.length >= 10) return "tel:+" + d;
   return "";
+}
+
+/**
+ * @param {string} full
+ * @param {number} maxLen
+ * @returns {string}
+ */
+function quoteMessagePreview(full, maxLen) {
+  const cap = Math.max(40, Math.floor(Number(maxLen) || 140));
+  const s = String(full || "").trim();
+  const lines = s.split(/\n/).map((x) => x.trim()).filter(Boolean);
+  let out = lines.slice(0, 2).join(" ");
+  if (out.length > cap) out = out.slice(0, cap).trim() + "…";
+  return out || "—";
 }
 
 const CARD =
@@ -373,6 +391,62 @@ router.get("/app", async (req, res) => {
     <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 6px;color:#7dd3fc;">📥 INBOUND LEADS</h2>
     <p style="margin:0 0 10px;font-size:0.78rem;line-height:1.45;opacity:0.85;">Website / ads — capture only (no auto-send). POST JSON to <code style="font-size:0.7rem;">/leads/capture</code>.</p>
     ${inboundListHtml}
+  </section>`;
+  const qqLink =
+    "font-size:0.78rem;font-weight:700;padding:8px 12px;border-radius:6px;border:1px solid #eab308;background:#422006;color:#fef08a;text-decoration:none;display:inline-block;";
+  const quickQuotesListHtml =
+    recentInbound.length > 0
+      ? recentInbound
+          .map((L) => {
+            const quote = computeQuickQuote({
+              message: String(L.message || ""),
+              quantity: null,
+              printType: "",
+              productType: "",
+            });
+            const fullMsg = buildLeadQuoteResponseMessage(
+              String(L.leadName || "").trim() || "there",
+              quote
+            );
+            const prev = esc(quoteMessagePreview(fullMsg, 155));
+            const msgPrev = esc(
+              String(L.message || "").length > 72
+                ? String(L.message || "").slice(0, 72).trim() + "…"
+                : String(L.message || "") || "—"
+            );
+            const th = telHref(String(L.phone || ""));
+            const pps = esc(String(quote.estimatedPricePerShirt));
+            const tot = esc(String(quote.estimatedTotal));
+            const qty = esc(String(quote.estimatedQuantity));
+            const conf = esc(String(quote.confidence || ""));
+            return `
+    <div class="qq-card" style="background:#101010;padding:10px;border-radius:8px;margin-top:8px;font-size:0.84rem;border:1px solid #334155;">
+      <div style="font-weight:800;color:#facc15;">${esc(L.leadName || "—")}</div>
+      <div style="margin-top:4px;opacity:0.82;font-size:0.76rem;line-height:1.35;">${msgPrev}</div>
+      <div style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.74rem;">
+        <div><span style="opacity:0.65;">Qty</span> · <strong>${qty}</strong></div>
+        <div><span style="opacity:0.65;">$/shirt</span> · <strong>$${pps}</strong></div>
+        <div style="grid-column:1/-1;"><span style="opacity:0.65;">Total (est.)</span> · <strong>$${tot}</strong> · <span style="text-transform:capitalize;opacity:0.85;">${conf}</span></div>
+      </div>
+      <div style="margin-top:6px;padding:8px;background:#0a0a0a;border-radius:6px;font-size:0.74rem;line-height:1.4;opacity:0.9;border:1px solid #262626;">${prev}</div>
+      <pre class="quote-response-full" style="display:none;">${esc(fullMsg)}</pre>
+      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+        <button type="button" class="app-copy-quote" style="${qqLink};cursor:pointer;font:inherit;">Copy Response</button>
+        ${
+          th
+            ? `<a href="${esc(th)}" style="${qqLink.replace("#422006", "#14532d").replace("#eab308", "#22c55e").replace("#fef08a", "#bbf7d0")}">Call Lead</a>`
+            : `<span style="font-size:0.72rem;opacity:0.5;">No phone</span>`
+        }
+      </div>
+    </div>`;
+          })
+          .join("")
+      : `<p style="opacity:0.72;font-size:0.85rem;margin:0;">No recent leads — capture one first (<code style="font-size:0.7rem;">/leads/capture</code>).</p>`;
+  const quickQuotesPanelHtml = `
+  <section style="${CARD};border:2px solid #ca8a04;background:#1a1508;">
+    <h2 style="font-size:1.05rem;font-weight:900;margin:0 0 6px;color:#facc15;">⚡ QUICK QUOTES</h2>
+    <p style="margin:0 0 10px;font-size:0.78rem;line-height:1.45;opacity:0.85;"><strong>Ballpark only</strong> — not a guarantee. Draft replies only; nothing is sent automatically. API: <code style="font-size:0.7rem;">POST /leads/respond</code>.</p>
+    ${quickQuotesListHtml}
   </section>`;
   let reactPayload = { customers: [], summary: { critical: 0, high: 0, medium: 0, low: 0 } };
   try {
@@ -1448,6 +1522,21 @@ router.get("/app", async (req, res) => {
         }).catch(function(){ if(out) out.textContent='Request failed'; });
       });
     });
+    document.querySelectorAll('.app-copy-quote').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var card=btn.closest&&btn.closest('.qq-card');
+        var pre=card&&card.querySelector('.quote-response-full');
+        var t=pre?pre.textContent:'';
+        function ok(){ if(btn) btn.textContent='Copied'; setTimeout(function(){ btn.textContent='Copy Response'; },1500); }
+        if(navigator.clipboard&&navigator.clipboard.writeText){
+          navigator.clipboard.writeText(t).then(ok).catch(function(){
+            try{ var ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); ok(); }catch(e){}
+          });
+        } else {
+          try{ var ta2=document.createElement('textarea'); ta2.value=t; document.body.appendChild(ta2); ta2.select(); document.execCommand('copy'); document.body.removeChild(ta2); ok(); }catch(e){}
+        }
+      });
+    });
   })();
   </script>`;
 
@@ -1462,6 +1551,7 @@ router.get("/app", async (req, res) => {
 <body style="margin:0;padding:14px;padding-bottom:max(24px,env(safe-area-inset-bottom));font-family:system-ui,-apple-system,sans-serif;background:#0a0a0a;color:#e8e8e8;max-width:520px;margin-left:auto;margin-right:auto;">
   ${cashBlitzPanelHtml}
   ${inboundLeadsPanelHtml}
+  ${quickQuotesPanelHtml}
   ${reactivationPanelHtml}
   ${nextActionsPanelHtml}
   <h1 style="font-size:1.35rem;margin:8px 0 4px;color:#f0ff44;font-weight:900;">Cheeky Tees</h1>
