@@ -1,28 +1,33 @@
-async function processOrder(order) {
-  console.log("💰 Processing order:", order.id);
-
-  const tasks = [];
-
-  for (const item of order.lineItems || []) {
-    let type = "DTG";
-
-    const name = (item.name || "").toLowerCase();
-
-    if (name.includes("screen")) type = "SCREEN_PRINT";
-    if (name.includes("dtf")) type = "DTF";
-    if (name.includes("embroidery")) type = "EMBROIDERY";
-
-    tasks.push({
-      orderId: order.id,
-      type,
-      status: "READY",
-      title: `${type} - ${item.name}`
-    });
-  }
-
-  console.log("🛠 Tasks created:", tasks.length);
-
-  return tasks;
+function inferTaskType(name = "") {
+  const n = String(name).toLowerCase();
+  if (n.includes("screen")) return "SCREEN_PRINT";
+  if (n.includes("dtf")) return "DTF";
+  if (n.includes("embroidery")) return "EMBROIDERY";
+  return "DTG";
 }
 
-module.exports = { processOrder };
+async function processSquarePaymentEvent(event) {
+  const payment = event?.data?.object?.payment || {};
+
+  const order = {
+    squarePaymentId: payment?.id || null,
+    squareOrderId: payment?.order_id || null,
+    buyerEmail: payment?.buyer_email_address || null,
+    amountMoney: payment?.amount_money?.amount ?? 0,
+    currency: payment?.amount_money?.currency || "USD",
+    sourceEventType: event?.type || "unknown",
+    lineItems: []
+  };
+
+  const tasks = [
+    {
+      title: "REVIEW ORDER",
+      type: "REVIEW",
+      status: "READY"
+    }
+  ];
+
+  return { order, tasks };
+}
+
+module.exports = { processSquarePaymentEvent };

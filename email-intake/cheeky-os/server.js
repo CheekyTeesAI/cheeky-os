@@ -111,6 +111,14 @@ app.use(express.json());
 const squareWebhook = require("../../src/webhooks/squareWebhook");
 app.use("/webhooks", squareWebhook);
 
+app.get("/money-engine/health", (req, res) => {
+  res.json({
+    ok: true,
+    emailPolling: "disabled",
+    webhook: "/webhooks/square/webhook"
+  });
+});
+
 app.use("/cheeky", cheekyRouter);
 app.use("/revenue", revenueRouter);
 app.use("/dashboard", dashboardRouter);
