@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cheeky OS — Dashboard</title>
+  <style>
+    :root { --bg: #0f1117; --card: #1a1d27; --accent: #4f8cff; --green: #34d399; --red: #f87171; --text: #e2e8f0; --muted: #94a3b8; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 1.5rem; }
+    h1 { font-size: 1.8rem; margin-bottom: 0.3rem; }
+    .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .card { background: var(--card); border-radius: 12px; padding: 1.2rem; border: 1px solid #2a2d3a; }
+    .card h2 { font-size: 1rem; color: var(--accent); margin-bottom: 0.8rem; }
+    .stat { font-size: 2rem; font-weight: 700; }
+    .stat-label { color: var(--muted); font-size: 0.8rem; margin-top: 0.2rem; }
+    .stat-row { display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px solid #2a2d3a; font-size: 0.85rem; }
+    .stat-row:last-child { border-bottom: none; }
+    .status-ok { color: var(--green); }
+    .status-err { color: var(--red); }
+    .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .btn { background: var(--accent); color: #fff; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.85; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-danger { background: var(--red); }
+    .btn-green { background: var(--green); color: #000; }
+    #log { background: var(--card); border-radius: 12px; padding: 1rem; font-family: 'Fira Code', monospace; font-size: 0.78rem; max-height: 300px; overflow-y: auto; white-space: pre-wrap; color: var(--muted); border: 1px solid #2a2d3a; }
+    .refresh-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .refresh-bar span { color: var(--muted); font-size: 0.75rem; }
+  </style>
+</head>
+<body>
+  <h1>🧢 Cheeky OS</h1>
+  <p class="subtitle">Business Command Center — v1</p>
+
+  <div class="actions">
+    <button class="btn btn-green" onclick="runAction('/cheeky/run','POST')">▶ Run All</button>
+    <button class="btn" onclick="runAction('/cheeky/followups','POST')">📨 Follow-ups</button>
+    <button class="btn" onclick="runAction('/cheeky/leads','POST')">🎯 Leads</button>
+    <button class="btn" onclick="runAction('/cheeky/build','POST')">🔨 Build</button>
+    <button class="btn" onclick="runAction('/cheeky/deploy','POST')">🚀 Deploy</button>
+    <button class="btn btn-danger" onclick="if(confirm('Rollback last commit?')) runAction('/cheeky/rollback','POST')">⏪ Rollback</button>
+  </div>
+
+  <div class="grid">
+    <div class="card" id="health-card">
+      <h2>🩺 System Health</h2>
+      <div id="health">Loading…</div>
+    </div>
+    <div class="card" id="cash-card">
+      <h2>💰 Revenue</h2>
+      <div id="cash">Loading…</div>
+    </div>
+    <div class="card" id="pipeline-card">
+      <h2>📊 Pipeline</h2>
+      <div id="pipeline">Loading…</div>
+    </div>
+    <div class="card" id="leads-card">
+      <h2>🎯 Hot Leads</h2>
+      <div id="leads">Loading…</div>
+    </div>
+  </div>
+
+  <div class="refresh-bar">
+    <span>Activity Log</span>
+    <span id="last-refresh">—</span>
+  </div>
+  <div id="log">Waiting for data…</div>
+
+  <script>
+    const BASE = window.location.origin;
+
+    async function api(path, method = "GET") {
+      try {
+        const res = await fetch(BASE + path, {
+          method,
+          headers: { "Content-Type": "application/json" },
+        });
+        return await res.json();
+      } catch (e) {
+        return { ok: false, error: e.message };
+      }
+    }
+
+    function $(id) { return document.getElementById(id); }
+
+    async function refreshHealth() {
+      const r = await api("/cheeky/health");
+      if (r.ok) {
+        const d = r.data;
+        $("health").innerHTML = `
+          <div class="stat status-ok">● Online</div>
+          <div class="stat-row"><span>Uptime</span><span>${d.uptime}</span></div>
+          <div class="stat-row"><span>Memory</span><span>${d.memory}</span></div>
+          <div class="stat-row"><span>Node</span><span>${d.node}</span></div>`;
+      } else {
+        $("health").innerHTML = `<div class="stat status-err">● Offline</div><div class="stat-label">${r.error || "Unreachable"}</div>`;
+      }
+    }
+
+    async function refreshCash() {
+      const r = await api("/cheeky/mobile");
+      if (r.ok && r.data && r.data.cash) {
+        const c = r.data.cash;
+        $("cash").innerHTML = `
+          <div class="stat">$${(c.revenue || 0).toLocaleString()}</div>
+          <div class="stat-label">Total Revenue</div>
+          <div class="stat-row"><span>Deposits</span><span>$${(c.deposits_collected || 0).toLocaleString()}</span></div>
+          <div class="stat-row"><span>Outstanding</span><span>$${(c.outstanding || 0).toLocaleString()}</span></div>
+          <div class="stat-row"><span>Collection</span><span>${c.collection_rate || 0}%</span></div>`;
+
+        // Pipeline
+        if (r.data.pipeline) {
+          const p = r.data.pipeline;
+          let html = `<div class="stat">${p.total_orders || 0}</div><div class="stat-label">Total Orders</div>`;
+          if (p.by_status) {
+            for (const [s, v] of Object.entries(p.by_status)) {
+              html += `<div class="stat-row"><span>${s}</span><span>${v.count} ($${(v.revenue||0).toLocaleString()})</span></div>`;
+            }
+          }
+          $("pipeline").innerHTML = html;
+        }
+
+        // Leads
+        if (r.data.hot_leads) {
+          const l = r.data.hot_leads;
+          let html = `<div class="stat">${l.count || 0}</div><div class="stat-label">Ready for Action</div>`;
+          if (l.leads) {
+            l.leads.slice(0, 5).forEach(lead => {
+              html += `<div class="stat-row"><span>${lead.customer}</span><span>$${(lead.remaining||0).toLocaleString()} due</span></div>`;
+            });
+          }
+          $("leads").innerHTML = html;
+        }
+      } else {
+        $("cash").innerHTML = `<div class="stat-label status-err">Failed to load</div>`;
+      }
+    }
+
+    async function refreshActivity() {
+      const r = await api("/cheeky/activity");
+      if (r.ok && r.data) {
+        const lines = r.data.entries.map(e => `[${e.timestamp}] ${e.level}: ${e.message}`).join("\n");
+        $("log").textContent = lines || "(no activity yet)";
+      }
+      $("last-refresh").textContent = "Updated " + new Date().toLocaleTimeString();
+    }
+
+    async function runAction(path, method) {
+      $("log").textContent += `\n→ ${method} ${path}…`;
+      const r = await api(path, method);
+      $("log").textContent += `\n← ${r.ok ? "✅" : "❌"} ${JSON.stringify(r.data || r.error).slice(0, 200)}`;
+      $("log").scrollTop = $("log").scrollHeight;
+      setTimeout(refreshAll, 1000);
+    }
+
+    async function refreshAll() {
+      await Promise.all([refreshHealth(), refreshCash(), refreshActivity()]);
+    }
+
+    // Initial load + 30s auto-refresh
+    refreshAll();
+    setInterval(refreshAll, 30000);
+  </script>
+</body>
+</html>

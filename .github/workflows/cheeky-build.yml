@@ -1,0 +1,47 @@
+# Cheeky OS — Build workflow
+# Runs on every push and PR to main. Validates syntax and dependencies.
+name: Cheeky Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'email-intake/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'email-intake/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: email-intake
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: email-intake/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Syntax check core files
+        run: |
+          node -c webhook/server.js
+          node -c api/orders-export.js
+          node -c start.js
+          node -c intake.js
+          node -c metadata.js
+          echo "✅ All syntax checks passed"
+
+      - name: Syntax check cheeky-os modules
+        run: |
+          find cheeky-os -name "*.js" -exec node -c {} \;
+          echo "✅ All cheeky-os modules pass syntax"

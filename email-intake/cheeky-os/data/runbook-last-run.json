@@ -1,0 +1,19 @@
+{
+  "at": "2026-04-07T03:05:47.009Z",
+  "steps": [
+    {
+      "step": "runbook_guard",
+      "ok": false,
+      "reason": "Autopilot disabled"
+    }
+  ],
+  "summary": {
+    "followups": 0,
+    "invoices": 0,
+    "productionMoves": 0,
+    "alerts": 0
+  },
+  "events": [
+    "Runbook blocked: Autopilot disabled"
+  ]
+}

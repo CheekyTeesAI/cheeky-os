@@ -1,0 +1,14 @@
+{
+  "at": "2026-04-07T02:56:58.177Z",
+  "cycleSummary": {
+    "followupsSent": 0,
+    "responsesProcessed": 1,
+    "invoicesPrepared": 1,
+    "queuedActions": 1
+  },
+  "events": [
+    "Follow-up cycle: no sends (skipped, limits, empty queue, or errors)",
+    "Detected ready_to_pay from Sarah",
+    "Queued invoice action for Sarah"
+  ]
+}

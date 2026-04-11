@@ -1,8 +1,9 @@
 console.log("🪝 WEBHOOK FILE LOADED");
 import { Request, Response, Router } from "express";
-import { brain } from "../core/brain";
-import { gatekeeper } from "../core/gatekeeper";
-import { route } from "../core/router";
+import { brain as runVoicePipeline } from "../core/brain";
+import { createOrder } from "../api/orders.create";
+const { parseSquareEvent } = require("../lib/event-truth");
+const { logger } = require("../utils/logger");
 
 const router = Router();
 
@@ -20,61 +21,68 @@ router.get("/", (req: Request, res: Response) => {
 });
 
 router.post("/", async (req: Request, res: Response) => {
-  console.log("🔥🔥🔥 INSIDE POST ROUTE 🔥🔥🔥");
+  try {
+    console.log("🔥 INSIDE POST ROUTE", {
+      method: req.method,
+      contentType: req.headers["content-type"]
+    });
 
-  const body = req.body as {
-    type?: string;
-    data?: {
-      id?: string;
-      object?: {
-        payment?: { id?: string; status?: string };
-        invoice?: { id?: string };
-      };
-    };
-  };
+    const body = JSON.parse(req.body.toString());
+    const event = parseSquareEvent(body);
 
-  const eventType = String(body?.type ?? "unknown");
-  const payment = body?.data?.object?.payment;
-  const paymentStatus = payment?.status ? String(payment.status).toUpperCase() : "";
-  const idHint =
-    body?.data?.object?.invoice?.id ??
-    payment?.id ??
-    body?.data?.id ??
-    "no-id";
-
-  console.log("EVENT TYPE:", eventType, "| payment.status:", payment?.status ?? "(none)");
-
-  const isCompletedPayment =
-    eventType === "payment.updated" && paymentStatus === "COMPLETED";
-
-  if (isCompletedPayment) {
-    const pipelineInput = `Square payment.updated COMPLETED. Payment/invoice id: ${idHint}`;
-    try {
-      const brainOut = await brain(pipelineInput);
-      const gk = gatekeeper(brainOut);
-      if (gk.ok === false) {
-        console.log("[WEBHOOK→PIPELINE] gatekeeper blocked:", gk.error);
-      } else {
-        const routed = await route(brainOut.intent, gk.payload);
-        console.log(
-          "[WEBHOOK→PIPELINE] invoiceId=",
-          routed.invoiceId,
-          "status=",
-          routed.status
-        );
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.log("[WEBHOOK→PIPELINE] error:", msg);
+    if (!event.valid) {
+      return res.status(200).json({
+        received: true,
+        ignored: true
+      });
     }
-  } else {
-    console.log(
-      "[WEBHOOK] Ignored (need payment.updated + COMPLETED):",
-      eventType
-    );
-  }
 
-  res.status(200).json({ received: true });
+    if (event.type === "payment.created") {
+      try {
+        const payment = event.data?.object?.payment;
+
+        if (!payment) return;
+
+        const orderPayload = {
+          body: {
+            customerName: payment?.buyer_email_address || "Square Customer",
+            email: payment?.buyer_email_address || "",
+            items: [`Payment $${payment.amount_money?.amount / 100}`],
+            notes: "Auto-created from Square"
+          }
+        };
+
+        // Mock req/res for reuse of createOrder
+        const mockReq: any = orderPayload;
+        const mockRes: any = {
+          json: () => {},
+          status: () => ({ json: () => {} })
+        };
+
+        await createOrder(mockReq, mockRes);
+
+        console.log("Order created from Square payment");
+
+      } catch (err) {
+        console.error("Square → Order failed", err);
+      }
+    }
+
+    logger.info("Pipeline ready — awaiting Bundle 2 wiring", {
+      paymentId: event.paymentId
+    });
+
+    const eventSummary = `Square payment completed | paymentId: ${event.paymentId} | invoiceId: no-invoice-id`;
+    await runVoicePipeline(eventSummary);
+
+    return res.status(200).json({ received: true });
+  } catch (err) {
+    logger.error("Webhook handler error", { err });
+    return res.status(200).json({
+      received: true,
+      error: "handler_failed"
+    });
+  }
 });
 
 export default router;

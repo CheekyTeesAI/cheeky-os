@@ -1,0 +1,48 @@
+# Cheeky OS — Rollback workflow
+# Manual trigger to revert the last commit on main via GitHub API.
+name: Cheeky Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type ROLLBACK to confirm'
+        required: true
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm == 'ROLLBACK'
+
+    steps:
+      - name: Validate confirmation
+        run: echo "✅ Rollback confirmed"
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Need parent commit
+
+      - name: Revert to previous commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CURRENT=$(git rev-parse HEAD)
+          PARENT=$(git rev-parse HEAD~1)
+          echo "Rolling back from ${CURRENT:0:8} to ${PARENT:0:8}"
+          git reset --hard HEAD~1
+          git push --force origin main
+          echo "✅ Rolled back main to ${PARENT:0:8}"
+
+      - name: Trigger redeploy
+        if: env.RENDER_DEPLOY_HOOK_URL != ''
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          curl -s -X POST "$RENDER_DEPLOY_HOOK_URL"
+          echo "🚀 Redeploy triggered after rollback"
+
+      - name: Rollback summary
+        run: |
+          echo "## Rollback Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Action:** Force-reverted main to HEAD~1" >> $GITHUB_STEP_SUMMARY
+          echo "- **Time:** $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_STEP_SUMMARY

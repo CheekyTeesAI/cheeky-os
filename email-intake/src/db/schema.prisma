@@ -1,0 +1,57 @@
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  createdAt DateTime @default(now())
+}
+
+model Invoice {
+  id           String   @id @default(cuid())
+  customerId   String
+  quantity     Int
+  unitPrice    Float
+  total        Float
+  deposit      Float
+  hash         String
+  status       String   @default("pending")
+  followUpSent Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  stage     String
+  input     Json
+  output    Json
+  status    String
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+
+  customerName  String
+  quantity      Int
+  unitPrice     Float
+  total         Float
+
+  squareInvoiceId String?
+
+  status        String   @default("CREATED")
+
+  followUpSent  Boolean  @default(false)
+
+  isRush        Boolean  @default(false)
+
+  productionStartedAt   DateTime?
+  productionCompletedAt DateTime?
+
+  notes         String?
+
+  @@index([customerName])
+  @@index([status])
+}

@@ -10,6 +10,8 @@ const { scoreFollowupOpportunities } = require("./followupScoringService");
 const { evaluateInvoiceAutomation } = require("./invoiceAutomationService");
 const { createDraftInvoice } = require("./squareDraftInvoice");
 const { canRun } = require("./autopilotGuardService");
+const { addException } = require("./exceptionQueueService");
+const { recordLedgerEventSafe } = require("./actionLedgerService");
 
 const INVOICE_STATE_FILE = path.join(
   __dirname,
@@ -121,6 +123,20 @@ async function runInvoiceExecutor() {
   if (!gate.allowed) {
     out.errors.push(gate.reason);
     console.warn("[invoiceExecutor] blocked:", gate.reason);
+    recordLedgerEventSafe({
+      type: "invoice",
+      action: "invoice_executor_blocked",
+      status: "blocked",
+      reason: String(gate.reason || ""),
+    });
+    const r = String(gate.reason || "").toLowerCase();
+    addException({
+      type: "automation",
+      customerName: "",
+      orderId: "",
+      severity: r.includes("kill switch") ? "critical" : "high",
+      reason: `Invoice automation blocked: ${gate.reason}`,
+    });
     return out;
   }
   const state = loadInvoiceState();
@@ -185,6 +201,13 @@ async function runInvoiceExecutor() {
 
       if (!decision.shouldCreate) {
         out.skipped++;
+        recordLedgerEventSafe({
+          type: "invoice",
+          action: "draft_invoice_skipped",
+          status: "skipped",
+          customerName: String(row.customerName || ""),
+          reason: String(decision.reason || "Automation decision skipped"),
+        });
         continue;
       }
 
@@ -199,6 +222,13 @@ async function runInvoiceExecutor() {
 
       if (!inv.success) {
         out.errors.push(String(inv.error || "create_draft_failed"));
+        recordLedgerEventSafe({
+          type: "invoice",
+          action: "draft_invoice_failed",
+          status: "blocked",
+          customerName: String(row.customerName || ""),
+          reason: String(inv.error || "create_draft_failed"),
+        });
         break;
       }
 
@@ -208,6 +238,15 @@ async function runInvoiceExecutor() {
       };
       saveInvoiceState(state);
       out.created++;
+      recordLedgerEventSafe({
+        type: "invoice",
+        action: "draft_invoice_created",
+        status: "success",
+        customerName: String(row.customerName || ""),
+        orderId: String(row.id || ""),
+        reason: "Draft invoice created from automation",
+        meta: { amount: Number(row.amount) || 0 },
+      });
       console.log("[invoiceExecutor] draft created", {
         customerId,
         invoiceId: inv.invoiceId,
@@ -216,6 +255,12 @@ async function runInvoiceExecutor() {
     }
   } catch (err) {
     out.errors.push(String(err && err.message ? err.message : err));
+    recordLedgerEventSafe({
+      type: "invoice",
+      action: "invoice_executor_error",
+      status: "blocked",
+      reason: String(err && err.message ? err.message : err),
+    });
   }
 
   return out;

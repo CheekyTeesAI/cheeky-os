@@ -1,0 +1,27 @@
+{
+  "runAt": "2026-04-10T18:21:22.290Z",
+  "processed": 2,
+  "hotLeads": 1,
+  "offersBuilt": 2,
+  "messagesGenerated": 2,
+  "estimatesCreated": 2,
+  "followUpsScheduled": 2,
+  "messages": [
+    {
+      "customerId": "mock1",
+      "to": "test@cheeky.com",
+      "subject": "Quick follow-up from Cheeky Tees",
+      "text": "Hey Test — we need a same-day decision today to hold your place; we have a few print slots open this week. Reply or approve estimate to lock your spot.",
+      "sendStatus": "pending",
+      "sendError": null
+    },
+    {
+      "customerId": "mock2",
+      "to": "lead@cheeky.com",
+      "subject": "Quick follow-up from Cheeky Tees",
+      "text": "Hey Hot — we need a same-day decision today to hold your place; we have a few print slots open this week. Reply or approve estimate to lock your spot.",
+      "sendStatus": "pending",
+      "sendError": null
+    }
+  ]
+}

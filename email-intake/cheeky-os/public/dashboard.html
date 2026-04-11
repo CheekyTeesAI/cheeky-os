@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cheeky OS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont;
+      background: #0f0f0f;
+      color: #fff;
+      padding: 15px;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .topbar-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .section {
+      margin-bottom: 25px;
+    }
+
+    .section h2 {
+      font-size: 16px;
+      margin-bottom: 10px;
+      opacity: 0.8;
+    }
+
+    .card {
+      background: #1a1a1a;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .card.red { border-left: 4px solid #ff3b30; }
+    .card.orange { border-left: 4px solid #ff9500; }
+    .card.blue { border-left: 4px solid #0a84ff; }
+
+    .text {
+      flex: 1;
+      font-size: 14px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    button {
+      background: #333;
+      color: #fff;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #555;
+    }
+
+    .btn-call { background: #0a84ff; }
+    .btn-text { background: #34c759; }
+    .btn-draft { background: #636366; }
+    .btn-done { background: #2c2c2e; }
+
+    .empty {
+      opacity: 0.7;
+      font-size: 13px;
+      padding: 8px 0;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      z-index: 20;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(560px, 100%);
+      background: #1a1a1a;
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .modal-card h3 {
+      margin: 0 0 10px 0;
+      font-size: 16px;
+    }
+
+    .modal-message {
+      background: #111;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 14px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      margin-bottom: 10px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <h1>🔥 Cheeky OS</h1>
+  <div class="topbar-actions">
+    <button onclick="refresh()">↻</button>
+    <button onclick="resetDone()">Reset Done</button>
+  </div>
+</div>
+
+<div class="section">
+  <h2>🔴 ACTIONS</h2>
+  <div id="actions"></div>
+</div>
+
+<div class="section">
+  <h2>💰 CASH AT RISK</h2>
+  <div id="cash"></div>
+</div>
+
+<div class="section">
+  <h2>📞 CALLS</h2>
+  <div id="calls"></div>
+</div>
+
+<div class="footer-note">
+  Dashboard actions are local session tools. Done state resets manually.
+</div>
+
+<div id="draftModal" class="modal">
+  <div class="modal-card">
+    <h3 id="draftTitle">Draft</h3>
+    <div id="draftMessage" class="modal-message"></div>
+    <div class="modal-actions">
+      <button class="btn-draft" onclick="copyDraft()">Copy</button>
+      <button onclick="closeDraft()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let CONTACTS = {};
+
+function cleanLines(text) {
+  if (!text) return ["No data available"];
+
+  return text
+    .split('\n')
+    .map(x => x.replace(/^[-\d.\s\[\]:UTC#]+/, '').trim())
+    .filter(x => x.length > 2)
+    .filter(x => !/^type:|^generated:|^id:|^item_count:|^why:|^result:|^expected outcome:/i.test(x))
+    .filter(x => !/^actions$|^cash at risk$|^calls$/i.test(x))
+    .filter(x => !/^must do today$|^watch$|^quick wins$|^done = success$/i.test(x))
+    .filter(x => x.length > 5)
+    .slice(0, 5);
+}
+
+function extractName(text) {
+  const known = Object.values(CONTACTS).find(contact => {
+    const n = String(contact && contact.name ? contact.name : "").toLowerCase();
+    return n && text.toLowerCase().includes(n);
+  });
+  if (known && known.name) return known.name;
+  const match = text.match(/\b[A-Z][a-z]+\b/);
+  return match ? match[0] : "Unknown";
+}
+
+function detectType(text) {
+  const lower = text.toLowerCase();
+  if (/deposit|payment|invoice/.test(lower)) return "deposit";
+  if (/quote|estimate/.test(lower)) return "quote";
+  if (/call|follow up/.test(lower)) return "call";
+  return "general";
+}
+
+function buildMessage(item) {
+  if (item.type === "deposit") {
+    return `Hey ${item.name} — wanted to circle back on the deposit so we can get this moving. Want me to resend the invoice?`;
+  }
+  if (item.type === "quote") {
+    return `Hey ${item.name} — wanted to follow up on the quote. We can get it moving whenever you're ready.`;
+  }
+  return `Hey ${item.name} — wanted to circle back on this. Let me know if you want me to get it moving.`;
+}
+
+function toItem(raw) {
+  const clean = raw.trim();
+  const name = extractName(clean);
+  const key = name.toLowerCase();
+  const contact = CONTACTS[key] || null;
+  const phone = contact && contact.phone ? contact.phone : null;
+  const type = detectType(clean);
+  return { raw, clean, name, phone, type };
+}
+
+function doneKey(item) {
+  return `done:${item.clean}`;
+}
+
+function isDone(item) {
+  return localStorage.getItem(doneKey(item)) === "1";
+}
+
+function markDone(raw) {
+  const item = toItem(raw);
+  localStorage.setItem(doneKey(item), "1");
+  refresh();
+}
+
+function createCard(item, colorClass) {
+  const safeRaw = JSON.stringify(item.raw);
+  return `
+    <div class="card ${colorClass}">
+      <div class="text">${item.clean}</div>
+      <div class="actions">
+        <button class="btn-call" onclick='callContact(${safeRaw})'>📞 Call</button>
+        <button class="btn-text" onclick='textContact(${safeRaw})'>💬 Text</button>
+        <button class="btn-draft" onclick='openDraft(${safeRaw})'>✉️ Draft</button>
+        <button class="btn-done" onclick='markDone(${safeRaw})'>✅ Done</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderSection(targetId, lines, colorClass) {
+  const items = lines.map(toItem).filter(item => !isDone(item));
+  const html = items.length
+    ? items.map(item => createCard(item, colorClass)).join("")
+    : `<div class="empty">No active items.</div>`;
+  document.getElementById(targetId).innerHTML = html;
+}
+
+async function load() {
+  try {
+    const res = await fetch('/dashboard/data');
+    const data = await res.json();
+    CONTACTS = data.contacts || {};
+
+    const actions = cleanLines(data.operator);
+    const cash = cleanLines(data.cash);
+    const calls = cleanLines(data.calls);
+
+    renderSection('actions', actions, 'red');
+    renderSection('cash', cash, 'orange');
+    renderSection('calls', calls, 'blue');
+  } catch (err) {
+    document.getElementById('actions').innerHTML = `<div class="empty">Dashboard data unavailable.</div>`;
+    document.getElementById('cash').innerHTML = `<div class="empty">Dashboard data unavailable.</div>`;
+    document.getElementById('calls').innerHTML = `<div class="empty">Dashboard data unavailable.</div>`;
+  }
+}
+
+function callContact(raw) {
+  const item = toItem(raw);
+  call(item.name, item.phone);
+}
+
+function textContact(raw) {
+  const item = toItem(raw);
+  const message = buildMessage(item);
+  textMsg(item.name, item.phone, message);
+}
+
+function call(name, phone) {
+  if (phone) {
+    window.location.href = 'tel:' + phone;
+  } else {
+    alert("No phone for " + name);
+  }
+}
+
+function textMsg(name, phone, message) {
+  if (phone) {
+    window.location.href = 'sms:' + phone + '?&body=' + encodeURIComponent(message);
+  } else {
+    alert(message);
+  }
+}
+
+function openDraft(raw) {
+  const item = toItem(raw);
+  const message = buildMessage(item);
+  document.getElementById('draftTitle').textContent = `Draft for ${item.name}`;
+  document.getElementById('draftMessage').textContent = message;
+  document.getElementById('draftModal').classList.add('open');
+}
+
+function closeDraft() {
+  document.getElementById('draftModal').classList.remove('open');
+}
+
+async function copyDraft() {
+  const message = document.getElementById('draftMessage').textContent || '';
+  try {
+    await navigator.clipboard.writeText(message);
+    alert('Copied');
+  } catch {
+    alert(message);
+  }
+}
+
+function refresh() {
+  load();
+}
+
+function resetDone() {
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('done:')) keys.push(key);
+  }
+  keys.forEach(key => localStorage.removeItem(key));
+  load();
+}
+
+setInterval(load, 30000);
+
+load();
+
+</script>
+
+</body>
+</html>

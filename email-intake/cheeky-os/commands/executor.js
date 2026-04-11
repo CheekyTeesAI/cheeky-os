@@ -27,8 +27,20 @@ async function executeCommand({ action, params }) {
   try {
     switch (action) {
       case "run_followups": {
-        const result = await runFollowups();
-        return { ok: result.ok, data: result.data, error: result.error };
+        console.log("🚀 Running followups...");
+        const base = process.env.BASE_URL || process.env.API_BASE_URL || "http://localhost:3000";
+        const res = await fetch(`${base}/cheeky/followup2/run`, { method: "POST" });
+        const text = await res.text();
+        let result = { ok: false, data: null, error: "empty response" };
+        if (text && text.trim()) {
+          try {
+            result = JSON.parse(text);
+          } catch {
+            result = { ok: false, data: null, error: "invalid JSON from followup2/run" };
+          }
+        }
+        console.log("📦 Followups result:", result);
+        return { ok: !!result.ok, data: result.data, error: result.error || null };
       }
 
       case "get_hot": {
@@ -43,13 +55,31 @@ async function executeCommand({ action, params }) {
       }
 
       case "get_next": {
-        const actions = getNextSalesActions();
-        return { ok: true, data: { count: actions.length, actions }, error: null };
+        try {
+          const raw = getNextSalesActions();
+          const actions = Array.isArray(raw) ? raw : [];
+          return { ok: true, data: { actions }, error: null };
+        } catch {
+          return { ok: true, data: { actions: [] }, error: null };
+        }
       }
 
       case "get_cash_summary": {
         const result = await getCashSummary();
-        return { ok: result.ok, data: result.data, error: result.error };
+        const d = result?.data && typeof result.data === "object" ? result.data : {};
+        return {
+          ok: true,
+          data: {
+            total_orders: d.total_orders ?? 0,
+            revenue: d.revenue ?? 0,
+            deposits_collected: d.deposits_collected ?? 0,
+            outstanding: d.outstanding ?? 0,
+            paid_orders: d.paid_orders ?? 0,
+            unpaid_orders: d.unpaid_orders ?? 0,
+            collection_rate: d.collection_rate ?? 0,
+          },
+          error: null,
+        };
       }
 
       case "get_production_queue": {
@@ -147,6 +177,20 @@ async function executeCommand({ action, params }) {
         });
 
         return { ok: true, data: result, error: null };
+      }
+
+      case "reactivate_customers": {
+        const base = process.env.BASE_URL || process.env.API_BASE_URL || "http://localhost:3000";
+        const res = await fetch(`${base}/cheeky/marketing/reactivate`, { method: "POST" });
+        const data = await res.json();
+        return { ok: !!data.ok, data: data.data, error: data.error || null };
+      }
+
+      case "list_dormant_customers": {
+        const base = process.env.BASE_URL || process.env.API_BASE_URL || "http://localhost:3000";
+        const res = await fetch(`${base}/cheeky/marketing/dormant`);
+        const data = await res.json();
+        return { ok: !!data.ok, data: data.data, error: data.error || null };
       }
 
       default:

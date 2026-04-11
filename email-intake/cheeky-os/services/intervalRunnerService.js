@@ -7,6 +7,7 @@ const { runFollowupExecutor } = require("./followupExecutorService");
 const { runInvoiceExecutor } = require("./invoiceExecutorService");
 const { runProductionExecutor } = require("./productionExecutorService");
 const { canRun } = require("./autopilotGuardService");
+const { addException } = require("./exceptionQueueService");
 
 const state = {
   isRunning: false,

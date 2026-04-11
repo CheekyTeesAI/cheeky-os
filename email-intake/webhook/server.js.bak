@@ -120,9 +120,17 @@ app.get("/health", async (req, res) => {
   async function probe(name, endpoint) {
     try {
       const r = await fetch(`${base}${endpoint}`);
-      const j = await r.json();
-      if (!r.ok || j.ok === false) {
-        return `${name} error: ${j.error || `HTTP ${r.status}`}`;
+      const text = await r.text();
+      let j = null;
+      if (text && String(text).trim()) {
+        try {
+          j = JSON.parse(text);
+        } catch {
+          return `${name} error: invalid JSON (${r.status})`;
+        }
+      }
+      if (!r.ok || (j && j.ok === false)) {
+        return `${name} error: ${(j && j.error) || `HTTP ${r.status}`}`;
       }
       return "ok";
     } catch (err) {

@@ -10,6 +10,7 @@ const { runInvoiceExecutor } = require("./invoiceExecutorService");
 const { runProductionExecutor } = require("./productionExecutorService");
 const { getActiveAlertsSorted } = require("./alertStoreService");
 const { canRun } = require("./autopilotGuardService");
+const { addException } = require("./exceptionQueueService");
 
 const LAST_RUN_FILE = path.join(__dirname, "..", "data", "runbook-last-run.json");
 
@@ -51,6 +52,14 @@ async function executeDailyRunbook() {
   };
   const gate = canRun("full_runbook_execute");
   if (!gate.allowed) {
+    const r = String(gate.reason || "").toLowerCase();
+    addException({
+      type: "automation",
+      customerName: "",
+      orderId: "",
+      severity: r.includes("kill switch") ? "critical" : "high",
+      reason: `Runbook blocked: ${gate.reason}`,
+    });
     const out = {
       steps: [{ step: "runbook_guard", ok: false, reason: gate.reason }],
       summary,

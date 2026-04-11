@@ -15,6 +15,7 @@ const ALLOWED_INTENTS = [
   "CLOSE_DEAL",
   "CREATE_INVOICE",
   "GET_CASH_SUMMARY",
+  "GET_UNPAID",
   "GET_PRODUCTION_QUEUE",
   "OUTREACH_LEADS",
   "GET_HEALTH",
@@ -39,7 +40,34 @@ async function parseIntent(text) {
 Given a natural language command, return JSON with:
 - intent: one of ${ALLOWED_INTENTS.join(", ")}
 - confidence: 0.0 to 1.0
-- params: any extracted parameters (customer name, amount, etc.)
+params: Extract structured data when present:
+- customer: string (business or person name)
+- quantity: number
+- unitPrice: number
+- total: number if explicitly stated
+
+Rules:
+- "24 shirts at 18 each" → quantity=24, unitPrice=18
+- "invoice John for 500" → customer="John", total=500
+- Always return numbers as numbers (not strings)
+- If missing, omit field (do NOT guess)
+
+Return ONLY valid JSON in this exact format:
+
+{
+  "intent": string,
+  "confidence": number,
+  "params": {
+    "customer"?: string,
+    "quantity"?: number,
+    "unitPrice"?: number,
+    "total"?: number
+  }
+}
+
+If any parameter exists in the text, it MUST be included in params.
+Do not return an empty params object if values are present in the input.
+
 
 Rules:
 - "follow up" or "chase deposits" → RUN_FOLLOWUP
@@ -47,6 +75,7 @@ Rules:
 - "close" or "mark paid" or "done" → CLOSE_DEAL
 - "invoice" or "bill" or "send invoice" → CREATE_INVOICE
 - "cash" or "money" or "revenue" → GET_CASH_SUMMARY
+- "unpaid" or "open deals" or "who owes" → GET_UNPAID
 - "queue" or "production" or "what's next" → GET_PRODUCTION_QUEUE
 - "leads" or "outreach" or "new customers" → OUTREACH_LEADS
 - "health" or "status" or "ping" → GET_HEALTH
@@ -63,13 +92,36 @@ Return ONLY valid JSON. No markdown, no explanation.`;
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: "gpt-4.1",
       messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: text },
-      ],
+        {
+          role: "system",
+          content: `${systemPrompt}
+
+    You MUST extract ALL available parameters from the text.
+    
+    Example:
+    Input: "create invoice for 24 shirts at 18 each for test customer"
+    Output:
+    {
+      "intent": "CREATE_INVOICE",
+      "confidence": 1,
+      "params": {
+        "customer": "Test Customer",
+        "quantity": 24,
+        "unitPrice": 18
+      }
+    }
+    
+    DO NOT leave params empty if data exists.
+    `,
+    },
+    { 
+      role: "user", 
+      content: text 
+    }
+  ],
       temperature: 0.1,
-      max_tokens: 200,
     }),
   });
 
@@ -79,8 +131,23 @@ Return ONLY valid JSON. No markdown, no explanation.`;
   }
 
   try {
-    const content = result.data.choices[0].message.content.trim();
-    const parsed = JSON.parse(content);
+    if (!result.data || !result.data.output || !result.data.output[0]) {
+      return { intent: "UNKNOWN", confidence: 0, params: {} };
+    }
+
+    const content = 
+      result.data?.choices?.[0]?.message?.content ||
+      result.data?.output?.[0]?.content?.[0]?.text ||
+      "";
+
+    const parsedText = String(content).trim();
+
+    let parsed;
+    try {
+      parsed = JSON.parse(parsedText);
+    } catch (e) {
+      return { intent: "UNKNOWN", confidence: 0, params: {} };
+    }
 
     // Validate intent is in allowed list
     if (!ALLOWED_INTENTS.includes(parsed.intent)) {

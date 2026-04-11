@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cheeky OS — Mobile</title>
+  <style>
+    :root { --bg: #0f1117; --card: #1a1d27; --accent: #4f8cff; --green: #34d399; --red: #f87171; --text: #e2e8f0; --muted: #94a3b8; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 1rem; max-width: 480px; margin: 0 auto; }
+    h1 { font-size: 1.4rem; text-align: center; margin-bottom: 0.3rem; }
+    .subtitle { color: var(--muted); font-size: 0.8rem; text-align: center; margin-bottom: 1rem; }
+    .card { background: var(--card); border-radius: 12px; padding: 1rem; border: 1px solid #2a2d3a; margin-bottom: 0.8rem; }
+    .card h2 { font-size: 0.9rem; color: var(--accent); margin-bottom: 0.5rem; }
+    .stat { font-size: 1.8rem; font-weight: 700; text-align: center; }
+    .stat-label { color: var(--muted); font-size: 0.75rem; text-align: center; }
+    .stat-row { display: flex; justify-content: space-between; font-size: 0.8rem; padding: 0.3rem 0; }
+    .btns { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+    .btn { width: 100%; padding: 1rem; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; color: #fff; transition: opacity 0.2s; }
+    .btn:active { opacity: 0.7; }
+    .btn-run { background: var(--green); color: #000; }
+    .btn-follow { background: var(--accent); }
+    .btn-leads { background: #a855f7; }
+    .btn-deploy { background: #f59e0b; color: #000; }
+    .status-ok { color: var(--green); }
+    .status-err { color: var(--red); }
+    #toast { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); background: var(--card); color: var(--text); padding: 0.8rem 1.5rem; border-radius: 12px; border: 1px solid var(--accent); font-size: 0.85rem; display: none; z-index: 99; max-width: 90vw; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>🧢 Cheeky Mobile</h1>
+  <p class="subtitle" id="status">Connecting…</p>
+
+  <div class="card">
+    <h2>💰 Cash</h2>
+    <div class="stat" id="revenue">—</div>
+    <div class="stat-label">Revenue</div>
+    <div class="stat-row"><span>Deposits</span><span id="deposits">—</span></div>
+    <div class="stat-row"><span>Outstanding</span><span id="outstanding">—</span></div>
+  </div>
+
+  <div class="card">
+    <h2>📊 Orders</h2>
+    <div class="stat" id="orders">—</div>
+    <div class="stat-label">Total</div>
+    <div class="stat-row"><span>Hot Leads</span><span id="hot">—</span></div>
+    <div class="stat-row"><span>Collection Rate</span><span id="rate">—</span></div>
+  </div>
+
+  <div class="btns">
+    <button class="btn btn-run" onclick="tap('/cheeky/run','POST')">▶ Run All Systems</button>
+    <button class="btn btn-follow" onclick="tap('/cheeky/followups','POST')">📨 Chase Deposits</button>
+    <button class="btn btn-leads" onclick="tap('/cheeky/leads','POST')">🎯 Find Leads</button>
+    <button class="btn btn-deploy" onclick="tap('/cheeky/deploy','POST')">🚀 Deploy</button>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    const BASE = window.location.origin;
+
+    function toast(msg, ms = 3000) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.style.display = "block";
+      setTimeout(() => { el.style.display = "none"; }, ms);
+    }
+
+    async function api(path, method = "GET") {
+      try {
+        const res = await fetch(BASE + path, { method, headers: { "Content-Type": "application/json" } });
+        return await res.json();
+      } catch (e) {
+        return { ok: false, error: e.message };
+      }
+    }
+
+    async function refresh() {
+      const r = await api("/cheeky/mobile");
+      if (r.ok && r.data) {
+        document.getElementById("status").textContent = "● Online";
+        document.getElementById("status").className = "subtitle status-ok";
+        const c = r.data.cash || {};
+        document.getElementById("revenue").textContent = "$" + (c.revenue || 0).toLocaleString();
+        document.getElementById("deposits").textContent = "$" + (c.deposits_collected || 0).toLocaleString();
+        document.getElementById("outstanding").textContent = "$" + (c.outstanding || 0).toLocaleString();
+        const p = r.data.pipeline || {};
+        document.getElementById("orders").textContent = p.total_orders || 0;
+        document.getElementById("hot").textContent = (r.data.hot_leads && r.data.hot_leads.count) || 0;
+        document.getElementById("rate").textContent = (c.collection_rate || 0) + "%";
+      } else {
+        document.getElementById("status").textContent = "● Offline";
+        document.getElementById("status").className = "subtitle status-err";
+      }
+    }
+
+    async function tap(path, method) {
+      toast("Running…");
+      const r = await api(path, method);
+      toast(r.ok ? "✅ Done" : "❌ " + (r.error || "Failed"), 3000);
+      setTimeout(refresh, 1000);
+    }
+
+    refresh();
+    setInterval(refresh, 30000);
+  </script>
+</body>
+</html>

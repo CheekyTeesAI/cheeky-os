@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const jarvisController_1 = require("../controllers/jarvisController");
+const jarvis_controller_1 = require("../modules/jarvis/controllers/jarvis.controller");
+const router = (0, express_1.Router)();
+router.post("/", jarvis_controller_1.handleJarvisMessage);
+router.post("/approve", jarvis_controller_1.approveJarvisAction);
+router.get("/estimates/followup", jarvisController_1.getEstimatesFollowup);
+router.get("/customers/search", jarvisController_1.getCustomersSearch);
+router.post("/estimate/create", jarvisController_1.postEstimateCreate);
+router.post("/invoice/create", jarvisController_1.postInvoiceCreate);
+exports.default = router;

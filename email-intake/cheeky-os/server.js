@@ -14,6 +14,7 @@ const cheekyRouter = require("./routes");
 const revenueRouter = require("./routes/revenue");
 const mobileDashboardRouter = require("./routes/mobileDashboard");
 const dashboardNextRouter = require("./routes/dashboardNext");
+const dashboardRouter = require("./routes/dashboard");
 const squareDraftRouter = require("./routes/squareDraft");
 const salesRouter = require("./routes/sales");
 const captureRouter = require("./routes/capture");
@@ -46,6 +47,7 @@ const autoExecutionRouter = require("./routes/autoExecution");
 const reactivationRouter = require("./routes/reactivation");
 const leadsRouter = require("./routes/leads");
 const retargetingRouter = require("./routes/retargeting");
+const memoryRouter = require("./routes/memory");
 
 /** Bundle 1 requires 3001; override with CHEEKY_OS_PORT only (not generic PORT). */
 const PORT = Number(process.env.CHEEKY_OS_PORT || 3001);
@@ -78,6 +80,7 @@ app.use(express.json());
 
 app.use("/cheeky", cheekyRouter);
 app.use("/revenue", revenueRouter);
+app.use("/dashboard", dashboardRouter);
 app.use("/dashboard", dashboardNextRouter);
 app.use("/square", squareDraftRouter);
 app.use("/sales", salesRouter);
@@ -109,6 +112,7 @@ app.use("/auto", autoExecutionRouter);
 app.use("/reactivation", reactivationRouter);
 app.use("/leads", leadsRouter);
 app.use("/retargeting", retargetingRouter);
+app.use("/memory", memoryRouter);
 app.use(appCenterRouter);
 app.use("/", mobileDashboardRouter);
 

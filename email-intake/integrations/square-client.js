@@ -10,7 +10,7 @@
  * @module integrations/square-client
  */
 
-const fs = require("fs");
+console.log("🔥 USING THIS FILE: square-client.js");const fs = require("fs");
 const path = require("path");
 const {
   mapToSquareLineItem,
@@ -22,7 +22,13 @@ const {
 // ── Config ──────────────────────────────────────────────────────────────────
 const SQUARE_ACCESS_TOKEN = process.env.SQUARE_ACCESS_TOKEN || "";
 const SQUARE_LOCATION_ID = process.env.SQUARE_LOCATION_ID || "";
-const SQUARE_ENV = (process.env.SQUARE_ENVIRONMENT || "sandbox").toLowerCase();
+const SQUARE_ENV = "production";
+console.log("🚨 SQUARE DEBUG →", {
+  ENV: process.env.SQUARE_ENVIRONMENT,
+  TOKEN_START: process.env.SQUARE_ACCESS_TOKEN?.slice(0, 10),
+  TOKEN_END: process.env.SQUARE_ACCESS_TOKEN?.slice(-6),
+  LOCATION: process.env.SQUARE_LOCATION_ID
+});
 
 /** Base URL switches between sandbox and production. */
 const BASE_URL =

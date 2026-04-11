@@ -1,0 +1,61 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Cheeky Orders Export API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000"
+    }
+  ],
+  "paths": {
+    "/api/orders/export": {
+      "get": {
+        "operationId": "getOrdersExport",
+        "summary": "Get exported orders",
+        "responses": {
+          "200": {
+            "description": "Orders export",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer"
+                    },
+                    "orders": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "customer_name": { "type": "string" },
+                          "order_total": { "type": "number" },
+                          "deposit_paid": { "type": "number" },
+                          "quote_sent_date": { "type": ["string", "null"], "format": "date-time" },
+                          "production_status": { "type": "string" },
+                          "production_status_code": { "type": ["integer", "null"] },
+                          "cash_priority": { "type": ["boolean", "null"] },
+                          "raw_id": { "type": "string" }
+                        },
+                        "required": [
+                          "customer_name",
+                          "order_total",
+                          "deposit_paid",
+                          "production_status",
+                          "raw_id"
+                        ]
+                      }
+                    }
+                  },
+                  "required": ["count", "orders"]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

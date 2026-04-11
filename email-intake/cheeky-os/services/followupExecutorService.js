@@ -9,6 +9,8 @@ const { scoreFollowupOpportunities } = require("./followupScoringService");
 const { evaluateFollowupAutomation } = require("./followupAutomationService");
 const { prepareMessage } = require("./messagePrepService");
 const { canRun } = require("./autopilotGuardService");
+const { addException } = require("./exceptionQueueService");
+const { recordLedgerEventSafe } = require("./actionLedgerService");
 
 const STATE_FILE = path.join(__dirname, "..", "data", "followup-auto-state.json");
 
@@ -119,6 +121,20 @@ async function runFollowupExecutor() {
   if (!gate.allowed) {
     out.errors.push(gate.reason);
     console.warn("[followupExecutor] blocked:", gate.reason);
+    recordLedgerEventSafe({
+      type: "followup",
+      action: "followup_executor_blocked",
+      status: "blocked",
+      reason: String(gate.reason || ""),
+    });
+    const r = String(gate.reason || "").toLowerCase();
+    addException({
+      type: "automation",
+      customerName: "",
+      orderId: "",
+      severity: r.includes("kill switch") ? "critical" : "high",
+      reason: `Follow-up automation blocked: ${gate.reason}`,
+    });
     return out;
   }
   const state = loadState();
@@ -141,6 +157,13 @@ async function runFollowupExecutor() {
       const key = normalizeE164(row.phone);
       if (!key) {
         out.skipped++;
+        recordLedgerEventSafe({
+          type: "followup",
+          action: "followup_skipped_missing_phone",
+          status: "skipped",
+          customerName: String(row.customerName || ""),
+          reason: "No phone number",
+        });
         continue;
       }
 
@@ -160,6 +183,14 @@ async function runFollowupExecutor() {
 
       if (!decision.shouldSend) {
         out.skipped++;
+        recordLedgerEventSafe({
+          type: "followup",
+          action: "followup_skipped",
+          status: "skipped",
+          customerName: String(row.customerName || ""),
+          reason: String(decision.reason || "Automation decision skipped"),
+          meta: { priority: row.priority || "" },
+        });
         continue;
       }
 
@@ -174,6 +205,13 @@ async function runFollowupExecutor() {
       const sendResult = await sendFollowupSms(key, message);
       if (!sendResult.ok) {
         out.errors.push(String(sendResult.error || "send_failed"));
+        recordLedgerEventSafe({
+          type: "followup",
+          action: "followup_send_failed",
+          status: "blocked",
+          customerName: String(row.customerName || ""),
+          reason: String(sendResult.error || "send_failed"),
+        });
         break;
       }
 
@@ -183,6 +221,14 @@ async function runFollowupExecutor() {
       };
       saveState(state);
       out.sent++;
+      recordLedgerEventSafe({
+        type: "followup",
+        action: "followup_sent",
+        status: "success",
+        customerName: String(row.customerName || ""),
+        reason: "Follow-up SMS sent",
+        meta: { msgType },
+      });
       console.log("[followupExecutor] sent sms", {
         to: key,
         runTotal: out.sent,
@@ -191,6 +237,12 @@ async function runFollowupExecutor() {
     }
   } catch (err) {
     out.errors.push(String(err && err.message ? err.message : err));
+    recordLedgerEventSafe({
+      type: "followup",
+      action: "followup_executor_error",
+      status: "blocked",
+      reason: String(err && err.message ? err.message : err),
+    });
   }
 
   return out;

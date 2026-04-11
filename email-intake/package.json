@@ -1,32 +1,46 @@
 {
-  "name": "email-intake",
+  "name": "cheeky-os",
   "version": "1.0.0",
-  "description": "Simple Email Intake Engine — raw email text to structured JSON via OpenAI, then POST to Dataverse",
-  "main": "index.js",
   "scripts": {
-    "dev": "node start.js",
-    "start": "node start.js",
-    "test": "node tests/test-runner.js",
-    "test:intake": "node --test tests/intake.test.js",
-    "test:webhook": "node --test tests/test-webhook.js",
-    "test:square": "node --test tests/test-square.js",
-    "test:bridge": "node --test tests/test-bridge.js",
-    "test:email": "node --test tests/test-email.js",
-    "test:all": "node tests/test-runner.js --all"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "bootstrap": "node social/scripts/bootstrap.js",
+    "dev": "node --import tsx ./src/api/voice.run.ts",
+    "reset": "taskkill /F /IM node.exe >nul 2>&1 || exit 0",
+    "dev:clean": "npm run reset && npm run dev",
+    "dev:watch": "tsx watch src/api/voice.run.ts",
+    "dev:social": "node social/scripts/bootstrap.js && npx --yes nodemon@3.1.9 server.js",
+    "dev:tsx": "tsx src/api/voice.run.ts",
+    "dev:ts-node": "ts-node --transpile-only src/api/voice.run.ts",
+    "build": "tsc",
+    "start": "node dist/api/voice.run.js",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run typecheck",
+    "social:verify": "node social/scripts/verify-batch.js && node social/scripts/verify-routes.js"
   },
   "dependencies": {
-    "@azure/identity": "^4.13.1",
-    "@microsoft/microsoft-graph-client": "^3.0.7",
-    "dotenv": "^17.3.1",
-    "express": "^5.2.1",
-    "jest": "^30.3.0",
-    "node-cron": "^4.2.1",
-    "node-fetch": "^2.7.0",
-    "square": "^44.0.1",
-    "supertest": "^7.2.2",
-    "winston": "^3.19.0"
+    "@prisma/client": "6.3.0",
+    "axios": "^1.6.0",
+    "clipboardy": "^2.3.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.0.0",
+    "helmet": "^7.0.0",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.8",
+    "openai": "^6.33.0",
+    "resend": "^4.8.0",
+    "square": "^35.0.0",
+    "winston": "^3.10.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.0.0",
+    "@types/nodemailer": "^6.4.14",
+    "prisma": "6.3.0",
+    "ts-node": "^10.9.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.3.0"
   }
 }

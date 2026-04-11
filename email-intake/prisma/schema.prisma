@@ -1,0 +1,145 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ────────────────────────────────────────────────────────────────────
+
+enum OrderStatus {
+  INTAKE
+  PAID
+  PRODUCTION_READY
+  PRINTING
+  COMPLETED
+  CANCELLED
+}
+
+enum ProductionType {
+  DTG
+  SCREEN
+  DTF
+  HEAT_PRESS
+  OTHER
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+  BLOCKED
+}
+
+// ─── MODELS ───────────────────────────────────────────────────────────────────
+
+model Customer {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders    Order[]
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  orderNumber     String      @unique
+  customerId      String
+  customer        Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  status          OrderStatus @default(INTAKE)
+
+  totalAmount     Float
+  depositAmount   Float       @default(0)
+
+  dueDate         DateTime?
+  notes           String?
+
+  squareOrderId   String?     @unique
+  squarePaymentId String?     @unique
+
+  deletedAt       DateTime?
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  lineItems       LineItem[]
+  tasks           Task[]
+
+  @@index([status])
+  @@index([customerId])
+  @@index([createdAt])
+  @@index([squareOrderId])
+  @@index([dueDate])
+  @@index([deletedAt])
+}
+
+model LineItem {
+  id             String         @id @default(uuid())
+  orderId        String
+  order          Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  description    String
+  quantity       Int
+  unitPrice      Float
+  productionType ProductionType
+  designRef      String?
+
+  createdAt      DateTime       @default(now())
+
+  @@index([orderId])
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  orderId     String
+  order       Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  title       String
+  status      TaskStatus @default(PENDING)
+  assignedTo  String?
+  dueDate     DateTime?
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([status])
+  @@index([orderId])
+}
+
+// ─── SEO ENGINES (audit → actions → execution tasks) ───────────────────────
+
+model SeoCompetitor {
+  id        String   @id @default(uuid())
+  name      String?
+  url       String?
+  notes     String?
+  createdAt DateTime @default(now())
+}
+
+model SeoAction {
+  id          String   @id @default(uuid())
+  type        String
+  description String
+  impact      String
+  createdAt   DateTime @default(now())
+
+  generatedTasks SeoGeneratedTask[]
+}
+
+/// Execution unit for SEO pipeline (not Order.tasks — avoids FK to Order).
+model SeoGeneratedTask {
+  id          String     @id @default(uuid())
+  seoActionId String?
+  seoAction   SeoAction? @relation(fields: [seoActionId], references: [id], onDelete: SetNull)
+  orderRef    String     @default("SEO")
+  type        String
+  status      String     @default("PENDING")
+  createdAt   DateTime   @default(now())
+
+  @@index([seoActionId])
+  @@index([status])
+}

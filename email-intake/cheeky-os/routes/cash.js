@@ -8,6 +8,13 @@ const { getAutoFollowupsResponse } = require("../services/autoFollowupsService")
 const { collectAutomationActions } = require("../services/automationActionsService");
 const { getRevenueFollowups } = require("../services/revenueFollowups");
 const { scoreOpportunity } = require("../services/opportunityScoringService");
+const { scoreDepositOpportunity } = require("../services/depositPriorityService");
+const { getFounderDashboardPayload } = require("../services/founderTodayService");
+const {
+  evaluatePaymentGate,
+  captureOrderToGateInput,
+} = require("../services/paymentGateService");
+const { getPrisma } = require("../marketing/prisma-client");
 const {
   readRecentEntries,
   readRecentAutoInvoiceEntries,
@@ -363,6 +370,178 @@ router.get("/priorities", async (_req, res) => {
   }
 });
 
+/** @returns {Promise<object[]>} */
+async function fetchCaptureOrdersForDeposits() {
+  const prisma = getPrisma();
+  if (!prisma || !prisma.captureOrder) return [];
+  try {
+    return await prisma.captureOrder.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 80,
+    });
+  } catch (err) {
+    console.error("[cash/deposits] capture orders", err.message || err);
+    return [];
+  }
+}
+
+/**
+ * Bundle 38 — ranked deposit-collection targets (orders blocked by payment gate).
+ * @returns {Promise<{ opportunities: object[], summary: object }>}
+ */
+async function buildDepositPrioritiesPayload() {
+  const summary = { critical: 0, high: 0, medium: 0, low: 0 };
+  /** @type {object[]} */
+  const rawInputs = [];
+
+  let orders = [];
+  let founder = { paymentBlockers: [] };
+  let rev = { unpaidInvoices: [], staleEstimates: [] };
+  try {
+    [orders, founder, rev] = await Promise.all([
+      fetchCaptureOrdersForDeposits(),
+      getFounderDashboardPayload(),
+      getRevenueFollowups(),
+    ]);
+  } catch (err) {
+    console.error("[cash/deposits] load", err.message || err);
+  }
+
+  const nameMeta = metaByCustomerName(rev);
+  const priceNames = pricingStatusByName();
+  const blockerIds = new Set(
+    (founder.paymentBlockers || [])
+      .map((b) => String(/** @type {{ orderId?: string }} */ (b).orderId || "").trim())
+      .filter(Boolean)
+  );
+
+  for (const o of orders) {
+    if (rawInputs.length >= 25) break;
+    if (!o || typeof o !== "object") continue;
+    const st = String(/** @type {{ status?: string }} */ (o).status || "")
+      .trim()
+      .toUpperCase();
+    if (st === "DONE") continue;
+    const gate = evaluatePaymentGate(captureOrderToGateInput(o));
+    if (gate.allowedToProduce) continue;
+
+    const oid = String(/** @type {{ id?: string }} */ (o).id || "").trim();
+    const nk = normName(/** @type {{ customerName?: string }} */ (o).customerName);
+    const meta = nameMeta.get(nk) || {
+      phone: "",
+      email: "",
+      customerId: "",
+      paymentStatus: "",
+    };
+    const depReq = /** @type {{ depositRequired?: boolean }} */ (o).depositRequired !== false;
+    const depRec = /** @type {{ depositReceived?: boolean }} */ (o).depositReceived === true;
+    const amount = Number(/** @type {{ balanceDue?: unknown }} */ (o).balanceDue) || 0;
+    const payOrder = String(
+      /** @type {{ paymentStatus?: string }} */ (o).paymentStatus || ""
+    ).trim();
+    const readyForProduction = st === "READY";
+
+    let recommendedAction = "collect_deposit";
+    if (st === "QUOTE" || st === "DEPOSIT") {
+      recommendedAction = "send_deposit_invoice";
+    }
+
+    let priority = "";
+    if (blockerIds.has(oid) || readyForProduction) {
+      priority = "high";
+    }
+
+    rawInputs.push({
+      orderId: oid,
+      customerName: String(/** @type {{ customerName?: string }} */ (o).customerName || ""),
+      customerId: String(meta.customerId || "").trim(),
+      phone: String(meta.phone || "").trim(),
+      email: String(meta.email || "").trim(),
+      amount,
+      status: st,
+      paymentStatus: payOrder,
+      depositRequired: depReq,
+      depositReceived: depRec,
+      pricingStatus: priceNames.get(nk) || "clear",
+      priority,
+      dueText: String(/** @type {{ dueDate?: string }} */ (o).dueDate || ""),
+      recommendedAction,
+      readyForProduction,
+    });
+  }
+
+  /** @type {object[]} */
+  const scored = [];
+  for (const inp of rawInputs) {
+    const r = scoreDepositOpportunity(inp);
+    scored.push({
+      ...inp,
+      score: r.score,
+      depositPriority: r.depositPriority,
+      scoreReason: r.reason,
+      scoreFlags: r.flags,
+    });
+  }
+
+  function rankDeposit(row) {
+    if (!row || typeof row !== "object") return 0;
+    const blocked =
+      String(/** @type {{ pricingStatus?: string }} */ (row).pricingStatus || "")
+        .toLowerCase() === "blocked";
+    const adj = blocked ? -10000 : 0;
+    return adj + Number(/** @type {{ score?: unknown }} */ (row).score) || 0;
+  }
+  scored.sort((a, b) => rankDeposit(b) - rankDeposit(a));
+
+  const seen = new Set();
+  /** @type {typeof scored} */
+  const deduped = [];
+  for (const row of scored) {
+    const id = String(/** @type {{ orderId?: string }} */ (row).orderId || "").trim();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    deduped.push(row);
+  }
+
+  const top = deduped.slice(0, 10);
+
+  for (const o of top) {
+    const dp = String(/** @type {{ depositPriority?: string }} */ (o).depositPriority || "").toLowerCase();
+    if (dp === "critical") summary.critical++;
+    else if (dp === "high") summary.high++;
+    else if (dp === "medium") summary.medium++;
+    else summary.low++;
+  }
+
+  const opportunities = top.map((o) => ({
+    orderId: String(/** @type {{ orderId?: string }} */ (o).orderId || ""),
+    customerName: String(/** @type {{ customerName?: string }} */ (o).customerName || ""),
+    amount: Number(/** @type {{ amount?: unknown }} */ (o).amount) || 0,
+    score: Number(/** @type {{ score?: unknown }} */ (o).score) || 0,
+    depositPriority: String(/** @type {{ depositPriority?: string }} */ (o).depositPriority || "low"),
+    reason: String(/** @type {{ scoreReason?: string }} */ (o).scoreReason || ""),
+    phone: String(/** @type {{ phone?: string }} */ (o).phone || ""),
+    email: String(/** @type {{ email?: string }} */ (o).email || ""),
+    status: String(/** @type {{ status?: string }} */ (o).status || ""),
+    paymentStatus: String(/** @type {{ paymentStatus?: string }} */ (o).paymentStatus || ""),
+  }));
+
+  return { opportunities, summary };
+}
+
+router.get("/deposits", async (_req, res) => {
+  try {
+    const out = await buildDepositPrioritiesPayload();
+    return res.json(out);
+  } catch (err) {
+    console.error("[cash/deposits]", err.message || err);
+    return res.json({
+      opportunities: [],
+      summary: { critical: 0, high: 0, medium: 0, low: 0 },
+    });
+  }
+});
+
 /**
  * @param {(s: unknown) => string} esc
  * @param {{ opportunities: object[] }} data
@@ -475,8 +654,122 @@ function cashPrioritiesSectionHtml(esc, data, opts) {
   );
 }
 
+/**
+ * @param {(s: unknown) => string} esc
+ * @param {{ opportunities: object[] }} data
+ * @param {{ appPrepareMessage?: boolean }} [opts]
+ */
+function depositPrioritiesSectionHtml(esc, data, opts) {
+  const appPrep = !!(opts && opts.appPrepareMessage);
+  const opps = (data && Array.isArray(data.opportunities) ? data.opportunities : []).slice(0, 5);
+  if (!opps.length) {
+    return (
+      '<section style="margin:0 0 18px 0;padding:16px;border-radius:16px;background:#0f172a;border:1px solid #334155;">' +
+      '<h2 style="font-size:1.02rem;margin:0 0 8px;color:#a5f3fc;font-weight:800;">💵 DEPOSIT PRIORITIES</h2>' +
+      '<p style="margin:0;font-size:0.9rem;opacity:0.78;line-height:1.45;">No deposit priorities ranked yet</p>' +
+      "</section>"
+    );
+  }
+
+  function actionHint(stRaw) {
+    const st = String(stRaw || "").trim().toUpperCase();
+    if (st === "READY") return "Payment Blocking Production";
+    if (st === "QUOTE" || st === "DEPOSIT") return "Send Deposit Invoice";
+    return "Collect Deposit";
+  }
+
+  const cards = opps
+    .map((o) => {
+      if (!o || typeof o !== "object") return "";
+      const pri = String(
+        /** @type {{ depositPriority?: string }} */ (o).depositPriority || ""
+      ).toUpperCase();
+      let band =
+        "background:#141414;border:1px solid #333;opacity:0.88;";
+      if (pri === "CRITICAL") {
+        band =
+          "background:#450a0a;border:2px solid #ef4444;box-shadow:0 0 14px rgba(239,68,68,0.35);";
+      } else if (pri === "HIGH") {
+        band = "background:#2a1f0a;border:2px solid #f97316;";
+      } else if (pri === "MEDIUM") {
+        band = "background:#0c4a6e;border:1px solid #38bdf8;";
+      } else if (pri === "LOW") {
+        band =
+          "background:#101010;border:1px solid #2a2a2a;opacity:0.72;";
+      }
+      const st = String(/** @type {{ status?: string }} */ (o).status || "");
+      const stUp = st.trim().toUpperCase();
+      const pay = String(/** @type {{ paymentStatus?: string }} */ (o).paymentStatus || "");
+      const hint = actionHint(st);
+      const phone = String(/** @type {{ phone?: string }} */ (o).phone || "").trim();
+      const email = String(/** @type {{ email?: string }} */ (o).email || "").trim();
+      const contact = [phone ? "Phone" : "", email ? "Email" : ""]
+        .filter(Boolean)
+        .join(" · ") || "No phone/email";
+      const cnRaw = String(
+        /** @type {{ customerName?: string }} */ (o).customerName || ""
+      ).trim();
+      const amtNum = Math.round(Number(/** @type {{ amount?: unknown }} */ (o).amount) || 0);
+      const prepType =
+        stUp === "QUOTE" || stUp === "DEPOSIT" ? "invoice" : "followup";
+      const prepBtnStyle =
+        "margin-top:6px;padding:10px 14px;border-radius:10px;font-weight:800;font-size:0.82rem;border:1px solid #0e7490;background:#164e63;color:#a5f3fc;cursor:pointer;min-height:44px;width:100%;box-sizing:border-box;";
+      const prepBlock =
+        appPrep && cnRaw
+          ? `<div style="margin-top:8px;">
+    <button type="button" class="app-prep-msg" style="${prepBtnStyle}" data-type="${esc(
+              prepType
+            )}" data-name="${esc(cnRaw)}" data-amount="${esc(String(amtNum))}" data-days="0">Prepare message</button>
+    <pre class="app-prep-out" style="display:none;margin:8px 0 0;padding:10px;border-radius:10px;background:#0a0a0a;border:1px solid #333;font-size:0.78rem;white-space:pre-wrap;word-break:break-word;"></pre>
+  </div>`
+          : "";
+      const oid = String(/** @type {{ orderId?: string }} */ (o).orderId || "").trim();
+      return `
+  <div style="margin-bottom:10px;padding:12px;border-radius:12px;${band}">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+      <strong style="font-size:1rem;line-height:1.3;">${esc(
+        String(/** @type {{ customerName?: string }} */ (o).customerName || "—")
+      )}</strong>
+      <span style="font-size:0.65rem;font-weight:900;color:#7dd3fc;white-space:nowrap;">${esc(pri)}</span>
+    </div>
+    ${
+      oid
+        ? `<div style="margin-top:4px;font-size:0.68rem;opacity:0.7;word-break:break-all;">${esc(
+            oid
+          )}</div>`
+        : ""
+    }
+    <div style="margin-top:6px;font-size:0.88rem;">$${esc(String(amtNum))} · score ${esc(
+      String(/** @type {{ score?: unknown }} */ (o).score ?? "")
+    )}</div>
+    <div style="margin-top:4px;font-size:0.8rem;opacity:0.88;"><span style="opacity:0.75;">Status:</span> ${esc(
+      stUp || "—"
+    )} · <span style="opacity:0.75;">Pay:</span> ${esc(pay || "—")}</div>
+    <div style="margin-top:6px;font-size:0.82rem;line-height:1.4;opacity:0.9;">${esc(
+      String(/** @type {{ reason?: string }} */ (o).reason || "").length > 120
+        ? String(/** @type {{ reason?: string }} */ (o).reason).slice(0, 117) + "…"
+        : String(/** @type {{ reason?: string }} */ (o).reason || "")
+    )}</div>
+    <div style="margin-top:6px;font-size:0.72rem;opacity:0.75;">${esc(contact)}</div>
+    <div style="margin-top:8px;font-size:0.78rem;font-weight:800;color:#67e8f9;">${esc(hint)}</div>
+    ${prepBlock}
+  </div>`;
+    })
+    .filter(Boolean)
+    .join("");
+
+  return (
+    '<section style="margin:0 0 18px 0;padding:16px;border-radius:16px;background:#082f49;border:1px solid #0e7490;">' +
+    '<h2 style="font-size:1.02rem;margin:0 0 10px;color:#a5f3fc;font-weight:800;">💵 DEPOSIT PRIORITIES</h2>' +
+    cards +
+    "</section>"
+  );
+}
+
 module.exports = {
   router,
   buildCashPrioritiesPayload,
   cashPrioritiesSectionHtml,
+  buildDepositPrioritiesPayload,
+  depositPrioritiesSectionHtml,
 };

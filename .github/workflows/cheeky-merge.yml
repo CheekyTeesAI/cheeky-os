@@ -1,0 +1,17 @@
+# Cheeky OS — Merge gate
+# Requires both build and test to pass before merging to main.
+name: Cheeky Merge Gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'email-intake/**'
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    needs: []  # This job runs independently; use branch protection to require cheeky-build + cheeky-test
+    steps:
+      - name: Merge gate check
+        run: echo "✅ Merge gate — this job is a placeholder for branch protection rules. Configure GitHub branch protection to require 'Cheeky Build' and 'Cheeky Test' as required status checks."

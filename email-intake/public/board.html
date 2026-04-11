@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Cheeky OS Board</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #111; color: white; margin: 0; }
+    .summary {
+      display: flex; flex-wrap: wrap; gap: 16px; justify-content: center;
+      padding: 12px 20px; background: #1a1a1a; border-bottom: 1px solid #333;
+      font-size: 13px; color: #ccc;
+    }
+    .summary strong { color: #fff; }
+    .board { display: flex; gap: 10px; padding: 20px; }
+    .column {
+      flex: 1;
+      background: #222;
+      padding: 10px;
+      border-radius: 8px;
+      min-height: 300px;
+    }
+    .task {
+      background: #333;
+      padding: 8px;
+      margin-bottom: 8px;
+      border-radius: 5px;
+      cursor: grab;
+    }
+    .task:active { cursor: grabbing; }
+    h2 { text-align: center; margin-top: 0; font-size: 0.95rem; }
+    h2 .cnt { color: #888; font-weight: normal; }
+    h1 { margin: 16px 0; }
+    #status { text-align: center; color: #888; font-size: 12px; }
+    .meta { font-size: 11px; color: #aaa; margin-top: 4px; line-height: 1.35; }
+  </style>
+</head>
+<body>
+
+<h1 style="text-align: center;">CHEEKY OS PRODUCTION BOARD</h1>
+<div class="summary" id="summary">
+  <span>Total: <strong id="sum-total">—</strong></span>
+  <span>Stuck: <strong id="sum-stuck">—</strong></span>
+  <span>High priority: <strong id="sum-high">—</strong></span>
+</div>
+<p id="status">Loading…</p>
+
+<div class="board">
+  <div class="column" id="INTAKE"><h2>INTAKE <span class="cnt" id="cnt-INTAKE">0</span></h2></div>
+  <div class="column" id="ART"><h2>ART <span class="cnt" id="cnt-ART">0</span></h2></div>
+  <div class="column" id="PRINT"><h2>PRINT <span class="cnt" id="cnt-PRINT">0</span></h2></div>
+  <div class="column" id="QC"><h2>QC <span class="cnt" id="cnt-QC">0</span></h2></div>
+  <div class="column" id="COMPLETE"><h2>COMPLETE <span class="cnt" id="cnt-COMPLETE">0</span></h2></div>
+</div>
+
+<script src="/board.js"></script>
+</body>
+</html>

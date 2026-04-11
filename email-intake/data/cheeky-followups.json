@@ -1,0 +1,67 @@
+[
+  {
+    "id": "1774296916512",
+    "customerName": "River Dance Academy",
+    "customerEmail": "info@riverdance.com",
+    "invoiceId": "mock-test-001",
+    "total": 600,
+    "deposit": 300,
+    "status": "paid",
+    "stage": "closed",
+    "lastContactAt": "2026-03-23T20:15:16.511Z",
+    "createdAt": "2026-03-23T20:15:16.511Z",
+    "notes": "50 hoodies test"
+  },
+  {
+    "id": "1774296923324",
+    "customerName": "Murphy Pub",
+    "customerEmail": "murphy@pub.ie",
+    "invoiceId": "mock-test-002",
+    "total": 850,
+    "deposit": 0,
+    "status": "paid",
+    "stage": "closed",
+    "lastContactAt": "2026-03-23T20:15:23.324Z",
+    "createdAt": "2026-03-23T20:15:23.324Z",
+    "notes": "100 tees"
+  },
+  {
+    "id": "1774296930079",
+    "customerName": "Small Job Co",
+    "customerEmail": "small@job.com",
+    "invoiceId": "mock-test-003",
+    "total": 90,
+    "deposit": 0,
+    "status": "draft",
+    "stage": "followed_up",
+    "lastContactAt": "2026-04-07T09:39:04.965Z",
+    "createdAt": "2026-03-23T20:15:30.078Z",
+    "notes": ""
+  },
+  {
+    "id": "1774296989383",
+    "customerName": "Auto Track Test",
+    "customerEmail": "auto@test.com",
+    "invoiceId": "mock-1774296989383",
+    "total": 450,
+    "deposit": 225,
+    "status": "hot",
+    "stage": "followed_up",
+    "lastContactAt": "2026-04-07T09:39:04.967Z",
+    "createdAt": "2026-03-23T20:16:29.383Z",
+    "notes": "Auto-tracked from /invoice/create — mode: mock"
+  },
+  {
+    "id": "1774330374910",
+    "customerName": "Post Test",
+    "customerEmail": null,
+    "invoiceId": "inv-1774330374910",
+    "total": 100,
+    "deposit": 50,
+    "status": "draft",
+    "stage": "followed_up",
+    "lastContactAt": "2026-04-07T09:39:04.968Z",
+    "createdAt": "2026-03-24T05:32:54.910Z",
+    "notes": ""
+  }
+]

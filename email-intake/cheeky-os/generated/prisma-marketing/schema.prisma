@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma-marketing"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("CHEEKY_MARKETING_DATABASE_URL")
+}
+
+model Customer {
+  id               String    @id @default(cuid())
+  squareCustomerId String    @unique
+  name             String?
+  email            String?
+  phone            String?
+  lastOrderDate    DateTime?
+  totalSpent       Float     @default(0)
+  createdAt        DateTime  @default(now())
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  source    String   @default("google_ads")
+  createdAt DateTime @default(now())
+}
+
+model CampaignLog {
+  id        String   @id @default(cuid())
+  type      String
+  status    String
+  recipient String
+  createdAt DateTime @default(now())
+}

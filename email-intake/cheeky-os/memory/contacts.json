@@ -1,0 +1,17 @@
+{
+  "kelsey": {
+    "name": "Kelsey",
+    "phone": "8644983475",
+    "notes": "School order"
+  },
+  "nelson": {
+    "name": "Nelson",
+    "phone": "8644983475",
+    "notes": "150 shirt job"
+  },
+  "bullseye": {
+    "name": "Bullseye",
+    "phone": "8644983475",
+    "notes": "Vendor"
+  }
+}

@@ -11,10 +11,15 @@
  * @module start
  */
 
-require('dotenv').config();
+require('dotenv').config({
+  path: require('path').join(__dirname, '.env')
+});
 
+console.log("🔥 USING THIS FILE: square-client.js");
 const fs = require("fs");
 const path = require("path");
+const { initializeSquareIntegration, getSquareIntegrationStatus } = require("./cheeky-os/integrations/square");
+const { printStartupEnvHints, getEngineReadinessFlags } = require("./cheeky-os/safety/startup-env");
 
 /** Ensure logs directory exists. */
 fs.mkdirSync(path.join(__dirname, "logs"), { recursive: true });
@@ -38,6 +43,13 @@ function timestamp() {
  * @returns {Promise<void>}
  */
 async function main() {
+  // ── Initialize Square integration (non-blocking) ─────────────────────────
+  try {
+    await initializeSquareIntegration();
+  } catch {
+    // Square init is intentionally non-blocking
+  }
+
   console.log("");
   console.log("═══════════════════════════════════════════════════════════");
   console.log("  🚀 CHEEKY OS — Starting Up");
@@ -45,13 +57,24 @@ async function main() {
   console.log("═══════════════════════════════════════════════════════════");
   console.log("");
 
+  printStartupEnvHints();
+  const engines = getEngineReadinessFlags();
+  console.log(`  Cash engine:       ${engines.cashEngine.includes("ready") ? "✅" : "⚠️"} ${engines.cashEngine}`);
+
   // ── Start Webhook Server ────────────────────────────────────────────────
   let webhookStarted = false;
+  let webhookRetryTimer = null;
+  let webhookPort = process.env.PORT || 3000;
+
+  async function tryStartWebhookOnce() {
+    // require("./webhook/server") — DISABLED, legacy
+    throw new Error("Legacy webhook/server.js disabled; use npm run dev for /cheeky/webhooks/square");
+  }
+
   try {
-    const { startServer, PORT } = require("./webhook/server");
-    await startServer();
+    webhookPort = await tryStartWebhookOnce();
     webhookStarted = true;
-    console.log(`  ✅ Webhook server running on port ${PORT}`);
+    console.log(`  ✅ Webhook server running on port ${webhookPort}`);
   } catch (err) {
     console.error(`  ❌ Webhook server failed to start: ${err.message}`);
     if (err && err.stack) {
@@ -59,7 +82,12 @@ async function main() {
       console.error("  ↳ Startup trace:");
       console.error(stackHead);
     }
-    console.log("     (continuing without webhook — fix config and restart)");
+    console.log("     (legacy webhook disabled — not retrying; use npm run dev for HTTP API)");
+
+    if (webhookRetryTimer) {
+      clearInterval(webhookRetryTimer);
+      webhookRetryTimer = null;
+    }
   }
 
   // ── Start Email Poller ──────────────────────────────────────────────────
@@ -93,10 +121,20 @@ async function main() {
   console.log("");
   console.log("═══════════════════════════════════════════════════════════");
   console.log("  📊 CHEEKY OS — Startup Summary");
-  console.log(`  Webhook Server:  ${webhookStarted ? "✅ RUNNING" : "❌ NOT RUNNING"}`);
+  console.log(
+    `  Webhook Server:  ${webhookStarted ? `✅ RUNNING on ${webhookPort}` : "❌ NOT RUNNING (retrying every 5s)"}`
+  );
   console.log(`  Email Poller:    ${pollerStarted ? "✅ RUNNING" : "⚠️  SKIPPED"}`);
   console.log(`  Manual Intake:   node intake.js (always available)`);
   console.log(`  Column Check:    node dataverse/column-check.js`);
+  let square = { status: "unknown" };
+  try {
+    square = getSquareIntegrationStatus() || square;
+  } catch (err) {
+    console.warn(`  ⚠️  Square status unavailable: ${err.message}`);
+  }
+  console.log(`  Square integration: [${square.status}]`);
+  console.log("  Square guidance: Set SQUARE_ACCESS_TOKEN, SQUARE_LOCATION_ID and SQUARE_ENVIRONMENT=production (or sandbox) in .env");
   console.log("═══════════════════════════════════════════════════════════");
   console.log("  Press Ctrl+C to stop.");
   console.log("");
@@ -108,6 +146,11 @@ async function main() {
    */
   async function shutdown() {
     console.log("\n🛑 Shutting down Cheeky OS...");
+
+    if (webhookRetryTimer) {
+      clearInterval(webhookRetryTimer);
+      webhookRetryTimer = null;
+    }
 
     if (webhookStarted) {
       try {
@@ -141,7 +184,7 @@ async function main() {
 if (require.main === module) {
   main().catch((err) => {
     console.error(`❌ Startup failed: ${err.message}`);
-    process.exit(1);
+    if (err && err.stack) console.error(err.stack.split("\n").slice(0, 6).join("\n"));
   });
 }
 

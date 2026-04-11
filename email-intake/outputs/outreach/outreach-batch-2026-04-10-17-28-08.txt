@@ -1,0 +1,21 @@
+CHEEKY OS OUTREACH BATCH
+Run At: 2026-04-10T21:28:08.618Z
+Processed: 2
+Hot Leads: 1
+Messages Generated: 2
+
+--------------------------------
+TO: test@cheeky.com
+SUBJECT: Quick follow-up from Cheeky Tees
+MESSAGE:
+Hey Test — we need a same-day decision today to hold your place; we have a few print slots open this week. Reply or approve estimate to lock your spot.
+STATUS: pending
+
+--------------------------------
+TO: lead@cheeky.com
+SUBJECT: Quick follow-up from Cheeky Tees
+MESSAGE:
+Hey Hot — we need a same-day decision today to hold your place; we have a few print slots open this week. Reply or approve estimate to lock your spot.
+STATUS: pending
+
+--------------------------------
