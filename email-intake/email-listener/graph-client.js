@@ -1,4 +1,13 @@
+const https = require("https");
 const { ClientSecretCredential } = require("@azure/identity");
+
+https
+  .get("https://login.microsoftonline.com", (r) => {
+    console.log("[GRAPH-TEST] Reached login.microsoft:", r.statusCode);
+  })
+  .on("error", (e) => {
+    console.error("[GRAPH-TEST] Cannot reach login.microsoft:", e.message);
+  });
 
 async function getAccessToken() {
   const credential = new ClientSecretCredential(
