@@ -11,5 +11,8 @@
   },
   "scripts": {
     "start": "node render-http.js"
+  },
+  "dependencies": {
+    "@azure/identity": "^4.13.1"
   }
 }
