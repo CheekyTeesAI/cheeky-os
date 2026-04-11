@@ -1,3 +1,4 @@
+console.log("✅ CHEEKY OS SERVER.JS IS HANDLING TRAFFIC");
 /**
  * Cheeky OS — Bundle 1 standalone HTTP server (mobile + revenue routes).
  * Listen on 0.0.0.0:3001. Run from repo: `node cheeky-os/server.js` (cwd: email-intake).
