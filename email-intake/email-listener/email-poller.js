@@ -27,7 +27,9 @@ async function fetchEmails() {
     {
       headers: {
         Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
+      timeout: 10000,
     }
   );
   return response.data;
