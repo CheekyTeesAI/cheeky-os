@@ -56,6 +56,21 @@ const HOST = "0.0.0.0";
 
 const app = express();
 
+console.log("🚨 CHEEKY SERVER BOOTED AND IS LISTENING");
+
+app.use((req, res, next) => {
+  console.log("➡️ INCOMING:", req.method, req.originalUrl);
+  if (req.method === "GET" && req.originalUrl === "/") {
+    return res.status(200).json({
+      reached: true,
+      service: "cheeky-api",
+      proof: "request reached express app",
+      time: new Date().toISOString()
+    });
+  }
+  next();
+});
+
 app.get("/", (_req, res) => {
   res.status(200).json({
     status: "ok",
