@@ -66,7 +66,7 @@ async function getGraphToken() {
 async function getUnreadEmails() {
   const token = await getGraphToken();
   const url =
-    `${GRAPH_BASE}/users/${USER_EMAIL}/mailFolders/Inbox/messages` +
+    `${GRAPH_BASE}/users/customer.service@cheekyteesllc.com/messages` +
     `?$filter=isRead eq false` +
     `&$orderby=receivedDateTime desc` +
     `&$top=10` +
@@ -97,7 +97,7 @@ async function getUnreadEmails() {
  */
 async function markAsRead(messageId) {
   const token = await getGraphToken();
-  const url = `${GRAPH_BASE}/users/${USER_EMAIL}/messages/${messageId}`;
+  const url = `${GRAPH_BASE}/users/customer.service@cheekyteesllc.com/messages/${messageId}`;
 
   const res = await fetch(url, {
     method: "PATCH",
