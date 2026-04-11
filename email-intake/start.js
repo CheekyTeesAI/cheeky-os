@@ -1,8 +1,8 @@
-// PHASE 5 — STARTUP SCRIPT: unified launcher for webhook + email poller
+// PHASE 5 — STARTUP SCRIPT: email poller launcher
 /**
  * Unified startup script for the Cheeky Tees intake system.
- * Starts both the webhook server (Express) and the email poller
- * (Graph API) together in a single process.
+ * Starts the email poller (Graph API) in a single process.
+ * For HTTP API use: npm start (Cheeky OS Express).
  *
  * Run as: node start.js
  *
@@ -38,8 +38,7 @@ function timestamp() {
 }
 
 /**
- * Main startup function. Starts webhook server and email poller,
- * then listens for shutdown signals.
+ * Main startup function. Starts email poller, then listens for shutdown signals.
  * @returns {Promise<void>}
  */
 async function main() {
@@ -60,46 +59,7 @@ async function main() {
   printStartupEnvHints();
   const engines = getEngineReadinessFlags();
   console.log(`  Cash engine:       ${engines.cashEngine.includes("ready") ? "✅" : "⚠️"} ${engines.cashEngine}`);
-
-  // ── Start Webhook Server ────────────────────────────────────────────────
-  let webhookStarted = false;
-  let webhookRetryTimer = null;
-  let webhookPort = process.env.PORT || 3000;
-
-  async function tryStartWebhookOnce() {
-    try {
-      const { startServer, PORT: wPort } = require("./webhook/server");
-      await startServer();
-      return wPort;
-    } catch (err) {
-      console.warn("  ⚠️ Webhook disabled (module missing or failed to start)");
-      return null;
-    }
-  }
-
-  try {
-    const portResult = await tryStartWebhookOnce();
-    if (portResult != null) {
-      webhookPort = portResult;
-      webhookStarted = true;
-      console.log(`  ✅ Webhook server running on port ${webhookPort}`);
-    } else {
-      console.log("     (webhook not started — use `npm start` for Cheeky OS Express API)");
-    }
-  } catch (err) {
-    console.error(`  ❌ Webhook server failed to start: ${err.message}`);
-    if (err && err.stack) {
-      const stackHead = String(err.stack).split("\n").slice(0, 4).join("\n");
-      console.error("  ↳ Startup trace:");
-      console.error(stackHead);
-    }
-    console.log("     (continuing without legacy webhook)");
-
-    if (webhookRetryTimer) {
-      clearInterval(webhookRetryTimer);
-      webhookRetryTimer = null;
-    }
-  }
+  console.log("  HTTP API:          use `npm start` (legacy webhook server removed)");
 
   // ── Start Email Poller ──────────────────────────────────────────────────
   let pollerStarted = false;
@@ -132,9 +92,6 @@ async function main() {
   console.log("");
   console.log("═══════════════════════════════════════════════════════════");
   console.log("  📊 CHEEKY OS — Startup Summary");
-  console.log(
-    `  Webhook Server:  ${webhookStarted ? `✅ RUNNING on ${webhookPort}` : "⚠️ NOT RUNNING (legacy webhook unavailable)"}`
-  );
   console.log(`  Email Poller:    ${pollerStarted ? "✅ RUNNING" : "⚠️  SKIPPED"}`);
   console.log(`  Manual Intake:   node intake.js (always available)`);
   console.log(`  Column Check:    node dataverse/column-check.js`);
@@ -152,26 +109,10 @@ async function main() {
 
   // ── Graceful Shutdown ───────────────────────────────────────────────────
   /**
-   * Handle shutdown signals (SIGINT, SIGTERM). Stops webhook server
-   * and email poller gracefully before exiting.
+   * Handle shutdown signals (SIGINT, SIGTERM). Stops email poller gracefully before exiting.
    */
   async function shutdown() {
     console.log("\n🛑 Shutting down Cheeky OS...");
-
-    if (webhookRetryTimer) {
-      clearInterval(webhookRetryTimer);
-      webhookRetryTimer = null;
-    }
-
-    if (webhookStarted) {
-      try {
-        const { stopServer } = require("./webhook/server");
-        await stopServer();
-        console.log("  ✅ Webhook server stopped.");
-      } catch (err) {
-        console.warn(`  ⚠️ Webhook shutdown skipped: ${err.message}`);
-      }
-    }
 
     if (pollerStarted) {
       try {
