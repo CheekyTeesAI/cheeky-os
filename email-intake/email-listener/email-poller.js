@@ -23,7 +23,7 @@ const { getAccessToken } = require("./graph-client");
 async function fetchEmails() {
   const token = await getAccessToken();
   const response = await axios.get(
-    "https://graph.microsoft.com/v1.0/users/customer.service@cheekyteesllc.com/messages?$top=10",
+    "https://graph.microsoft.com/v1.0/users/customer.service@cheekyteesllc.com/mailFolders/inbox/messages?$top=10",
     {
       headers: {
         Authorization: `Bearer ${token}`,
