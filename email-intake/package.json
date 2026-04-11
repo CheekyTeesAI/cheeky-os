@@ -1,6 +1,9 @@
 {
   "name": "cheeky-os",
   "version": "1.0.0",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "postinstall": "prisma generate",
     "bootstrap": "node social/scripts/bootstrap.js",
