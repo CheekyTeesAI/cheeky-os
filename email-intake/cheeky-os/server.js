@@ -56,9 +56,11 @@ const HOST = "0.0.0.0";
 const app = express();
 
 app.get("/", (_req, res) => {
-  res.json({
-    status: "Cheeky OS Live",
-    time: new Date().toISOString(),
+  res.status(200).json({
+    status: "ok",
+    service: "cheeky-api",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
   });
 });
 

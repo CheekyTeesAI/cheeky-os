@@ -21,6 +21,7 @@
     "social:verify": "node social/scripts/verify-batch.js && node social/scripts/verify-routes.js"
   },
   "dependencies": {
+    "@azure/identity": "^4.13.1",
     "@prisma/client": "6.3.0",
     "axios": "^1.6.0",
     "clipboardy": "^2.3.0",
