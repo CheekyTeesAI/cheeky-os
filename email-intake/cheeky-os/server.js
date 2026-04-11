@@ -130,6 +130,22 @@ app.use("/memory", memoryRouter);
 app.use(appCenterRouter);
 app.use("/", mobileDashboardRouter);
 
+// ===== FINAL GUARANTEED ROOT FALLBACK (MUST BE LAST) =====
+app.use((req, res) => {
+  if (req.method === "GET" && req.path === "/") {
+    return res.status(200).json({
+      status: "ok",
+      service: "cheeky-api",
+      env: process.env.NODE_ENV || "production",
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  res.status(404).send("Not Found");
+});
+// ===== END FALLBACK =====
+
 app.use((err, req, res, _next) => {
   console.error("[cheeky-os/server]", req.method, req.url, err.message || err);
   res.status(500).json({ ok: false, error: err.message || "error" });
