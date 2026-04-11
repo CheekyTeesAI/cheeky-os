@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const { main } = require("./start");
+const { main } = require("./cheeky-os/server");
 
 main().catch((err) => {
   console.error(`❌ Startup failed: ${err.message}`);

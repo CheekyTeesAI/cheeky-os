@@ -2,6 +2,7 @@
   "name": "cheeky-os",
   "version": "1.0.0",
   "scripts": {
+    "postinstall": "prisma generate",
     "bootstrap": "node social/scripts/bootstrap.js",
     "dev": "node --import tsx ./src/api/voice.run.ts",
     "reset": "taskkill /F /IM node.exe >nul 2>&1 || exit 0",
@@ -11,7 +12,7 @@
     "dev:tsx": "tsx src/api/voice.run.ts",
     "dev:ts-node": "ts-node --transpile-only src/api/voice.run.ts",
     "build": "tsc",
-    "start": "node dist/api/voice.run.js",
+    "start": "node index.js",
     "typecheck": "tsc --noEmit",
     "test": "npm run typecheck",
     "social:verify": "node social/scripts/verify-batch.js && node social/scripts/verify-routes.js"

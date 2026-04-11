@@ -49,8 +49,8 @@ const leadsRouter = require("./routes/leads");
 const retargetingRouter = require("./routes/retargeting");
 const memoryRouter = require("./routes/memory");
 
-/** Bundle 1 requires 3001; override with CHEEKY_OS_PORT only (not generic PORT). */
-const PORT = Number(process.env.CHEEKY_OS_PORT || 3001);
+/** Render/cloud: PORT; local override: CHEEKY_OS_PORT. */
+const PORT = Number(process.env.PORT || process.env.CHEEKY_OS_PORT || 3000);
 const HOST = "0.0.0.0";
 
 const app = express();
