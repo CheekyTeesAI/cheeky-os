@@ -67,14 +67,25 @@ async function main() {
   let webhookPort = process.env.PORT || 3000;
 
   async function tryStartWebhookOnce() {
-    // require("./webhook/server") — DISABLED, legacy
-    throw new Error("Legacy webhook/server.js disabled; use npm run dev for /cheeky/webhooks/square");
+    try {
+      const { startServer, PORT: wPort } = require("./webhook/server");
+      await startServer();
+      return wPort;
+    } catch (err) {
+      console.warn("  ⚠️ Webhook disabled (module missing or failed to start)");
+      return null;
+    }
   }
 
   try {
-    webhookPort = await tryStartWebhookOnce();
-    webhookStarted = true;
-    console.log(`  ✅ Webhook server running on port ${webhookPort}`);
+    const portResult = await tryStartWebhookOnce();
+    if (portResult != null) {
+      webhookPort = portResult;
+      webhookStarted = true;
+      console.log(`  ✅ Webhook server running on port ${webhookPort}`);
+    } else {
+      console.log("     (webhook not started — use `npm start` for Cheeky OS Express API)");
+    }
   } catch (err) {
     console.error(`  ❌ Webhook server failed to start: ${err.message}`);
     if (err && err.stack) {
@@ -82,7 +93,7 @@ async function main() {
       console.error("  ↳ Startup trace:");
       console.error(stackHead);
     }
-    console.log("     (legacy webhook disabled — not retrying; use npm run dev for HTTP API)");
+    console.log("     (continuing without legacy webhook)");
 
     if (webhookRetryTimer) {
       clearInterval(webhookRetryTimer);
@@ -122,7 +133,7 @@ async function main() {
   console.log("═══════════════════════════════════════════════════════════");
   console.log("  📊 CHEEKY OS — Startup Summary");
   console.log(
-    `  Webhook Server:  ${webhookStarted ? `✅ RUNNING on ${webhookPort}` : "❌ NOT RUNNING (retrying every 5s)"}`
+    `  Webhook Server:  ${webhookStarted ? `✅ RUNNING on ${webhookPort}` : "⚠️ NOT RUNNING (legacy webhook unavailable)"}`
   );
   console.log(`  Email Poller:    ${pollerStarted ? "✅ RUNNING" : "⚠️  SKIPPED"}`);
   console.log(`  Manual Intake:   node intake.js (always available)`);
@@ -158,7 +169,7 @@ async function main() {
         await stopServer();
         console.log("  ✅ Webhook server stopped.");
       } catch (err) {
-        console.error(`  ❌ Webhook shutdown error: ${err.message}`);
+        console.warn(`  ⚠️ Webhook shutdown skipped: ${err.message}`);
       }
     }
 
