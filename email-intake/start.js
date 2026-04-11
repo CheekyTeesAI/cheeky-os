@@ -20,6 +20,14 @@ const fs = require("fs");
 const path = require("path");
 const { initializeSquareIntegration, getSquareIntegrationStatus } = require("./cheeky-os/integrations/square");
 const { printStartupEnvHints, getEngineReadinessFlags } = require("./cheeky-os/safety/startup-env");
+const express = require("express");
+
+const app = express();
+const PORT = Number(process.env.PORT) || 3000;
+app.get("/health", (_req, res) => res.json({ status: "ok" }));
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server listening on ${PORT}`);
+});
 
 /** Ensure logs directory exists. */
 fs.mkdirSync(path.join(__dirname, "logs"), { recursive: true });
