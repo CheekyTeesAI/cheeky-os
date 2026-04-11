@@ -1,6 +1,7 @@
 /**
- * Repo-root entry when the start command is `node src/start.js` (e.g. Render with project root = repo root).
- * Delegates to email-intake Cheeky OS Express — no legacy webhook server.
+ * Repo-root entry when the start command is `node src/start.js` (project root = git root).
+ * Loads only ../email-intake/cheeky-os/server. Do not require ./webhook/server or
+ * ./email-listener/email-poller from this path — those modules live under email-intake/.
  */
 require("dotenv").config({
   path: require("path").join(__dirname, "..", "email-intake", ".env"),
