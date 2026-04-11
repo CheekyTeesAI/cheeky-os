@@ -59,9 +59,14 @@ app.get("/", (_req, res) => {
   res.status(200).json({
     status: "ok",
     service: "cheeky-api",
+    env: process.env.NODE_ENV || "production",
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
   });
+});
+
+app.get("/healthz", (_req, res) => {
+  res.send("ok");
 });
 
 app.get("/health", (_req, res) => {
