@@ -2,12 +2,14 @@
   "name": "cheeky-os-root",
   "private": true,
   "version": "1.0.0",
-  "description": "Render: Root Directory blank; Build Command: npm install; Start Command: npm start; Runtime: Node. Serves email-intake/cheeky-os/server.js only.",
+  "description": "Render: Root Directory empty; Build: npm install; Start: npm start; Runtime: Node. Entry: render-http.js → email-intake/cheeky-os/server.js",
+  "workspaces": [
+    "email-intake"
+  ],
   "engines": {
     "node": "18.x"
   },
   "scripts": {
-    "postinstall": "npm install --prefix email-intake",
-    "start": "node email-intake/cheeky-os/server.js"
+    "start": "node render-http.js"
   }
 }

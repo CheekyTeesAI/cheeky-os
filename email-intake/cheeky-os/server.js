@@ -289,7 +289,11 @@ async function main() {
   });
 }
 
-if (require.main === module) {
+const _renderHttpBoot =
+  require.main &&
+  require.main.filename &&
+  String(require.main.filename).replace(/\\/g, "/").endsWith("/render-http.js");
+if (require.main === module || _renderHttpBoot) {
   main().catch((err) => {
     console.error("[cheeky-os/server] fatal:", err);
     process.exit(1);

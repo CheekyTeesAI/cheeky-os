@@ -15,7 +15,6 @@
     "dev:tsx": "tsx src/api/voice.run.ts",
     "dev:ts-node": "ts-node --transpile-only src/api/voice.run.ts",
     "build": "tsc",
-    "start": "node cheeky-os/server.js",
     "typecheck": "tsc --noEmit",
     "test": "npm run typecheck",
     "social:verify": "node social/scripts/verify-batch.js && node social/scripts/verify-routes.js"
