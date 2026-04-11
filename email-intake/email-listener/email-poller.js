@@ -17,7 +17,35 @@ require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") }
 
 const fs = require("fs");
 const path = require("path");
-const { getUnreadEmails, markAsRead } = require("./graph-client");
+const axios = require("axios");
+const { getAccessToken } = require("./graph-client");
+
+async function fetchEmails() {
+  const token = await getAccessToken();
+  const response = await axios.get(
+    "https://graph.microsoft.com/v1.0/users/customer.service@cheekyteesllc.com/messages?$top=10",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data;
+}
+
+async function markAsRead(messageId) {
+  const token = await getAccessToken();
+  await axios.patch(
+    `https://graph.microsoft.com/v1.0/users/customer.service@cheekyteesllc.com/messages/${messageId}`,
+    { isRead: true },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+}
 
 // Lazy-load intake functions to avoid circular dependency at module level
 let _intake = null;
@@ -173,7 +201,8 @@ async function pollOnce() {
 
   let emails;
   try {
-    emails = await getUnreadEmails();
+    const data = await fetchEmails();
+    emails = data.value || [];
   } catch (err) {
     log("ERROR", `Failed to fetch emails: ${err.message}`);
     return { processed: 0, failed: 0, skipped: 0 };
