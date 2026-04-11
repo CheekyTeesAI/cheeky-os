@@ -59,7 +59,7 @@ async function main() {
   printStartupEnvHints();
   const engines = getEngineReadinessFlags();
   console.log(`  Cash engine:       ${engines.cashEngine.includes("ready") ? "✅" : "⚠️"} ${engines.cashEngine}`);
-  console.log("  HTTP API:          use `npm start` (legacy webhook server removed)");
+  console.log("  HTTP API:          use `npm start` (Cheeky OS Express)");
 
   // ── Start Email Poller ──────────────────────────────────────────────────
   let pollerStarted = false;
