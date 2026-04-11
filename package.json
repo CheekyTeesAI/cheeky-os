@@ -10,7 +10,7 @@
     "node": "18.x"
   },
   "scripts": {
-    "start": "node render-http.js"
+    "start": "node email-intake/cheeky-os/server.js"
   },
   "dependencies": {
     "@azure/identity": "^4.13.1"
