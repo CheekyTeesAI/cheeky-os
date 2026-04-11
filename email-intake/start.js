@@ -69,32 +69,11 @@ async function main() {
   console.log(`  Cash engine:       ${engines.cashEngine.includes("ready") ? "✅" : "⚠️"} ${engines.cashEngine}`);
   console.log("  HTTP API:          use `npm start` (Cheeky OS Express)");
 
-  // ── Start Email Poller ──────────────────────────────────────────────────
-  let pollerStarted = false;
-  const hasGraphConfig =
-    process.env.AZURE_TENANT_ID &&
-    process.env.AZURE_CLIENT_ID &&
-    process.env.AZURE_CLIENT_SECRET &&
-    process.env.OUTLOOK_USER_EMAIL;
-
-  if (hasGraphConfig) {
-    try {
-      const { startPolling } = require("./email-listener/email-poller");
-      startPolling();
-      pollerStarted = true;
-      console.log(`  ✅ Email poller running (mailbox: ${process.env.OUTLOOK_USER_EMAIL})`);
-    } catch (err) {
-      console.error(`  ❌ Email poller failed to start: ${err.message}`);
-      console.log("     (continuing without email polling — fix config and restart)");
-    }
-  } else {
-    console.log("  ⚠️  Email poller SKIPPED — missing Graph API config:");
-    if (!process.env.AZURE_TENANT_ID) console.log("     → AZURE_TENANT_ID");
-    if (!process.env.AZURE_CLIENT_ID) console.log("     → AZURE_CLIENT_ID");
-    if (!process.env.AZURE_CLIENT_SECRET) console.log("     → AZURE_CLIENT_SECRET");
-    if (!process.env.OUTLOOK_USER_EMAIL) console.log("     → OUTLOOK_USER_EMAIL");
-    console.log("     Set these in .env to enable email auto-intake.");
-  }
+  // ── Start Email Poller — DISABLED (MONEY ENGINE) ─────────────────────────
+  // const { startPolling } = require("./email-listener/email-poller");
+  // startPolling();
+  console.log("🚫 EMAIL POLLING DISABLED — FOCUSING ON MONEY ENGINE");
+  const pollerStarted = false;
 
   // ── Startup Summary ─────────────────────────────────────────────────────
   console.log("");

@@ -108,6 +108,9 @@ app.use("/system", systemCheckRouter);
 
 app.use(express.json());
 
+const squareWebhook = require("../../src/webhooks/squareWebhook");
+app.use("/webhooks", squareWebhook);
+
 app.use("/cheeky", cheekyRouter);
 app.use("/revenue", revenueRouter);
 app.use("/dashboard", dashboardRouter);
