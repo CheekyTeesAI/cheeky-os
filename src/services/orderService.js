@@ -117,6 +117,17 @@ async function createQuickOrder(body) {
       console.log("Portal token assignment skipped:", e && e.message ? e.message : e);
     }
 
+    // [CHEEKY-GATE] Compute lifecycle tasks from current order state.
+    // Surfaces next-action tasks in the API response without DB writes.
+    // DB persistence wired in a later phase once Job record pattern is established.
+    try {
+      const CHEEKY_getLifecycleTasks = require("./taskAutogenService").generateTasksForOrder;
+      result.order.pendingTasks = CHEEKY_getLifecycleTasks(result.order);
+      console.log("[CHEEKY-GATE] pendingTasks:", JSON.stringify(result.order.pendingTasks));
+    } catch (_) {
+      result.order.pendingTasks = [];
+    }
+
     return { success: true, data: result };
   } catch (e) {
     console.error("[orderService.createQuickOrder]", e && e.stack ? e.stack : e);

@@ -1,0 +1,16 @@
+chore(rie): add Repo Intelligence Engine + Phase 1-2 cash/task patches
+
+Phase 1 - Revenue signal fix (GAP 2):
+summary.js: add revenueToday via prisma.order.aggregate(amountPaid)
+moneyEngine.js: add CHEEKY_computeRevenue() helper using real revenue,
+falls back to ordersToday x 100 placeholder
+
+Phase 2 - Wire task lifecycle (GAP 3):
+orderService.js: call taskAutogenService.generateTasksForOrder after
+createQuickOrder; surfaces pendingTasks in API response (additive only)
+
+RIE tooling added (Phase 0):
+tools/repo-intelligence/ full scanner, route/stub/service/cash
+analyzers, report generator producing report.json + report.md
+
+Zero lines deleted. Zero schema changes. CHEEKY_ prefix on all new fns.

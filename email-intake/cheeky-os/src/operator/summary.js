@@ -67,6 +67,17 @@ module.exports = async function getSummary() {
       summary.metrics.ordersToday = ordersToday;
     } catch (_) {}
 
+    // REVENUE TODAY — real cash signal for moneyEngine [CHEEKY-GATE]
+    try {
+      const revResult = await prisma.order.aggregate({
+        _sum: { amountPaid: true },
+        where: { createdAt: { gte: startOfDay } },
+      });
+      summary.metrics.revenueToday = Number(
+        (revResult && revResult._sum && revResult._sum.amountPaid) || 0
+      );
+    } catch (_) {}
+
     // OPEN TASKS
     try {
       const openTasks = await prisma.task.count({
