@@ -16,6 +16,7 @@ const {
 } = require("../services/communicationOrchestrator");
 const { listCommunications, countByStatusToday } = require("../services/communicationService");
 const { getRelatedCommunicationTimeline } = require("../services/communicationHistoryService");
+const { CHEEKY_listCommunicationQueue } = require("../services/revenueFollowupService");
 
 async function loadOrder(orderId) {
   const prisma = getPrisma();
@@ -80,21 +81,11 @@ router.post("/api/communications/status/:orderId", async (req, res) => {
 });
 
 router.get("/api/communications/queue", async (_req, res) => {
+  // [CHEEKY-GATE] Delegated to revenueFollowupService.CHEEKY_listCommunicationQueue.
   try {
-    const prisma = getPrisma();
-    if (!prisma) {
-      return res.json({ success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" });
-    }
-    const drafts = await prisma.revenueFollowup.findMany({
-      where: {
-        status: {
-          in: ["READY", "APPROVED"],
-        },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 100,
-    });
-    return res.json({ success: true, data: drafts });
+    const out = await CHEEKY_listCommunicationQueue();
+    if (!out.success) return res.json({ success: false, error: out.error, code: out.code || "COMMUNICATION_QUEUE_FAILED" });
+    return res.json({ success: true, data: out.data });
   } catch (e) {
     return res.json({
       success: false,

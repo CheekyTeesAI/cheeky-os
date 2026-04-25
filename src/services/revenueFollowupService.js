@@ -130,7 +130,21 @@ function startRevenueFollowupCron() {
   console.log("[SAFE EXIT] Completed without background persistence");
 }
 
+// [CHEEKY-GATE] CHEEKY_listCommunicationQueue — extracted from GET /api/communications/queue.
+// Pure relocation: revenueFollowup.findMany READY|APPROVED desc.
+async function CHEEKY_listCommunicationQueue() {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE", data: null };
+  const drafts = await prisma.revenueFollowup.findMany({
+    where: { status: { in: ["READY", "APPROVED"] } },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+  });
+  return { success: true, data: drafts };
+}
+
 module.exports = {
   runRevenueFollowupScan,
   startRevenueFollowupCron,
+  CHEEKY_listCommunicationQueue,
 };
