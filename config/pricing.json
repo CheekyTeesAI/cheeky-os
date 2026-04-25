@@ -1,0 +1,27 @@
+{
+  "_comment": "Cheeky OS — canonical pricing config. All route handlers read from here. Never hardcode.",
+  "quantityTiers": [
+    { "min": 1,  "max": 11,  "label": "1-11",  "basePrice": 28.00 },
+    { "min": 12, "max": 23,  "label": "12-23", "basePrice": 22.00 },
+    { "min": 24, "max": 47,  "label": "24-47", "basePrice": 18.00 },
+    { "min": 48, "max": null,"label": "48+",   "basePrice": 14.00 }
+  ],
+  "printMethodMultipliers": {
+    "DTG":       1.0,
+    "DTF":       1.1,
+    "Screen":    0.85,
+    "HeatPress": 0.9
+  },
+  "turnaroundMultipliers": {
+    "standard": 1.0,
+    "rush48":   1.4,
+    "rush24":   1.8
+  },
+  "customerTierDiscounts": {
+    "NEW":       0.00,
+    "REPEAT":    0.05,
+    "VIP":       0.10,
+    "WHOLESALE": 0.20
+  },
+  "quoteExpiryHours": 72
+}
