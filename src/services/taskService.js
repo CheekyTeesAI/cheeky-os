@@ -1,6 +1,6 @@
 "use strict";
 
-const { getPrisma } = require("./decisionEngine");
+const { getPrisma, runDecisionEngineInTransaction } = require("./decisionEngine");
 
 const TYPES = {
   PREP_JOB: "PREP_JOB",
@@ -39,7 +39,34 @@ async function createTask({ orderId, title, type, assignedTo }) {
   }
 }
 
+// [CHEEKY-GATE] CHEEKY_createTaskWithDecision — extracted from POST /api/os/tasks.
+// Pure relocation: $transaction task.create + runDecisionEngineInTransaction.
+async function CHEEKY_createTaskWithDecision({ orderId, title, type, assignedTo }) {
+  const t = String(type || "").trim();
+  if (!orderId || !title || !TYPES[t]) {
+    return { success: false, error: "orderId, title, and valid type required", code: "VALIDATION_ERROR" };
+  }
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" };
+  const data = await prisma.$transaction(async (tx) => {
+    const task = await tx.task.create({
+      data: {
+        orderId: String(orderId),
+        title: String(title).slice(0, 500),
+        type: t,
+        status: "PENDING",
+        assignedTo: assignedTo ? String(assignedTo) : null,
+      },
+    });
+    const order = await runDecisionEngineInTransaction(tx, String(orderId));
+    return { task, order };
+  });
+  console.log("[taskService] task created", data.task.id, t);
+  return { success: true, data };
+}
+
 module.exports = {
   TYPES,
   createTask,
+  CHEEKY_createTaskWithDecision,
 };

@@ -3,54 +3,27 @@
 const express = require("express");
 const router = express.Router();
 
-const { TYPES } = require("../services/taskService");
-const { getPrisma, runDecisionEngineInTransaction } = require("../services/decisionEngine");
+const { TYPES, CHEEKY_createTaskWithDecision } = require("../services/taskService");
 const { logError } = require("../middleware/logger");
 
 router.post("/", async (req, res) => {
+  // [CHEEKY-GATE] Delegated to taskService.CHEEKY_createTaskWithDecision.
   try {
     const body = req.body && typeof req.body === "object" ? req.body : {};
-    const orderId = String(body.orderId || "").trim();
-    const title = String(body.title || "").trim();
-    const type = String(body.type || "").trim();
-    const assignedTo = body.assignedTo ? String(body.assignedTo) : null;
-    if (!orderId || !title || !TYPES[type]) {
-      return res.status(400).json({
-        success: false,
-        error: "orderId, title, and valid type required",
-        code: "VALIDATION_ERROR",
-      });
-    }
-    const prisma = getPrisma();
-    if (!prisma) {
-      return res.status(503).json({
-        success: false,
-        error: "Database unavailable",
-        code: "DB_UNAVAILABLE",
-      });
-    }
-    const data = await prisma.$transaction(async (tx) => {
-      const task = await tx.task.create({
-        data: {
-          orderId,
-          title: title.slice(0, 500),
-          type,
-          status: "PENDING",
-          assignedTo: assignedTo || null,
-        },
-      });
-      const order = await runDecisionEngineInTransaction(tx, orderId);
-      return { task, order };
+    const out = await CHEEKY_createTaskWithDecision({
+      orderId: String(body.orderId || "").trim(),
+      title: String(body.title || "").trim(),
+      type: String(body.type || "").trim(),
+      assignedTo: body.assignedTo ? String(body.assignedTo) : null,
     });
-    console.log("[taskService] task created", data.task.id, type);
-    return res.status(200).json({ success: true, data });
+    if (!out.success) {
+      const status = out.code === "VALIDATION_ERROR" ? 400 : out.code === "DB_UNAVAILABLE" ? 503 : 500;
+      return res.status(status).json({ success: false, error: out.error, code: out.code });
+    }
+    return res.status(200).json(out);
   } catch (err) {
     logError("POST /api/os/tasks", err);
-    return res.status(500).json({
-      success: false,
-      error: err && err.message ? err.message : "internal_error",
-      code: "INTERNAL_ERROR",
-    });
+    return res.status(500).json({ success: false, error: err && err.message ? err.message : "internal_error", code: "INTERNAL_ERROR" });
   }
 });
 
