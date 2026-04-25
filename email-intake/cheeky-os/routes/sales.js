@@ -3,6 +3,7 @@
  */
 
 const { Router } = require("express");
+const path = require("path");
 const { getRevenueFollowups } = require("../services/revenueFollowups");
 const { getReactivationBuckets } = require("../services/reactivationBuckets");
 const { buildNextAction } = require("../services/nextAction");
@@ -12,9 +13,97 @@ const {
   runSalesAutomationCycle,
 } = require("../services/salesLoopService");
 const { runSalesOperatorCycle } = require("../services/salesOperatorService");
+const salesEngine = require(path.join(
+  __dirname,
+  "..",
+  "..",
+  "src",
+  "services",
+  "salesEngine.js"
+));
 
 const router = Router();
 const TOP = 5;
+
+router.get("/daily-call-list", async (req, res) => {
+  try {
+    const limit = Number(req.query && req.query.limit) || 5;
+    const leads = await salesEngine.getDailyCallList(limit);
+    return res.json({
+      success: true,
+      count: leads.length,
+      leads,
+    });
+  } catch (err) {
+    console.error("[sales/daily-call-list]", err.message || err);
+    return res.json({
+      success: true,
+      count: 0,
+      leads: [],
+    });
+  }
+});
+
+router.get("/call-list", async (req, res) => {
+  try {
+    const limit = Number(req.query && req.query.limit) || 5;
+    const leads = await salesEngine.getDailyCallList(limit);
+    return res.json({
+      success: true,
+      count: leads.length,
+      leads,
+    });
+  } catch (err) {
+    console.error("[sales/call-list]", err.message || err);
+    return res.json({ success: true, count: 0, leads: [] });
+  }
+});
+
+router.post("/log", async (req, res) => {
+  try {
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const customerId = String(body.customerId || "").trim();
+    const outcome = String(body.outcome || "").trim();
+    if (!customerId || !outcome) {
+      return res.status(400).json({
+        success: false,
+        error: "customerId and outcome are required",
+      });
+    }
+    const out = salesEngine.logSalesOutcome(customerId, outcome);
+    return res.json({
+      success: true,
+      action: "sales_call_logged",
+      result: out,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+});
+
+router.get("/ai-call-list", async (req, res) => {
+  try {
+    const limit = Number(req.query && req.query.limit) || 5;
+    const out = await salesEngine.getAiCallList(limit);
+    return res.json({
+      success: true,
+      count: out.leads.length,
+      leads: out.leads,
+      insights: out.insights,
+    });
+  } catch (err) {
+    console.error("[sales/ai-call-list]", err.message || err);
+    return res.json({
+      success: true,
+      count: 0,
+      leads: [],
+      insights: "",
+    });
+  }
+});
 
 router.get("/command-center", async (_req, res) => {
   try {

@@ -2,7 +2,16 @@
  * Bundle 3 — persist capture orders + default production tasks.
  */
 
+const path = require("path");
 const { getPrisma } = require("../marketing/prisma-client");
+const memoryService = require(path.join(
+  __dirname,
+  "..",
+  "..",
+  "src",
+  "services",
+  "memoryService.js"
+));
 
 const DEFAULT_TASKS = ["Review Artwork", "Print", "Quality Check"];
 
@@ -84,7 +93,8 @@ async function createOrderFromCapture(body) {
         product,
         printType,
         dueDate,
-        status: "INTAKE",
+        status: "QUOTE",
+        depositReceived: false,
       },
     });
     return { success: true, orderId: row.id, error: "" };
@@ -134,6 +144,15 @@ async function generateTasksForOrder(orderId, opts) {
       };
     }
 
+    if (!order.depositReceived) {
+      return {
+        success: false,
+        tasksCreated: 0,
+        taskTitles: [],
+        error: "Deposit not received — production tasks are blocked",
+      };
+    }
+
     const desiredTitles = buildTaskTitles(opts);
     const existing = await prisma.captureTask.findMany({
       where: { orderId: id },
@@ -155,6 +174,16 @@ async function generateTasksForOrder(orderId, opts) {
         status: "PENDING",
       })),
     });
+    try {
+      memoryService.logEvent("deposit_received", {
+        orderId: id,
+        tasksCreated: toCreate.length,
+        taskTitles: toCreate,
+        note: "Production tasks created after deposit gate passed",
+      });
+    } catch (_) {
+      /* optional */
+    }
     return {
       success: true,
       tasksCreated: toCreate.length,

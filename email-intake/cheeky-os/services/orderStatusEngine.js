@@ -85,6 +85,14 @@ async function updateCaptureOrderStatus(orderId, status) {
       };
     }
 
+    if (next === "READY" && !row.depositReceived) {
+      return {
+        success: false,
+        status: "",
+        error: "Cannot move to READY until deposit is received",
+      };
+    }
+
     await prisma.captureOrder.update({
       where: { id },
       data: { status: next },
@@ -117,8 +125,23 @@ function sortOrdersForQueue(rows) {
   return copy;
 }
 
-/** @param {{ id: string, customerName: string, product: string, quantity: number, printType: string, dueDate: string }} row */
+/**
+ * Optional memoryJson.garmentOrderStatus mirrors PostgreSQL flow for capture orders.
+ * @param {{ id: string, customerName: string, product: string, quantity: number, printType: string, dueDate: string, memoryJson?: string }} row
+ */
 function toQueueItem(row) {
+  let blockedByGarments = false;
+  try {
+    const m = JSON.parse(row.memoryJson || "{}");
+    const g = String(m.garmentOrderStatus || "").toUpperCase();
+    blockedByGarments =
+      g !== "" &&
+      g !== "NOT_NEEDED" &&
+      g !== "RECEIVED" &&
+      row.depositReceived === true;
+  } catch (_) {
+    blockedByGarments = false;
+  }
   return {
     orderId: row.id,
     customerName: row.customerName,
@@ -126,6 +149,7 @@ function toQueueItem(row) {
     quantity: row.quantity,
     printType: row.printType,
     dueDate: row.dueDate || "",
+    blockedByGarments,
   };
 }
 
@@ -139,7 +163,9 @@ async function getProductionQueue() {
 
   try {
     const [readyRows, printingRows, qcRows] = await Promise.all([
-      prisma.captureOrder.findMany({ where: { status: "READY" } }),
+      prisma.captureOrder.findMany({
+        where: { status: "READY", depositReceived: true },
+      }),
       prisma.captureOrder.findMany({ where: { status: "PRINTING" } }),
       prisma.captureOrder.findMany({ where: { status: "QC" } }),
     ]);

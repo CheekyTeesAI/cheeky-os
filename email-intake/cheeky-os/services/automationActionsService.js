@@ -7,6 +7,7 @@ const { getAutoFollowupsResponse } = require("./autoFollowupsService");
 const { getMemory } = require("./orderMemoryService");
 const { analyzeJob, inferProductType } = require("./jobIntelligenceService");
 const { suggestActions } = require("./actionSuggestionService");
+const { tryGarmentDigestSnapshot } = require("./garmentDigestBridge");
 
 const PRI = { critical: 0, high: 1, medium: 2, low: 3 };
 
@@ -145,6 +146,44 @@ async function collectAutomationActions(maxOut = 10) {
         daysOld,
       });
     }
+  }
+
+  const garmentSnap = await tryGarmentDigestSnapshot();
+  if (garmentSnap && garmentSnap.garmentOrdersPending > 0) {
+    flat.push({
+      type: "garments",
+      label: `Place ${garmentSnap.garmentOrdersPending} garment order(s)`,
+      priority: "high",
+      customerName: "—",
+      orderId: "",
+      reason: "GET /api/operator/garment-orders",
+      amount: 0,
+      daysOld: 0,
+    });
+  }
+  if (garmentSnap && garmentSnap.garmentOrdersOrderedAwaitingReceive > 0) {
+    flat.push({
+      type: "garments_receive",
+      label: `Receive ${garmentSnap.garmentOrdersOrderedAwaitingReceive} garment shipment(s)`,
+      priority: "medium",
+      customerName: "—",
+      orderId: "",
+      reason: "Garments ordered but not marked received",
+      amount: 0,
+      daysOld: 0,
+    });
+  }
+  if (garmentSnap && garmentSnap.productionReadyMissingGarmentTask > 0) {
+    flat.push({
+      type: "garments_gap",
+      label: `Fix ${garmentSnap.productionReadyMissingGarmentTask} order(s) missing garment task`,
+      priority: "high",
+      customerName: "—",
+      orderId: "",
+      reason: "Data check — deposit cleared but no GARMENT_ORDER task",
+      amount: 0,
+      daysOld: 0,
+    });
   }
 
   const deduped = dedupeFlattened(flat);

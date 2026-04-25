@@ -7,16 +7,18 @@ const { getDailySummary } = require("../services/dailySummaryService");
 
 const router = Router();
 
-router.get("/today", async (_req, res) => {
+async function handleDailySummary(_req, res) {
   try {
     const data = await getDailySummary();
     return res.json({
+      success: true,
       counts: data.counts || {},
       highlights: data.highlights || {},
     });
   } catch (err) {
     console.error("[summary/today]", err.message || err);
     return res.json({
+      success: true,
       counts: {
         urgentFollowups: 0,
         blockedOrders: 0,
@@ -31,6 +33,9 @@ router.get("/today", async (_req, res) => {
       },
     });
   }
-});
+}
+
+router.get("/today", handleDailySummary);
+router.get("/daily-summary", handleDailySummary);
 
 module.exports = router;

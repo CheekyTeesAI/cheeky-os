@@ -1,71 +1,57 @@
 /**
- * Cheeky OS — Route: commands.js
- * Command center endpoint — send text, get action executed.
- * AI-first with keyword fallback.
- *
- * @module cheeky-os/routes/commands
+ * Commands router:
+ * - GET /list: supported structured Chad commands
+ * - POST /run: execute structured command directly
  */
 
 const { Router } = require("express");
-const { routeCommand } = require("../commands/router");
-const { executeCommand } = require("../commands/executor");
-const { parseCommand } = require("../ai/command-brain");
-const { logger } = require("../utils/logger");
+const path = require("path");
+
+const commandRouter = require(path.join(
+  __dirname,
+  "..",
+  "..",
+  "src",
+  "services",
+  "commandRouter.js"
+));
 
 const router = Router();
 
-// ── POST /commands/run — execute a text command ─────────────────────────────
+router.get("/list", (_req, res) => {
+  return res.json(commandRouter.getSupportedCommands());
+});
+
 router.post("/run", async (req, res) => {
   try {
-    const { text } = req.body || {};
+    const text = String((req.body && req.body.text) || "").trim();
     if (!text) {
-      return res.json({ ok: false, data: null, error: "Missing text" });
+      return res.status(400).json({
+        success: false,
+        error: "Missing text",
+      });
     }
-
-    logger.info(`[COMMANDS] POST /run — "${text}"`);
-
-    let routed;
-    let source = "keyword";
-
-    // Try AI parse first
-    try {
-      const aiResult = await parseCommand(text);
-      if (aiResult.action !== "unknown" && aiResult.confidence > 0.7) {
-        routed = { action: aiResult.action, params: {} };
-        source = "ai";
-        logger.info(`[COMMANDS] AI routed → ${aiResult.action} (${aiResult.confidence})`);
-      }
-    } catch (aiErr) {
-      logger.error(`[COMMANDS] AI parse failed (non-blocking): ${aiErr.message}`);
+    const routed = commandRouter.routeCommand(text);
+    if (!routed.matched) {
+      return res.json({
+        success: false,
+        command: text,
+        action: "UNMATCHED",
+        result: { ok: false, message: "No structured command match" },
+      });
     }
-
-    // Fallback to keyword router
-    if (!routed) {
-      routed = routeCommand(text);
-      source = "keyword";
-    }
-
-    const result = await executeCommand(routed);
-
-    const payload =
-      result.data !== undefined
-        ? result.data
-        : result.result !== undefined
-          ? result.result
-          : null;
-
-    res.json({
-      ok: result.ok,
-      data: {
-        input: text,
-        action: routed.action,
-        source,
-        result: payload,
-      },
-      error: result.error,
+    const out = await commandRouter.executeRoutedCommand(routed);
+    return res.json({
+      success: !!out.ok,
+      command: routed.normalized,
+      action: routed.action,
+      result: out,
     });
   } catch (err) {
-    res.json({ ok: false, data: null, error: err.message });
+    return res.status(500).json({
+      success: false,
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 });
 

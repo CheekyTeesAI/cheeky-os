@@ -11,6 +11,7 @@ const {
 } = require("./paymentGateService");
 const { getMemory } = require("./orderMemoryService");
 const { analyzeJob, inferProductType } = require("./jobIntelligenceService");
+const { tryGarmentDigestSnapshot } = require("./garmentDigestBridge");
 
 const ORDER_LIMIT = 25;
 
@@ -22,11 +23,20 @@ function emptySummary() {
       readyToPrint: 0,
       inProduction: 0,
       highRiskOrders: 0,
+      garmentOrdersPending: 0,
+      garmentOrdersOrderedAwaitingReceive: 0,
+      productionReadyMissingGarmentTask: 0,
+      unpaidOrdersNeedingReminders: 0,
+      proofsNotSent: 0,
+      proofsAwaitingApproval: 0,
+      pickupReadyNotNotified: 0,
+      commsStubbedLast24h: 0,
     },
     highlights: {
       topAction: "",
       topCustomer: "",
       biggestOpportunity: "",
+      customerCommsDigest: "",
     },
   };
 }
@@ -153,17 +163,108 @@ function computeSummaryFromData(orders, auto, actions) {
 }
 
 /**
+ * @param {object} out
+ * @param {{ garmentOrdersPending?: number, garmentOrdersOrderedAwaitingReceive?: number, productionReadyMissingGarmentTask?: number } | null} snap
+ */
+/**
+ * @param {object} out
+ * @param {{ counts?: object, summaryLine?: string } | null} comms
+ */
+function mergeCommsDigest(out, comms) {
+  if (!comms || typeof comms !== "object") return;
+  const c = comms.counts && typeof comms.counts === "object" ? comms.counts : {};
+  if (typeof c.unpaidOrdersNeedingReminders === "number") {
+    out.counts.unpaidOrdersNeedingReminders = c.unpaidOrdersNeedingReminders;
+  }
+  if (typeof c.proofsNotSent === "number") {
+    out.counts.proofsNotSent = c.proofsNotSent;
+  }
+  if (typeof c.proofsAwaitingApproval === "number") {
+    out.counts.proofsAwaitingApproval = c.proofsAwaitingApproval;
+  }
+  if (typeof c.pickupReadyNotNotified === "number") {
+    out.counts.pickupReadyNotNotified = c.pickupReadyNotNotified;
+  }
+  if (typeof c.commsStubbedLast24h === "number") {
+    out.counts.commsStubbedLast24h = c.commsStubbedLast24h;
+  }
+  const line = String(comms.summaryLine || "").trim();
+  if (line) {
+    out.highlights.customerCommsDigest = line;
+    if (!out.highlights.topAction) {
+      out.highlights.topAction = line;
+    }
+  }
+}
+
+function mergeGarmentDigest(out, snap) {
+  if (!snap || typeof snap !== "object") return;
+  if (typeof snap.garmentOrdersPending === "number") {
+    out.counts.garmentOrdersPending = snap.garmentOrdersPending;
+  }
+  if (typeof snap.garmentOrdersOrderedAwaitingReceive === "number") {
+    out.counts.garmentOrdersOrderedAwaitingReceive =
+      snap.garmentOrdersOrderedAwaitingReceive;
+  }
+  if (typeof snap.productionReadyMissingGarmentTask === "number") {
+    out.counts.productionReadyMissingGarmentTask =
+      snap.productionReadyMissingGarmentTask;
+  }
+  const parts = [];
+  const gp = Number(snap.garmentOrdersPending) || 0;
+  const ga = Number(snap.garmentOrdersOrderedAwaitingReceive) || 0;
+  const gm = Number(snap.productionReadyMissingGarmentTask) || 0;
+  if (gp > 0) {
+    parts.push(`${gp} garment order(s) to place`);
+  }
+  if (ga > 0) {
+    parts.push(`${ga} awaiting garment receipt`);
+  }
+  if (gm > 0) {
+    parts.push(
+      `${gm} missing garment task rows`
+    );
+  }
+  if (parts.length && !out.highlights.topAction) {
+    out.highlights.topAction = parts.join(" · ");
+  }
+}
+
+/**
  * @returns {Promise<{ counts: object, highlights: object }>}
  */
 async function getDailySummary() {
   try {
-    const [auto, autoPack, orders] = await Promise.all([
+    const [auto, autoPack, orders, garmentSnap] = await Promise.all([
       getAutoFollowupsResponse(),
       collectAutomationActions(10),
       fetchRecentOrders(),
+      tryGarmentDigestSnapshot(),
     ]);
     const actions = (autoPack && autoPack.actions) || [];
-    return computeSummaryFromData(orders, auto, actions);
+    const out = computeSummaryFromData(orders, auto, actions);
+    mergeGarmentDigest(out, garmentSnap);
+
+    let commsDigest = null;
+    try {
+      const path = require("path");
+      const mod = require(path.join(
+        __dirname,
+        "..",
+        "..",
+        "dist",
+        "services",
+        "customerCommsService.js"
+      ));
+      if (mod && typeof mod.getCustomerCommsDigest === "function") {
+        commsDigest = await mod.getCustomerCommsDigest();
+      }
+    } catch (e) {
+      /* optional — build without comms */
+    }
+    mergeCommsDigest(out, commsDigest);
+
+    return out;
   } catch (err) {
     console.error("[dailySummary]", err.message || err);
     return emptySummary();

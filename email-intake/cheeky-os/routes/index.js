@@ -56,8 +56,19 @@ router.use("/marketing", marketingRoutes);
 // Lead capture: /cheeky/leads/create
 router.use("/leads", leadsRoutes);
 
-// ── Start followup scheduler (6-hour cycle)
-startFollowupScheduler();
+// ── Start followup scheduler (6-hour cycle) only when explicitly enabled
+const followupSchedulerEnabled =
+  process.env.ENABLE_SCHEDULER === "true" ||
+  process.env.DAILY_SCHEDULER === "true" ||
+  process.env.ENABLE_FOLLOWUP_SCHEDULER === "true";
+
+if (followupSchedulerEnabled) {
+  startFollowupScheduler();
+} else {
+  logger.info(
+    "[FOLLOWUP-SCHEDULER] Disabled (set ENABLE_FOLLOWUP_SCHEDULER=true or ENABLE_SCHEDULER=true)"
+  );
+}
 
 // ── Global error handler for /cheeky/* routes ───────────────────────────────
 router.use((err, req, res, _next) => {

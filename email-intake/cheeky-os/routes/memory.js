@@ -1,5 +1,14 @@
 const express = require("express");
+const path = require("path");
 const router = express.Router();
+const memory = require(path.join(
+  __dirname,
+  "..",
+  "..",
+  "src",
+  "services",
+  "memory.js"
+));
 
 let appendDailyEvent;
 try { appendDailyEvent = require("../scripts/memory/appendDailyEvent"); } catch (e) {}
@@ -31,6 +40,35 @@ try { generateCollections = require("../scripts/memory/generateCollections"); } 
 function missing(res) {
   return res.status(500).json({ ok: false, result: {}, error: "Module not available" });
 }
+
+router.get("/insights", (req, res) => {
+  try {
+    const category = String((req.query && req.query.category) || "").trim();
+    const result = memory.getInsights(category);
+    return res.json({ success: true, action: "memory_insights_returned", result });
+  } catch (e) {
+    return res.status(500).json({
+      success: false,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
+});
+
+router.get("/kaizen", async (_req, res) => {
+  try {
+    const summary = await memory.generateKaizenSummary();
+    return res.json({
+      success: true,
+      action: "kaizen_summary_returned",
+      result: { summary },
+    });
+  } catch (e) {
+    return res.status(500).json({
+      success: false,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
+});
 
 router.post("/intake", (req, res) => {
   if (!processIntake) return missing(res);
