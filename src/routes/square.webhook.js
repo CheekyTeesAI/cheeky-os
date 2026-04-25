@@ -9,9 +9,7 @@ const express = require("express");
 const crypto = require("crypto");
 const path = require("path");
 const { getPrisma } = require("../services/decisionEngine");
-const { createProductionJob } = require("../services/productionService");
-const { logAction } = require("../services/auditService");
-const { updateOrderFinancials } = require("../services/financeService");
+const { CHEEKY_processSquareWebhookEvent } = require("../services/squareEngine");
 
 const router = express.Router();
 
@@ -90,84 +88,11 @@ router.post("/webhooks/square", async (req, res) => {
       return res.status(200).json({ success: true, ignored: "missing_event_type" });
     }
 
-    // Idempotency: if we already processed this event id, safely ignore.
-    if (eventId) {
-      const already = await prisma.processedWebhookEvent.findUnique({ where: { id: eventId } });
-      if (already) {
-        console.log("[WEBHOOK] Already processed event", eventId);
-        return res.status(200).json({ success: true, duplicate: true });
-      }
-    }
-
-    if (eventType === "invoice.payment_made") {
-      const invoiceId = normalizeInvoiceId(event);
-      if (!invoiceId) {
-        return res.status(200).json({ success: true, ignored: "missing_invoice_id" });
-      }
-
-      const order = await prisma.order.findFirst({
-        where: { squareInvoiceId: invoiceId },
-      });
-
-      if (!order) {
-        console.log("[WEBHOOK] Order not found for invoice", invoiceId);
-      } else if (order.depositPaid) {
-        console.log("[WEBHOOK] Already paid", order.id);
-        try {
-          const job = await createProductionJob(order.id);
-          console.log("[WEBHOOK] Production job ensured", job.id);
-        } catch (jobErr) {
-          console.log(
-            "[WEBHOOK] Production job skipped",
-            jobErr && jobErr.message ? jobErr.message : jobErr
-          );
-        }
-      } else {
-        await prisma.order.update({
-          where: { id: order.id },
-          data: {
-            depositPaid: true,
-            depositPaidAt: new Date(),
-            status: "PRODUCTION_READY",
-            nextAction: "Order garments",
-            nextOwner: "Jeremy",
-            blockedReason: null,
-          },
-        });
-        await updateOrderFinancials(order.id);
-        await logAction("PAYMENT_RECEIVED", "Order", order.id, {
-          invoice: order.squareInvoiceId,
-        });
-        console.log("[WEBHOOK] Deposit received -> Order unlocked", order.id);
-        try {
-          const job = await createProductionJob(order.id);
-          console.log("[WEBHOOK] Production job created", job.id);
-          try {
-            const { autoScheduleJobs } = require("../services/schedulerService");
-            await autoScheduleJobs();
-          } catch (_e) {
-            // optional scheduling hook
-          }
-        } catch (jobErr) {
-          console.log(
-            "[WEBHOOK] Production job skipped",
-            jobErr && jobErr.message ? jobErr.message : jobErr
-          );
-        }
-      }
-    } else {
-      // Gracefully ignore unknown event types.
-      console.log("[WEBHOOK] Ignored event type", eventType);
-    }
-
-    if (eventId) {
-      await prisma.processedWebhookEvent.create({
-        data: {
-          id: eventId,
-          eventType,
-        },
-      });
-    }
+    // [CHEEKY-GATE] All DB operations delegated to squareEngine.CHEEKY_processSquareWebhookEvent.
+    const out = await CHEEKY_processSquareWebhookEvent(event, eventId, eventType);
+    if (out && out.duplicate) return res.status(200).json({ success: true, duplicate: true });
+    if (out && out.ignored) return res.status(200).json({ success: true, ignored: out.ignored });
+    if (out && !out.success) return res.status(200).json({ success: false, code: out.code });
 
     return res.status(200).json({ success: true });
   } catch (e) {

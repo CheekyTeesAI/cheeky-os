@@ -201,9 +201,103 @@ async function processLegacyPaymentJsonPayload(payload) {
   }
 }
 
+// [CHEEKY-GATE] CHEEKY_processSquareWebhookEvent — extracted from POST /webhooks/square.
+// Pure relocation: idempotency guard + invoice.payment_made order unlock + idempotency record.
+// Signature verification and JSON parsing remain in the route (non-DB, route responsibility).
+async function CHEEKY_processSquareWebhookEvent(event, eventId, eventType) {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, code: "DB_UNAVAILABLE" };
+
+  // Idempotency guard — exact copy from route
+  if (eventId) {
+    const already = await prisma.processedWebhookEvent.findUnique({ where: { id: eventId } });
+    if (already) {
+      console.log("[WEBHOOK] Already processed event", eventId);
+      return { success: true, duplicate: true };
+    }
+  }
+
+  const result = { success: true };
+
+  if (eventType === "invoice.payment_made") {
+    const invoiceId =
+      (event &&
+        event.data &&
+        event.data.object &&
+        event.data.object.invoice_payment &&
+        event.data.object.invoice_payment.invoice_id) ||
+      null;
+
+    if (!invoiceId) {
+      result.ignored = "missing_invoice_id";
+    } else {
+      const order = await prisma.order.findFirst({ where: { squareInvoiceId: invoiceId } });
+
+      if (!order) {
+        console.log("[WEBHOOK] Order not found for invoice", invoiceId);
+      } else if (order.depositPaid) {
+        console.log("[WEBHOOK] Already paid", order.id);
+        try {
+          const { createProductionJob } = require("./productionService");
+          const job = await createProductionJob(order.id);
+          console.log("[WEBHOOK] Production job ensured", job.id);
+        } catch (jobErr) {
+          console.log("[WEBHOOK] Production job skipped", jobErr && jobErr.message ? jobErr.message : jobErr);
+        }
+      } else {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: {
+            depositPaid: true,
+            depositPaidAt: new Date(),
+            status: "PRODUCTION_READY",
+            nextAction: "Order garments",
+            nextOwner: "Jeremy",
+            blockedReason: null,
+          },
+        });
+        try {
+          const { updateOrderFinancials } = require("./financeService");
+          await updateOrderFinancials(order.id);
+        } catch (_) {}
+        try {
+          const { logAction } = require("./auditService");
+          await logAction("PAYMENT_RECEIVED", "Order", order.id, { invoice: order.squareInvoiceId });
+        } catch (_) {}
+        console.log("[WEBHOOK] Deposit received -> Order unlocked", order.id);
+        try {
+          const { createProductionJob } = require("./productionService");
+          const job = await createProductionJob(order.id);
+          console.log("[WEBHOOK] Production job created", job.id);
+          try {
+            const { autoScheduleJobs } = require("./schedulerService");
+            await autoScheduleJobs();
+          } catch (_) {}
+        } catch (jobErr) {
+          console.log("[WEBHOOK] Production job skipped", jobErr && jobErr.message ? jobErr.message : jobErr);
+        }
+      }
+    }
+  } else {
+    console.log("[WEBHOOK] Ignored event type", eventType);
+  }
+
+  // Idempotency record — always written (original logic), P2002 = safe race ignore
+  if (eventId) {
+    try {
+      await prisma.processedWebhookEvent.create({ data: { id: eventId, eventType: eventType || "unknown" } });
+    } catch (e) {
+      if (!(e && e.code === "P2002")) throw e;
+    }
+  }
+
+  return result;
+}
+
 module.exports = {
   verifySquareSignature,
   applyManualDeposit,
   processLegacyPaymentJsonPayload,
   extractEventId,
+  CHEEKY_processSquareWebhookEvent,
 };
