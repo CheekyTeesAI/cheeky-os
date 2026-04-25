@@ -2,113 +2,37 @@
 
 const express = require("express");
 const router = express.Router();
-const { getPrisma } = require("../services/decisionEngine");
 const { buildWorkOrderPacket } = require("../services/workOrderPacketService");
+const { CHEEKY_getWorkOrderData, CHEEKY_saveWorkOrderPacket, CHEEKY_listAllProductionJobs } = require("../services/productionService");
 
 router.get("/api/workorders/:jobId", async (req, res) => {
+  // [CHEEKY-GATE] Delegated to productionService.CHEEKY_getWorkOrderData.
   try {
-    const prisma = getPrisma();
-    if (!prisma) {
-      return res.json({ success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" });
-    }
-
-    const job = await prisma.productionJob.findUnique({ where: { id: req.params.jobId } });
-    if (!job) {
-      return res.json({
-        success: false,
-        error: "Production job not found",
-        code: "JOB_NOT_FOUND",
-      });
-    }
-
-    const order = await prisma.order.findUnique({
-      where: { id: job.orderId },
-      include: { lineItems: true },
-    });
-    if (!order) {
-      return res.json({
-        success: false,
-        error: "Order not found",
-        code: "ORDER_NOT_FOUND",
-      });
-    }
-
-    const packet = buildWorkOrderPacket(job, order);
-    return res.json({ success: true, data: packet });
-  } catch (e) {
-    return res.json({
-      success: false,
-      error: e && e.message ? e.message : "workorder_fetch_failed",
-      code: "WORKORDER_FETCH_FAILED",
-    });
-  }
+    const out = await CHEEKY_getWorkOrderData(req.params.jobId);
+    if (!out.success) return res.json({ success: false, error: out.error, code: out.code });
+    return res.json({ success: true, data: buildWorkOrderPacket(out.job, out.order) });
+  } catch (e) { return res.json({ success: false, error: e && e.message ? e.message : "workorder_fetch_failed", code: "WORKORDER_FETCH_FAILED" }); }
 });
 
 router.post("/api/workorders/:jobId/create", async (req, res) => {
+  // [CHEEKY-GATE] Delegated to productionService.CHEEKY_getWorkOrderData + CHEEKY_saveWorkOrderPacket.
   try {
-    const prisma = getPrisma();
-    if (!prisma) {
-      return res.json({ success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" });
-    }
-
-    const job = await prisma.productionJob.findUnique({ where: { id: req.params.jobId } });
-    if (!job) {
-      return res.json({
-        success: false,
-        error: "Production job not found",
-        code: "JOB_NOT_FOUND",
-      });
-    }
-
-    const order = await prisma.order.findUnique({
-      where: { id: job.orderId },
-      include: { lineItems: true },
-    });
-    if (!order) {
-      return res.json({
-        success: false,
-        error: "Order not found",
-        code: "ORDER_NOT_FOUND",
-      });
-    }
-
-    const packet = buildWorkOrderPacket(job, order);
-    const updated = await prisma.productionJob.update({
-      where: { id: job.id },
-      data: {
-        packetJson: packet,
-        packetStatus: "CREATED",
-      },
-    });
-
-    return res.json({ success: true, data: updated });
-  } catch (e) {
-    return res.json({
-      success: false,
-      error: e && e.message ? e.message : "workorder_create_failed",
-      code: "WORKORDER_CREATE_FAILED",
-    });
-  }
+    const out = await CHEEKY_getWorkOrderData(req.params.jobId);
+    if (!out.success) return res.json({ success: false, error: out.error, code: out.code });
+    const packet = buildWorkOrderPacket(out.job, out.order);
+    const saved = await CHEEKY_saveWorkOrderPacket(req.params.jobId, packet);
+    if (!saved.success) return res.json({ success: false, error: saved.error, code: saved.code });
+    return res.json(saved);
+  } catch (e) { return res.json({ success: false, error: e && e.message ? e.message : "workorder_create_failed", code: "WORKORDER_CREATE_FAILED" }); }
 });
 
 router.get("/api/workorders", async (_req, res) => {
+  // [CHEEKY-GATE] Delegated to productionService.CHEEKY_listAllProductionJobs.
   try {
-    const prisma = getPrisma();
-    if (!prisma) {
-      return res.json({ success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" });
-    }
-    const jobs = await prisma.productionJob.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 500,
-    });
-    return res.json({ success: true, data: jobs });
-  } catch (e) {
-    return res.json({
-      success: false,
-      error: e && e.message ? e.message : "workorder_list_failed",
-      code: "WORKORDER_LIST_FAILED",
-    });
-  }
+    const out = await CHEEKY_listAllProductionJobs();
+    if (!out.success) return res.json({ success: false, error: out.error, code: out.code });
+    return res.json(out);
+  } catch (e) { return res.json({ success: false, error: e && e.message ? e.message : "workorder_list_failed", code: "WORKORDER_LIST_FAILED" }); }
 });
 const { getJobPacket } = require("../services/workOrderEngine");
 const { logError } = require("../middleware/logger");

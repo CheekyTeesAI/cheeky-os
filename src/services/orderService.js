@@ -347,6 +347,30 @@ async function CHEEKY_markPickupNotified(orderId) {
   return { success: true, data: updated };
 }
 
+// [CHEEKY-GATE] CHEEKY_getDailyReport — extracted from GET /api/reports/os/daily + /api/reports/daily.
+// Pure relocation: 4 parallel order queries (aggregate + count + 2 findMany).
+async function CHEEKY_getDailyReport() {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" };
+  const [atRiskAgg, atRiskCount, stuck, actions] = await Promise.all([
+    prisma.order.aggregate({
+      where: { deletedAt: null, depositReceived: false, quotedAmount: { gt: 0 } },
+      _sum: { quotedAmount: true },
+    }),
+    prisma.order.count({ where: { deletedAt: null, depositReceived: false, quotedAmount: { gt: 0 } } }),
+    prisma.order.findMany({
+      where: { deletedAt: null, status: { notIn: ["READY", "COMPLETED", "CANCELLED", "PAID_IN_FULL"] }, updatedAt: { lt: new Date(Date.now() - 3 * 86400000) } },
+      take: 20,
+      select: { id: true, orderNumber: true, status: true, nextAction: true, nextOwner: true, updatedAt: true, quotedAmount: true },
+    }),
+    prisma.order.findMany({ where: { deletedAt: null, nextAction: { not: null } }, select: { nextAction: true } }),
+  ]);
+  const actionCounts = {};
+  for (const row of actions) { const k = row.nextAction || ""; actionCounts[k] = (actionCounts[k] || 0) + 1; }
+  const top3 = Object.entries(actionCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([action, count]) => ({ action, count }));
+  return { success: true, data: { revenueAtRisk: { estimatedTotal: (atRiskAgg._sum && atRiskAgg._sum.quotedAmount) || 0, orderCount: atRiskCount }, stuckOrders: stuck, topActions: top3 } };
+}
+
 module.exports = {
   createQuickOrder,
   computeRoutingHint,
@@ -358,4 +382,5 @@ module.exports = {
   CHEEKY_listPrintQueue,
   CHEEKY_listPickupReady,
   CHEEKY_markPickupNotified,
+  CHEEKY_getDailyReport,
 };
