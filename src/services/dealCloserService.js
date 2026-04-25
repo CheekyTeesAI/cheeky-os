@@ -39,4 +39,37 @@ async function getDealList() {
     .sort((a, b) => Number(b.score || 0) - Number(a.score || 0));
 }
 
-module.exports = { getDealList, scoreOrder };
+// [CHEEKY-GATE] CHEEKY_contactDeal — extracted from POST /api/deals/:id/contacted.
+async function CHEEKY_contactDeal(id) {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable" };
+  const updated = await prisma.order.update({
+    where: { id: String(id || "") },
+    data: { closeStatus: "CONTACTED", lastCloseTouch: new Date() },
+  });
+  return { success: true, data: updated };
+}
+
+// [CHEEKY-GATE] CHEEKY_snoozeDeal — extracted from POST /api/deals/:id/snooze.
+async function CHEEKY_snoozeDeal(id, note) {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable" };
+  const updated = await prisma.order.update({
+    where: { id: String(id || "") },
+    data: { closeStatus: "SNOOZED", closeNotes: note == null ? null : String(note), lastCloseTouch: new Date() },
+  });
+  return { success: true, data: updated };
+}
+
+// [CHEEKY-GATE] CHEEKY_markDealPaid — extracted from POST /api/deals/:id/paid.
+async function CHEEKY_markDealPaid(id) {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable" };
+  const updated = await prisma.order.update({
+    where: { id: String(id || "") },
+    data: { depositPaid: true, closeStatus: "PAID", lastCloseTouch: new Date() },
+  });
+  return { success: true, data: updated };
+}
+
+module.exports = { getDealList, scoreOrder, CHEEKY_contactDeal, CHEEKY_snoozeDeal, CHEEKY_markDealPaid };

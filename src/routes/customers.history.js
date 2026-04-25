@@ -2,8 +2,7 @@
 
 const express = require("express");
 const router = express.Router();
-const { getPrisma } = require("../services/decisionEngine");
-const { getCustomerHistory } = require("../services/customerHistoryService");
+const { getCustomerHistory, CHEEKY_getCustomerOrders } = require("../services/customerHistoryService");
 const { createReorderFromOrder } = require("../services/reorderService");
 
 router.get("/api/customers/history", async (_req, res) => {
@@ -23,36 +22,14 @@ router.get("/api/customers/history", async (_req, res) => {
 });
 
 router.get("/api/customers/:key/orders", async (req, res) => {
+  // [CHEEKY-GATE] Delegated to customerHistoryService.CHEEKY_getCustomerOrders.
   try {
-    const prisma = getPrisma();
-    if (!prisma) {
-      return res.json({
-        success: false,
-        error: "Database unavailable",
-        code: "DB_UNAVAILABLE",
-      });
-    }
     const key = decodeURIComponent(String(req.params.key || ""));
-
-    const orders = await prisma.order.findMany({
-      where: {
-        OR: [{ email: key }, { phone: key }, { customerName: key }],
-      },
-      orderBy: { createdAt: "desc" },
-      include: { lineItems: true },
-      take: 200,
-    });
-
-    return res.json({
-      success: true,
-      data: orders,
-    });
+    const out = await CHEEKY_getCustomerOrders(key);
+    if (!out.success) return res.json({ success: false, error: out.error, code: out.code || "CUSTOMER_ORDERS_FAILED" });
+    return res.json({ success: true, data: out.data });
   } catch (e) {
-    return res.json({
-      success: false,
-      error: e && e.message ? e.message : "customer_orders_failed",
-      code: "CUSTOMER_ORDERS_FAILED",
-    });
+    return res.json({ success: false, error: e && e.message ? e.message : "customer_orders_failed", code: "CUSTOMER_ORDERS_FAILED" });
   }
 });
 
