@@ -309,6 +309,44 @@ async function CHEEKY_markFollowupDone(orderId) {
   return { success: true, data: { orderId: updated.id, followupDone: updated.followupDone } };
 }
 
+// [CHEEKY-GATE] CHEEKY_listPrintQueue — extracted from GET /api/print/queue.
+// Pure relocation: order.findMany garmentsReceived + !productionComplete.
+async function CHEEKY_listPrintQueue() {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE", data: null };
+  const orders = await prisma.order.findMany({
+    where: { garmentsReceived: true, productionComplete: false },
+    include: { lineItems: true },
+    take: 500,
+  });
+  return { success: true, data: orders };
+}
+
+// [CHEEKY-GATE] CHEEKY_listPickupReady — extracted from GET /api/pickup.
+// Pure relocation: order.findMany readyForPickup = true.
+async function CHEEKY_listPickupReady() {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE", data: null };
+  const list = await prisma.order.findMany({
+    where: { readyForPickup: true },
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  });
+  return { success: true, data: list };
+}
+
+// [CHEEKY-GATE] CHEEKY_markPickupNotified — extracted from POST /api/pickup/:id/notified.
+// Pure relocation: order.update pickupNotified = true.
+async function CHEEKY_markPickupNotified(orderId) {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE", data: null };
+  const updated = await prisma.order.update({
+    where: { id: String(orderId || "") },
+    data: { pickupNotified: true },
+  });
+  return { success: true, data: updated };
+}
+
 module.exports = {
   createQuickOrder,
   computeRoutingHint,
@@ -317,4 +355,7 @@ module.exports = {
   CHEEKY_advanceOrderSmart,
   CHEEKY_sendFollowupReminder,
   CHEEKY_markFollowupDone,
+  CHEEKY_listPrintQueue,
+  CHEEKY_listPickupReady,
+  CHEEKY_markPickupNotified,
 };
