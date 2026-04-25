@@ -5,38 +5,18 @@ const router = express.Router();
 
 const { applyManualDeposit } = require("../services/squareEngine");
 const { logError } = require("../middleware/logger");
-const { getPrisma } = require("../services/decisionEngine");
+const { CHEEKY_listPayableOrders } = require("../services/orderService");
 
 /** GET /api/payments — deposit panel source */
 router.get("/", async (_req, res) => {
+  // [CHEEKY-GATE] Delegated to orderService.CHEEKY_listPayableOrders.
   try {
-    const prisma = getPrisma();
-    if (!prisma) {
-      return res.json({
-        success: false,
-        error: "Database unavailable",
-        code: "DB_UNAVAILABLE",
-      });
+    const out = await CHEEKY_listPayableOrders();
+    if (!out.success) {
+      const status = out.code === "DB_UNAVAILABLE" ? 503 : 500;
+      return res.json({ success: false, error: out.error, code: out.code });
     }
-
-    const orders = await prisma.order.findMany({
-      where: { squareInvoiceId: { not: null } },
-      orderBy: { createdAt: "desc" },
-      take: 500,
-    });
-
-    return res.json({
-      success: true,
-      data: (orders || []).map((o) => ({
-        id: o.id,
-        customerName: o.customerName,
-        squareInvoiceId: o.squareInvoiceId,
-        paymentLink: o.paymentLink || null,
-        depositAmount: o.depositAmount || null,
-        depositPaid: Boolean(o.depositPaid),
-        status: o.status,
-      })),
-    });
+    return res.json({ success: true, data: out.data });
   } catch (e) {
     return res.json({
       success: false,

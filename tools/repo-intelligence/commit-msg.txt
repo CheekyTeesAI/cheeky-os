@@ -1,13 +1,18 @@
-fix(schema+service): Phase 3 - orphan schema fix + service layer extraction
+refactor(service-layer): Phase 4+5 - pure extractions, zero new logic
 
-GAP 4 - Fix orphaned Prisma schema:
-email-intake/src/db/schema.prisma had no datasource or generator block.
-Added postgresql datasource + client generator so it passes prisma validate.
-Annotated as legacy with reference to canonical schema.
+Phase 4 (corrected surgical restart):
+CHEEKY_advanceOrderSmart(id, routeFn) in orderService.js.
+Removed out-of-scope CHEEKY_routeOrder. productionRoutingForOrder
+stays in routes/orders.js and is passed as dependency to service fn.
+Route handler is now a thin delegator (7 lines).
 
-GAP 1 (partial) - Service layer extraction for GET /api/orders:
-Added CHEEKY_listOrders() to orderService.js. Routes GET /api/orders
-now delegates to service layer instead of calling prisma.order.findMany()
-directly in the handler. Prisma logic preserved inside service function.
+Phase 5 - HIGH VALUE route service extractions:
+leadService.js: CHEEKY_triggerLeadFollowup - extracted from
+  POST /api/leads/:id/followup (was direct prisma.lead.findUnique)
+leadService.js: CHEEKY_convertLead - extracted from
+  POST /api/leads/:id/convert (full lead-to-order conversion flow)
+orderService.js: CHEEKY_listPayableOrders - extracted from
+  GET /api/payments (square invoice order query + mapping)
 
-Zero lines deleted. Zero schema model changes. CHEEKY_ prefix on new fn.
+All 5 route handlers now delegate to service layer.
+Zero new business logic. Zero deletions. CHEEKY_ prefix on all new fns.

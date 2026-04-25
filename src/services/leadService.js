@@ -148,6 +148,57 @@ async function updateNextFollowUp(leadId, days = 2) {
   });
 }
 
+// [CHEEKY-GATE] CHEEKY_triggerLeadFollowup — extracted from POST /api/leads/:id/followup.
+// Pure relocation: findUnique guard + createFollowUpForLead + updateNextFollowUp.
+async function CHEEKY_triggerLeadFollowup(leadId) {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" };
+  const lead = await prisma.lead.findUnique({ where: { id: String(leadId || "") } });
+  if (!lead) return { success: false, error: "Lead not found", code: "LEAD_NOT_FOUND" };
+  const followUp = await createFollowUpForLead(lead);
+  await updateNextFollowUp(lead.id);
+  return { success: true, data: followUp };
+}
+
+// [CHEEKY-GATE] CHEEKY_convertLead — extracted from POST /api/leads/:id/convert.
+// Pure relocation: lead lookup, order upsert, lead status update.
+async function CHEEKY_convertLead(leadId) {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" };
+  const lead = await prisma.lead.findUnique({ where: { id: String(leadId || "") } });
+  if (!lead) return { success: false, error: "Lead not found", code: "LEAD_NOT_FOUND" };
+
+  let order = null;
+  if (lead.orderId) {
+    order = await prisma.order.update({
+      where: { id: lead.orderId },
+      data: {
+        customerName: lead.name || lead.company || "New Customer",
+        email: lead.email || `${lead.id}@lead.cheeky.local`,
+        phone: lead.phone || null,
+        status: "INTAKE",
+      },
+    });
+  } else {
+    order = await prisma.order.create({
+      data: {
+        customerName: lead.name || lead.company || "New Customer",
+        email: lead.email || `${lead.id}@lead.cheeky.local`,
+        phone: lead.phone || null,
+        status: "INTAKE",
+        source: "LEAD_PIPELINE",
+      },
+    });
+  }
+
+  await prisma.lead.update({
+    where: { id: lead.id },
+    data: { status: "WON", orderId: order.id, lastContactAt: new Date() },
+  });
+
+  return { success: true, data: order };
+}
+
 module.exports = {
   createLead,
   getLeads,
@@ -155,4 +206,6 @@ module.exports = {
   markContacted,
   createFollowUpForLead,
   updateNextFollowUp,
+  CHEEKY_triggerLeadFollowup,
+  CHEEKY_convertLead,
 };

@@ -10,6 +10,8 @@ const {
   markContacted,
   createFollowUpForLead,
   updateNextFollowUp,
+  CHEEKY_triggerLeadFollowup,
+  CHEEKY_convertLead,
 } = require("../services/leadService");
 
 router.post("/api/leads", async (req, res) => {
@@ -70,16 +72,14 @@ router.post("/api/leads/:id/contacted", async (req, res) => {
 });
 
 router.post("/api/leads/:id/followup", async (req, res) => {
+  // [CHEEKY-GATE] Delegated to leadService.CHEEKY_triggerLeadFollowup.
   try {
-    const prisma = getPrisma();
-    if (!prisma) return res.json({ success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" });
-    const lead = await prisma.lead.findUnique({ where: { id: req.params.id } });
-    if (!lead) {
-      return res.json({ success: false, error: "Lead not found", code: "LEAD_NOT_FOUND" });
+    const out = await CHEEKY_triggerLeadFollowup(req.params.id);
+    if (!out.success) {
+      const status = out.code === "DB_UNAVAILABLE" ? 503 : out.code === "LEAD_NOT_FOUND" ? 404 : 500;
+      return res.json({ success: false, error: out.error, code: out.code });
     }
-    const followUp = await createFollowUpForLead(lead);
-    await updateNextFollowUp(lead.id);
-    return res.json({ success: true, data: followUp });
+    return res.json({ success: true, data: out.data });
   } catch (e) {
     return res.json({
       success: false,
@@ -90,47 +90,14 @@ router.post("/api/leads/:id/followup", async (req, res) => {
 });
 
 router.post("/api/leads/:id/convert", async (req, res) => {
+  // [CHEEKY-GATE] Delegated to leadService.CHEEKY_convertLead.
   try {
-    const prisma = getPrisma();
-    if (!prisma) return res.json({ success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" });
-    const lead = await prisma.lead.findUnique({ where: { id: req.params.id } });
-    if (!lead) {
-      return res.json({ success: false, error: "Lead not found", code: "LEAD_NOT_FOUND" });
+    const out = await CHEEKY_convertLead(req.params.id);
+    if (!out.success) {
+      const status = out.code === "DB_UNAVAILABLE" ? 503 : out.code === "LEAD_NOT_FOUND" ? 404 : 500;
+      return res.json({ success: false, error: out.error, code: out.code });
     }
-
-    let order = null;
-    if (lead.orderId) {
-      order = await prisma.order.update({
-        where: { id: lead.orderId },
-        data: {
-          customerName: lead.name || lead.company || "New Customer",
-          email: lead.email || `${lead.id}@lead.cheeky.local`,
-          phone: lead.phone || null,
-          status: "INTAKE",
-        },
-      });
-    } else {
-      order = await prisma.order.create({
-        data: {
-          customerName: lead.name || lead.company || "New Customer",
-          email: lead.email || `${lead.id}@lead.cheeky.local`,
-          phone: lead.phone || null,
-          status: "INTAKE",
-          source: "LEAD_PIPELINE",
-        },
-      });
-    }
-
-    await prisma.lead.update({
-      where: { id: lead.id },
-      data: {
-        status: "WON",
-        orderId: order.id,
-        lastContactAt: new Date(),
-      },
-    });
-
-    return res.json({ success: true, data: order });
+    return res.json({ success: true, data: out.data });
   } catch (e) {
     return res.json({
       success: false,
