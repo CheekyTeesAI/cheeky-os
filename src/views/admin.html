@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #020617;
+      color: white;
+      padding: 20px;
+    }
+
+    button {
+      padding: 10px;
+      margin: 5px;
+      background: #22c55e;
+      border: none;
+      border-radius: 5px;
+      color: black;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>⚙ SYSTEM CONTROL</h1>
+
+<button onclick="toggleAuto()">Toggle Auto</button>
+<button onclick="toggleMode()">Toggle Mode</button>
+<button onclick="toggleFollowups()">Toggle Follow-ups</button>
+<button onclick="toggleScheduler()">Toggle Scheduler</button>
+<button onclick="emergencyStop()">EMERGENCY STOP</button>
+
+<div id="status"></div>
+
+<script>
+function asMap(arr) {
+  const out = {};
+  (arr || []).forEach((s) => {
+    out[s.key] = s.value;
+  });
+  return out;
+}
+
+async function fetchSettings() {
+  const res = await fetch("/api/admin/settings");
+  const data = await res.json();
+  return asMap(data.data || []);
+}
+
+async function setSetting(key, value) {
+  await fetch("/api/admin/settings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key, value }),
+  });
+}
+
+async function load() {
+  const settings = await fetchSettings();
+  const entries = Object.keys(settings).sort().map((k) => `${k}: ${settings[k]}`);
+  document.getElementById("status").innerHTML = entries.join("<br>") || "No settings yet";
+}
+
+async function toggleAuto() {
+  const settings = await fetchSettings();
+  const current = String(settings.AUTO_ENABLED || "true").toLowerCase() === "true";
+  await setSetting("AUTO_ENABLED", current ? "false" : "true");
+  load();
+}
+
+async function toggleMode() {
+  const settings = await fetchSettings();
+  const mode = String(settings.AUTO_MODE || "SAFE").toUpperCase();
+  await setSetting("AUTO_MODE", mode === "SAFE" ? "ACTIVE" : "SAFE");
+  load();
+}
+
+async function toggleFollowups() {
+  const settings = await fetchSettings();
+  const current = String(settings.FOLLOWUPS_ENABLED || "true").toLowerCase() === "true";
+  await setSetting("FOLLOWUPS_ENABLED", current ? "false" : "true");
+  load();
+}
+
+async function toggleScheduler() {
+  const settings = await fetchSettings();
+  const current = String(settings.SCHEDULER_ENABLED || "true").toLowerCase() === "true";
+  await setSetting("SCHEDULER_ENABLED", current ? "false" : "true");
+  load();
+}
+
+async function emergencyStop() {
+  await setSetting("AUTO_ENABLED", "false");
+  await setSetting("AUTO_MODE", "SAFE");
+  await setSetting("FOLLOWUPS_ENABLED", "false");
+  await setSetting("SCHEDULER_ENABLED", "false");
+  load();
+}
+
+load();
+</script>
+
+</body>
+</html>

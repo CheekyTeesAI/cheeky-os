@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>New Order</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      padding: 20px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: none;
+    }
+
+    button {
+      padding: 12px;
+      background: #22c55e;
+      border: none;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 6px;
+      width: 100%;
+    }
+
+    .box {
+      max-width: 500px;
+      margin: auto;
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>📦 NEW ORDER</h2>
+
+  <input id="customerName" placeholder="Customer Name" />
+  <input id="email" placeholder="Email" />
+  <input id="phone" placeholder="Phone" />
+
+  <input id="product" placeholder="Product (e.g. T-Shirts)" />
+  <input id="quantity" type="number" placeholder="Quantity" />
+
+  <select id="productionType">
+    <option value="DTG">DTG</option>
+    <option value="SCREEN_PRINT">Screen Print</option>
+    <option value="DTF">DTF</option>
+  </select>
+
+  <textarea id="notes" placeholder="Notes"></textarea>
+
+  <button onclick="submitOrder()">CREATE ORDER</button>
+</div>
+
+<script>
+
+async function submitOrder() {
+
+  const body = {
+    customerName: document.getElementById('customerName').value,
+    email: document.getElementById('email').value,
+    phone: document.getElementById('phone').value,
+    product: document.getElementById('product').value,
+    quantity: Number(document.getElementById('quantity').value),
+    productionType: document.getElementById('productionType').value,
+    notes: document.getElementById('notes').value
+  };
+
+  const res = await fetch('/api/orders/quick', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json();
+  if (!data || !data.success) {
+    alert("Order failed: " + ((data && data.error) || "unknown_error"));
+    return;
+  }
+
+  alert("Order Created ✔");
+  window.location.href = '/dashboard';
+}
+
+</script>
+
+</body>
+</html>

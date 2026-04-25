@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Audit</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #020617;
+      color: white;
+      padding: 10px;
+    }
+
+    .row {
+      background: #0f172a;
+      padding: 8px;
+      margin-bottom: 6px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🛡 AUDIT LOG</h1>
+<div id="list"></div>
+
+<script>
+async function load() {
+  const res = await fetch("/api/audit");
+  const data = await res.json();
+
+  document.getElementById("list").innerHTML =
+    (data.data || []).map((l) => `
+      <div class="row">
+        ${(l.action || l.stage || "UNKNOWN")} | ${(l.entity || "System")}
+        <br>
+        ${l.details || ""}
+        <br>
+        ${new Date(l.createdAt).toLocaleString()}
+      </div>
+    `).join("");
+}
+
+load();
+</script>
+
+</body>
+</html>

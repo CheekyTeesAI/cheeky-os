@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cheeky Ops</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #020617;
+      color: white;
+      padding: 10px;
+    }
+
+    h2 {
+      margin-top: 20px;
+      margin-bottom: 5px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 5px;
+    }
+
+    .section {
+      margin-bottom: 15px;
+    }
+
+    .card {
+      background: #0f172a;
+      padding: 8px;
+      margin-bottom: 6px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 6px;
+      margin-top: 4px;
+      border: none;
+      border-radius: 4px;
+      background: #22c55e;
+      color: black;
+      font-size: 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🚀 CHEEKY CONTROL</h1>
+
+<h2>📊 KPIs</h2>
+<div id="kpis"></div>
+
+<h2>🧠 INSIGHTS</h2>
+<div id="insights"></div>
+<button onclick="selfHeal()">🛠 Run Self Heal</button>
+
+<div class="section">
+  <h2>⚙ AUTO MODE</h2>
+  <div id="auto"></div>
+</div>
+
+<div class="section">
+  <h2>💰 CASH</h2>
+  <div id="cash"></div>
+</div>
+
+<div class="section">
+  <h2>🔥 DEALS</h2>
+  <div id="deals"></div>
+</div>
+
+<div class="section">
+  <h2>🖨 TODAY</h2>
+  <div id="prod"></div>
+</div>
+
+<div class="section">
+  <h2>🎨 ART</h2>
+  <div id="art"></div>
+</div>
+
+<div class="section">
+  <h2>📦 PICKUP</h2>
+  <div id="pickup"></div>
+</div>
+
+<div class="section">
+  <h2>📈 REACTIVATION</h2>
+  <div id="growth"></div>
+</div>
+
+<div class="section">
+  <h2>📬 MESSAGES</h2>
+  <div id="messages"></div>
+</div>
+
+<div class="section">
+  <h2>🧠 MEMORY</h2>
+  <div id="memory"></div>
+</div>
+
+<div class="section">
+  <h2>🔮 PREDICTIONS</h2>
+  <div id="predictions"></div>
+</div>
+
+<div class="section">
+  <h2>📣 CAMPAIGNS</h2>
+  <div id="campaigns"></div>
+</div>
+
+<div class="section">
+  <h2>💰 FINANCE</h2>
+  <div id="finance"></div>
+</div>
+
+<script>
+async function load() {
+  try {
+    const res = await fetch("/api/kpi");
+    const d = (await res.json()).data || {};
+
+    document.getElementById("kpis").innerHTML =
+      `
+      <div class="card">
+        Today: $${d.todayRevenue || 0}
+        <br>
+        Week: $${d.weekRevenue || 0}
+        <br>
+        Unpaid: $${d.unpaid || 0}
+        <br>
+        Jobs: ${d.jobsInProduction || 0}
+        <br>
+        Stuck: ${d.stuckOrders || 0}
+      </div>
+      `;
+  } catch {}
+
+  try {
+    const res = await fetch("/api/insights");
+    const data = await res.json();
+
+    document.getElementById("insights").innerHTML =
+      (data.data || []).map((i) => `
+      <div class="card">
+        <strong>${i.type || ""}</strong>
+        <br>
+        ${i.message || ""}
+        <br>
+        👉 ${i.action || ""}
+      </div>
+    `).join("");
+  } catch {}
+
+  try {
+    const r = await fetch("/api/auto");
+    const d = (await r.json()).data || {};
+    document.getElementById("auto").innerHTML =
+      "Enabled: " + d.enabled + " | Mode: " + (d.mode || "SAFE");
+  } catch {}
+
+  try {
+    const r = await fetch("/api/cashflow");
+    const d = (await r.json()).data || {};
+    document.getElementById("cash").innerHTML =
+      `Unpaid: $${d.unpaid || 0} | Pipeline: $${d.pipeline || 0} | Today Target: $${d.dailyTarget || 0}`;
+  } catch {}
+
+  try {
+    const r = await fetch("/api/deals");
+    const list = (await r.json()).data || [];
+    document.getElementById("deals").innerHTML =
+      list.slice(0, 5).map((x) =>
+        `<div class="card">
+          ${x.customerName || ""}
+          | $${x.totalAmount || 0}
+          <br>
+          <button onclick="runAction('CREATE_QUOTE','${x.id}')">Quote</button>
+          <button onclick="runAction('CREATE_DEPOSIT','${x.id}')">Deposit</button>
+          <button onclick="runAction('REORDER','${x.id}')">Reorder</button>
+          <button onclick="runAction('CREATE_JOB','${x.id}')">Job</button>
+          <br>
+          <button onclick="pay('${x.id}')">Mark Paid</button>
+        </div>`
+      ).join("");
+  } catch {}
+
+  try {
+    const r = await fetch("/api/schedule/today");
+    const list = (await r.json()).data || [];
+    document.getElementById("prod").innerHTML =
+      list.map((x) =>
+        `<div class="card">
+          ${x.orderId}
+          <br>
+          ${x.status}
+          <br>
+          <button onclick="runAction('ORDER_GARMENTS','${x.id}')">Garments</button>
+          <button onclick="runAction('ADVANCE_JOB','${x.id}')">Advance</button>
+        </div>`
+      ).join("");
+  } catch {}
+
+  try {
+    const r = await fetch("/api/art");
+    const list = (await r.json()).data || [];
+    document.getElementById("art").innerHTML =
+      list.slice(0, 5).map((x) =>
+        `<div class="card">
+          ${x.order?.customerName || ""}
+          | ${x.status}
+        </div>`
+      ).join("");
+  } catch {}
+
+  try {
+    const r = await fetch("/api/pickup");
+    const list = (await r.json()).data || [];
+    document.getElementById("pickup").innerHTML =
+      list.map((x) =>
+        `<div class="card">
+          ${x.customerName || ""}
+          | ${x.pickupNotified ? "Done" : "Notify"}
+        </div>`
+      ).join("");
+  } catch {}
+
+  try {
+    const res = await fetch("/api/growth/reactivation");
+    const data = await res.json();
+
+    document.getElementById("growth").innerHTML =
+      (data.data || []).slice(0, 5).map((c) => `
+      <div class="card">
+        ${c.customerName || ""}
+        <br>
+        Last Order: ${new Date(c.lastOrder).toLocaleDateString()}
+        <br>
+        <button onclick="copyMsg('${(c.message && c.message.text ? c.message.text : "").replace(/'/g, "\\'")}')">Copy Text</button>
+      </div>
+    `).join("");
+  } catch {}
+
+  try {
+    const res = await fetch("/api/notifications");
+    const data = await res.json();
+
+    document.getElementById("messages").innerHTML =
+      (data.data || []).slice(0, 6).map((n) => `
+      <div class="card">
+        ${n.customerName || "Customer"}
+        <br>
+        ${n.messageText || ""}
+        <br>
+        <button onclick="copyMsg('${(n.messageText || "").replace(/'/g, "\\'")}')">Copy</button>
+        <button onclick="markSent('${n.id}')">Sent</button>
+        <button onclick="snoozeMsg('${n.id}')">Snooze</button>
+      </div>
+    `).join("");
+  } catch {}
+
+  try {
+    const dealsRes = await fetch("/api/deals");
+    const deals = ((await dealsRes.json()).data || []);
+    if (deals[0]) {
+      const key = deals[0].email || deals[0].phone || deals[0].customerName || "";
+      const memRes = await fetch("/api/memory/" + encodeURIComponent(key));
+      const mem = ((await memRes.json()).data || {});
+      document.getElementById("memory").innerHTML =
+        `
+        ${mem.customerName || ""}
+        <br>
+        Last Product: ${mem.lastProduct || ""}
+        <br>
+        Last Qty: ${mem.lastQuantity || ""}
+        `;
+    } else {
+      document.getElementById("memory").innerHTML = "No deal context";
+    }
+  } catch {}
+
+  try {
+    const res = await fetch("/api/predictions");
+    const data = await res.json();
+
+    document.getElementById("predictions").innerHTML =
+      (data.data || []).slice(0, 5).map((p) => `
+      <div class="card">
+        ${p.customerName || ""}
+        <br>
+        Likely Order: ${p.product || ""}
+        <br>
+        Qty: ${p.quantity || ""}
+        <br>
+        Date: ${new Date(p.predictedDate).toLocaleDateString()}
+      </div>
+    `).join("");
+  } catch {}
+
+  try {
+    const res = await fetch("/api/campaigns");
+    const data = await res.json();
+
+    document.getElementById("campaigns").innerHTML =
+      (data.data || []).slice(0, 5).map((c) => `
+      <div class="card">
+        ${c.name}
+        <br>
+        Type: ${c.type}
+        <br>
+        Status: ${c.status}
+        <br>
+        <button onclick="buildCampaign('${c.id}')">Build</button>
+        <button onclick="viewCampaign('${c.id}')">View</button>
+      </div>
+    `).join("");
+  } catch {}
+
+  try {
+    const res = await fetch("/api/finance");
+    const data = await res.json();
+    const f = data.data || {};
+
+    document.getElementById("finance").innerHTML =
+      `
+      <div class="card">
+        Revenue: $${f.revenue || 0}
+        <br>
+        Cost: $${f.cost || 0}
+        <br>
+        Profit: $${f.profit || 0}
+        <br>
+        Unpaid: $${f.unpaid || 0}
+      </div>
+      `;
+  } catch {}
+}
+
+async function pay(id) {
+  await fetch("/api/deals/" + id + "/paid", { method: "POST" });
+  load();
+}
+
+async function runAction(action, id) {
+  const res = await fetch("/api/actions/run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, id }),
+  });
+  const data = await res.json();
+  if (!data.success) {
+    alert("Error: " + (data.error || "Action failed"));
+  }
+  load();
+}
+
+function copyMsg(msg) {
+  navigator.clipboard.writeText(msg || "");
+  alert("Copied ✔");
+}
+
+async function markSent(id) {
+  await fetch("/api/notifications/" + id + "/sent", { method: "POST" });
+  load();
+}
+
+async function snoozeMsg(id) {
+  await fetch("/api/notifications/" + id + "/snooze", { method: "POST" });
+  load();
+}
+
+async function selfHeal() {
+  await fetch("/api/self-heal", { method: "POST" });
+  alert("Self-heal complete");
+  load();
+}
+
+async function buildCampaign(id) {
+  await fetch("/api/campaigns/" + id + "/build", { method: "POST" });
+  load();
+}
+
+async function viewCampaign(id) {
+  const res = await fetch("/api/campaigns/" + id + "/targets");
+  const data = await res.json();
+
+  document.getElementById("campaigns").innerHTML =
+    (data.data || []).map((t) => `
+      <div class="card">
+        ${t.customerName || ""}
+        <br>
+        ${t.messageText || ""}
+        <br>
+        Status: ${t.status}
+        <br>
+        <button onclick="copyMsg('${(t.messageText || "").replace(/'/g, "\\'")}')">Copy</button>
+        <button onclick="markCampaignTarget('${t.id}','CONTACTED')">Contacted</button>
+        <button onclick="markCampaignTarget('${t.id}','WON')">Won</button>
+        <button onclick="markCampaignTarget('${t.id}','SKIPPED')">Skip</button>
+      </div>
+    `).join("");
+}
+
+async function markCampaignTarget(id, status) {
+  await fetch("/api/campaign-targets/" + id + "/status", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+}
+
+load();
+setInterval(load, 15000);
+</script>
+
+</body>
+</html>

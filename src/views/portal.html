@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Order Portal</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #fff;
+      padding: 20px;
+    }
+
+    .box {
+      max-width: 700px;
+      margin: 0 auto;
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    .section {
+      margin-top: 20px;
+      padding: 15px;
+      background: #334155;
+      border-radius: 8px;
+    }
+
+    .row {
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .pay {
+      background: #22c55e;
+      color: #111;
+      font-weight: bold;
+    }
+
+    .approve {
+      background: #38bdf8;
+      color: #111;
+      font-weight: bold;
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Order Portal</h1>
+
+    <div class="section">
+      <div id="status"></div>
+    </div>
+
+    <div class="section">
+      <h3>Items</h3>
+      <div id="items"></div>
+    </div>
+
+    <div class="section">
+      <h3>Art Approval</h3>
+      <div id="art"></div>
+    </div>
+
+    <div class="section">
+      <h3>Payment</h3>
+      <button id="payBtn" class="pay">Pay Deposit</button>
+    </div>
+  </div>
+
+  <script>
+    const token = window.location.pathname.split("/").pop();
+
+    async function loadPortal() {
+      const res = await fetch("/api/portal/" + token);
+      const json = await res.json();
+
+      if (!json.success) {
+        document.body.innerHTML = "<h2>Invalid or expired portal link</h2>";
+        return;
+      }
+
+      const d = json.data;
+
+      document.getElementById("status").innerHTML =
+        "<strong>Customer:</strong> " + (d.customerName || "") +
+        "<br><strong>Status:</strong> " + (d.status || "") +
+        "<br><strong>Next Step:</strong> " + (d.nextAction || "") +
+        "<br><strong>Notes:</strong> " + (d.notes || "");
+
+      const itemRows = (d.items || []).map(function (i) {
+        return "<div class='row'>" +
+          (i.description || "Item") + " x " + (i.quantity || 0) +
+          "</div>";
+      });
+      document.getElementById("items").innerHTML = itemRows.join("") || "<div>No items</div>";
+
+      const artRows = (d.artFiles || []).map(function (a) {
+        const status = a.approvalStatus || "PENDING";
+        const approveBtn = status !== "APPROVED"
+          ? "<button class='approve' onclick=\"approveArt('" + a.id + "')\">Approve</button>"
+          : "";
+        return "<div class='row'>" +
+          (a.label || "Art File") + " | Status: " + status + approveBtn +
+          "</div>";
+      });
+      document.getElementById("art").innerHTML = artRows.join("") || "<div>No art files</div>";
+
+      if (d.paymentLink) {
+        document.getElementById("payBtn").onclick = function () {
+          window.open(d.paymentLink, "_blank");
+        };
+      } else {
+        document.getElementById("payBtn").style.display = "none";
+      }
+    }
+
+    async function approveArt(artId) {
+      const res = await fetch("/api/portal/" + token + "/art/" + artId + "/approve", {
+        method: "POST",
+      });
+      const json = await res.json();
+      if (!json.success) {
+        alert("Approval failed");
+        return;
+      }
+      alert("Art approved");
+      loadPortal();
+    }
+
+    loadPortal();
+  </script>
+</body>
+</html>

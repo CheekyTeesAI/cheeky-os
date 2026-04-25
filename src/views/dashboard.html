@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cheeky OS</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .card:hover {
+      background: #334155;
+      transform: scale(1.03);
+    }
+
+    .section {
+      margin-top: 30px;
+    }
+
+    .list {
+      background: #1e293b;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🔥 CHEEKY OS — CONTROL CENTER</h1>
+
+<div class="section">
+  <h2>💰 CASHFLOW</h2>
+  <div id="cashflow" class="list"></div>
+</div>
+
+<div class="section">
+  <h2>🔥 DEAL CLOSER</h2>
+  <div id="deals" class="list"></div>
+</div>
+
+<div class="section">
+  <h2>🔁 REORDERS / CUSTOMER HISTORY</h2>
+  <div id="reorders" class="list"></div>
+</div>
+
+<div class="grid">
+
+  <div class="card" onclick="go('/calendar')">📅 CALENDAR</div>
+  <div class="card" onclick="go('/tasks')">🧠 TASKS</div>
+  <div class="card" onclick="go('/production')">🖨 PRODUCTION</div>
+
+  <div class="card" onclick="go('/orders/new')">📦 NEW ORDER</div>
+  <div class="card" onclick="go('/estimates/new')">💰 NEW ESTIMATE</div>
+  <div class="card" onclick="go('/calculator')">🧮 CALCULATOR</div>
+
+  <div class="card" onclick="go('/orders?status=hold')">⏸ ON HOLD</div>
+  <div class="card" onclick="go('/notes')">📝 NOTES</div>
+  <div class="card" onclick="go('/marketing')">📢 MARKETING</div>
+
+</div>
+
+<div class="section">
+  <h2>📞 COLD CALLS / FOLLOW-UPS</h2>
+  <div id="leads" class="list"></div>
+</div>
+
+<div class="section">
+  <h2>📦 PRODUCTION QUEUE</h2>
+  <div id="queue" class="list"></div>
+</div>
+
+<div class="section">
+  <h2>💰 FOLLOW-UPS / MONEY</h2>
+  <div id="money" class="list"></div>
+</div>
+
+<div class="section">
+  <h2>🤖 AI OPERATOR</h2>
+  <div id="ai" class="list"></div>
+</div>
+
+<div class="section">
+  <h2>🧾 QUOTES</h2>
+  <div id="quotes" class="list"></div>
+</div>
+
+<div class="section">
+  <h2>💳 DEPOSITS</h2>
+  <div id="deposits" class="list"></div>
+</div>
+
+<div class="section">
+  <h2>📦 READY FOR PICKUP</h2>
+  <div id="pickup" class="list"></div>
+</div>
+
+<script>
+
+function go(path) {
+  window.location.href = path;
+}
+
+async function loadDashboard() {
+  // CASHFLOW
+  try {
+    const cashRes = await fetch('/api/cashflow');
+    const cashData = await cashRes.json();
+    const d = cashData.data || {};
+    document.getElementById('cashflow').innerHTML =
+      "Unpaid: $" + (d.unpaid || 0) +
+      " | Pipeline: $" + (d.pipeline || 0) +
+      " | Collected: $" + (d.collected || 0) +
+      "<br>Daily Target: $" + (d.dailyTarget || 0);
+  } catch {}
+
+  // DEAL CLOSER
+  try {
+    const dealsRes = await fetch('/api/deals');
+    const dealsData = await dealsRes.json();
+    document.getElementById('deals').innerHTML =
+      (dealsData.data || []).slice(0, 6).map(d => `
+      <div style="margin-bottom:10px; padding:10px; background:#1e293b; border-radius:6px;">
+        <strong>${d.customerName || "Customer"}</strong>
+        | Score: ${d.score || 0}
+        | Status: ${d.closeStatus || "OPEN"}
+        <br>
+        Value: $${d.totalAmount || ((d.quantity || 0) * 12)}
+        <br>
+        <button onclick="contacted('${d.id}')">Contacted</button>
+        <button onclick="emailDeal('${d.id}')">Email</button>
+        <button onclick="textDeal('${d.id}')">Text</button>
+        <button onclick="paid('${d.id}')">Paid</button>
+        <button onclick="snooze('${d.id}')">Snooze</button>
+      </div>
+    `).join("") || "No open deals";
+  } catch {}
+
+  // REORDERS / CUSTOMER HISTORY
+  try {
+    const historyRes = await fetch('/api/customers/history');
+    const historyData = await historyRes.json();
+    document.getElementById('reorders').innerHTML =
+      (historyData.data || []).slice(0, 6).map(c => `
+      <div style="margin-bottom:10px; padding:10px; background:#1e293b; border-radius:6px;">
+        <strong>${c.customerName || "Customer"}</strong>
+        | Orders: ${c.totalOrders || 0}
+        <br>
+        ${c.email || c.phone || c.customerKey}
+        <br>
+        <button onclick="viewCustomerOrders('${encodeURIComponent(c.customerKey)}')">View Orders</button>
+      </div>
+    `).join("") || "No customer history";
+  } catch {}
+
+  // LEADS
+  try {
+    const leads = await fetch('/api/leads').then(r => r.json());
+    document.getElementById('leads').innerHTML =
+      (leads.data || []).slice(0, 5).map(l =>
+        (l.name || "Unknown") + " | " + l.status
+      ).join("<br>");
+  } catch {}
+
+  // PRODUCTION
+  try {
+    const queue = await fetch('/api/production/queue').then(r => r.json());
+    document.getElementById('queue').innerHTML =
+      (queue.data || []).slice(0, 5).map(q =>
+        q.customerName + " | " + q.status
+      ).join("<br>");
+  } catch {}
+
+  // MONEY / FOLLOWUPS
+  try {
+    const follow = await fetch('/api/followups/run').then(r => r.json());
+    document.getElementById('money').innerHTML =
+      (follow.data || []).slice(0,5).map(f => `
+      <div style="margin-bottom:10px;">
+        ${f.customerName}
+        <button onclick="send('${f.orderId}', 'EMAIL')">Email</button>
+        <button onclick="send('${f.orderId}', 'SMS')">Text</button>
+        <button onclick="done('${f.orderId}')">Done</button>
+      </div>
+    `).join("");
+  } catch {}
+
+  // AI OPERATOR
+  try {
+    const aiRes = await fetch('/api/ai-status');
+    const aiData = await aiRes.json();
+    document.getElementById('ai').innerHTML =
+      (aiData.data || []).map(x => x.message).join("<br>") || "No insights";
+  } catch {}
+
+  // QUOTES
+  try {
+    const quotesRes = await fetch('/api/quotes');
+    const quotesData = await quotesRes.json();
+    document.getElementById('quotes').innerHTML =
+      (quotesData.data || []).slice(0, 6).map(q => `
+      <div style="margin-bottom:10px; padding:10px; background:#1e293b; border-radius:6px;">
+        Order: ${q.orderId}
+        <br>
+        Total: $${q.total}
+        <br>
+        ${q.breakdown || ""}
+        <br>
+        Status: ${q.status}
+        <br>
+        <button onclick="acceptQuote('${q.id}')">Accept</button>
+      </div>
+    `).join("") || "No quotes yet";
+  } catch {}
+
+  // DEPOSITS
+  try {
+    const payRes = await fetch('/api/payments');
+    const payData = await payRes.json();
+    document.getElementById('deposits').innerHTML =
+      (payData.data || []).slice(0, 6).map(p => `
+      <div style="margin-bottom:10px; padding:10px; background:#1e293b; border-radius:6px;">
+        <strong>${p.customerName || "Customer"}</strong>
+        <br>
+        Deposit: $${p.depositAmount || 0}
+        <br>
+        Status: ${p.depositPaid ? "PAID" : "PENDING"}
+        <br>
+        ${p.paymentLink ? `<a href="${p.paymentLink}" target="_blank" style="color:#38bdf8;">Open Payment Link</a>` : "No payment link"}
+      </div>
+    `).join("") || "No deposits yet";
+  } catch {}
+
+  // READY FOR PICKUP
+  try {
+    const pickupRes = await fetch('/api/pickup');
+    const pickupData = await pickupRes.json();
+    document.getElementById('pickup').innerHTML =
+      (pickupData.data || []).slice(0, 6).map(p => `
+      <div style="margin-bottom:10px; padding:10px; background:#1e293b; border-radius:6px;">
+        <strong>${p.customerName || "Customer"}</strong>
+        <br>
+        Status: ${p.pickupNotified ? "Notified" : "Needs Notification"}
+        <br>
+        <button onclick="markNotified('${p.id}')">Mark Notified</button>
+      </div>
+    `).join("") || "No pickup-ready orders";
+  } catch {}
+}
+
+async function send(id, channel) {
+  await fetch('/api/followups/send/' + id, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ channel })
+  });
+  alert(channel + " sent ✔");
+}
+
+async function done(id) {
+  await fetch('/api/followups/done/' + id, { method: 'POST' });
+  location.reload();
+}
+
+async function contacted(id) {
+  await fetch('/api/deals/' + id + '/contacted', { method: 'POST' });
+  loadDashboard();
+}
+
+async function paid(id) {
+  await fetch('/api/deals/' + id + '/paid', { method: 'POST' });
+  loadDashboard();
+}
+
+async function snooze(id) {
+  const note = prompt("Reason?");
+  await fetch('/api/deals/' + id + '/snooze', {
+    method: 'POST',
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ note: note || null })
+  });
+  loadDashboard();
+}
+
+async function emailDeal(id) {
+  await fetch('/api/deals/' + id + '/contacted', { method: 'POST' });
+  alert("Email action logged (manual send)");
+  loadDashboard();
+}
+
+async function textDeal(id) {
+  await fetch('/api/deals/' + id + '/contacted', { method: 'POST' });
+  alert("Text action logged (manual send)");
+  loadDashboard();
+}
+
+async function viewCustomerOrders(key) {
+  const res = await fetch('/api/customers/' + key + '/orders');
+  const data = await res.json();
+
+  const html = (data.data || []).map(o => `
+    <div style="margin-bottom:10px; padding:10px; background:#1e293b; border-radius:6px;">
+      Order ${o.id}
+      | Status: ${o.status || ''}
+      | Notes: ${o.notes || ''}
+      <br>
+      <button onclick="reorder('${o.id}')">Reorder</button>
+    </div>
+  `).join("");
+
+  alert("See console for customer orders list");
+  console.log("CUSTOMER ORDERS", data.data);
+  document.getElementById('reorders').innerHTML = html || "No orders";
+}
+
+async function reorder(id) {
+  await fetch('/api/orders/' + id + '/reorder', { method: 'POST' });
+  alert('Reorder created ✔');
+  loadDashboard();
+}
+
+async function acceptQuote(id) {
+  await fetch('/api/quotes/' + id + '/accept', { method: 'POST' });
+  loadDashboard();
+}
+
+async function markNotified(id) {
+  await fetch('/api/pickup/' + id + '/notified', { method: 'POST' });
+  loadDashboard();
+}
+
+loadDashboard();
+
+</script>
+
+</body>
+</html>

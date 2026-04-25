@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Art Queue</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      padding: 20px;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+    }
+
+    button {
+      margin-top: 5px;
+      padding: 8px;
+      border: none;
+      border-radius: 5px;
+      background: #38bdf8;
+      color: black;
+      cursor: pointer;
+      margin-right: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Art Queue</h1>
+  <div id="list"></div>
+
+  <script>
+    async function load() {
+      const res = await fetch("/api/art");
+      const data = await res.json();
+      const list = data && data.data ? data.data : [];
+
+      document.getElementById("list").innerHTML = list
+        .map(
+          (a) => `
+        <div class="card">
+          Order: ${(a && a.orderId) || ""}<br>
+          Customer: ${(a && a.order && a.order.customerName) || ""}
+          <br>Status: ${(a && a.status) || "NEEDS_ART"}
+          <br>
+          <button onclick="setStatus('${a.id}', 'IN_PROGRESS')">Start</button>
+          <button onclick="setStatus('${a.id}', 'READY_FOR_APPROVAL')">Ready</button>
+          <button onclick="setStatus('${a.id}', 'APPROVED')">Approve</button>
+        </div>
+      `
+        )
+        .join("");
+    }
+
+    async function setStatus(id, status) {
+      await fetch("/api/art/" + id + "/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      load();
+    }
+
+    load();
+  </script>
+</body>
+</html>

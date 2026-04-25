@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Production Board</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      padding: 20px;
+    }
+
+    .column {
+      width: 24%;
+      display: inline-block;
+      vertical-align: top;
+      margin-right: 1%;
+    }
+
+    .col-title {
+      text-align: center;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 5px;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      background: #22c55e;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Production Board</h1>
+  <button onclick="runSchedule()">Run Schedule</button>
+
+  <div class="column">
+    <div class="col-title">READY</div>
+    <div id="ready"></div>
+  </div>
+
+  <div class="column">
+    <div class="col-title">PRINTING</div>
+    <div id="printing"></div>
+  </div>
+
+  <div class="column">
+    <div class="col-title">QC</div>
+    <div id="qc"></div>
+  </div>
+
+  <div class="column">
+    <div class="col-title">COMPLETE</div>
+    <div id="complete"></div>
+  </div>
+
+  <script>
+    async function load() {
+      try {
+        const res = await fetch("/api/schedule/today");
+        const data = await res.json();
+        const jobs = data && data.data ? data.data : [];
+
+        const buckets = {
+          READY: [],
+          PRINTING: [],
+          QC: [],
+          COMPLETE: [],
+        };
+
+        jobs.forEach((j) => {
+          const status = String((j && j.status) || "READY").toUpperCase();
+          if (!buckets[status]) buckets[status] = [];
+          buckets[status].push(j);
+        });
+
+        render("ready", buckets.READY);
+        render("printing", buckets.PRINTING);
+        render("qc", buckets.QC);
+        render("complete", buckets.COMPLETE);
+      } catch (_e) {
+        render("ready", []);
+        render("printing", []);
+        render("qc", []);
+        render("complete", []);
+      }
+    }
+
+    function render(id, list) {
+      document.getElementById(id).innerHTML = (list || [])
+        .map(
+          (j) => `
+        <div class="card">
+          Order: ${(j && j.orderId) || ""}<br>
+          Type: ${(j && j.type) || ""}
+          <br>
+          Garments: ${
+            j && j.garmentsReceived
+              ? "RECEIVED"
+              : j && j.garmentsOrdered
+                ? "ORDERED"
+                : "NOT ORDERED"
+          }
+          ${
+            !((j && j.garmentsOrdered) || false)
+              ? `<button onclick="orderGarments('${j.id}')">Order Garments</button>`
+              : ""
+          }
+          <button onclick="advance('${j.id}')">Next</button>
+        </div>
+      `
+        )
+        .join("");
+    }
+
+    async function advance(id) {
+      await fetch("/api/production/jobs/" + id + "/advance", {
+        method: "POST",
+      });
+      load();
+    }
+
+    async function orderGarments(id) {
+      const res = await fetch("/api/garments/" + id + "/order", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!data || !data.success) {
+        alert((data && data.error) || "Unable to order garments");
+      }
+      load();
+    }
+
+    async function runSchedule() {
+      await fetch("/api/schedule/run", { method: "POST" });
+      load();
+    }
+
+    load();
+  </script>
+</body>
+</html>

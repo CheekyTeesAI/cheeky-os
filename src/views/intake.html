@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Start Order</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      padding: 20px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      border: none;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      background: #22c55e;
+      color: black;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Start Your Order</h1>
+
+  <input id="name" placeholder="Name" />
+  <input id="email" placeholder="Email" />
+  <input id="phone" placeholder="Phone" />
+  <input id="product" placeholder="Product (shirts, hoodies, etc.)" />
+  <input id="quantity" placeholder="Quantity" />
+  <textarea id="notes" placeholder="Describe your order"></textarea>
+
+  <button onclick="submitOrder()">Submit</button>
+
+  <script>
+    async function submitOrder() {
+      const data = {
+        customerName: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("phone").value,
+        product: document.getElementById("product").value,
+        quantity: document.getElementById("quantity").value,
+        notes: document.getElementById("notes").value,
+      };
+
+      const res = await fetch("/api/intake", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const json = await res.json();
+      if (json && json.success) {
+        alert("Order submitted");
+      } else {
+        alert("Error: " + ((json && json.error) || "Unknown error"));
+      }
+    }
+  </script>
+</body>
+</html>

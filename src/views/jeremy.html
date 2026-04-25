@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Jeremy — Execute</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: #0b0f14; color: #e6edf3; min-height: 100vh; }
+    header { padding: 20px 24px; border-bottom: 1px solid #1f2a36; background: #111820; }
+    h1 { margin: 0; font-size: 1.1rem; letter-spacing: 0.06em; text-transform: uppercase; color: #7ee787; }
+    .sub { margin: 6px 0 0; font-size: 0.85rem; color: #8b9cad; }
+    main { padding: 24px; max-width: 960px; margin: 0 auto; }
+    .card { background: #151c24; border: 1px solid #243040; border-radius: 14px; padding: 28px; margin-bottom: 20px; }
+    .next { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 800; line-height: 1.15; color: #fff; margin: 0 0 12px; }
+    .owner { font-size: 0.9rem; color: #58a6ff; }
+    ul { list-style: none; padding: 0; margin: 0; }
+    li { padding: 14px 0; border-bottom: 1px solid #243040; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    li:last-child { border-bottom: none; }
+    .muted { color: #6e7f95; font-size: 0.85rem; }
+    .err { color: #f85149; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Jeremy</h1>
+    <p class="sub">Only actions where nextOwner is Jeremy — execute; state is on the order.</p>
+  </header>
+  <main>
+    <div class="card" id="hero">
+      <p class="muted">Current focus</p>
+      <p class="next" id="bigAction">Loading…</p>
+      <p class="owner" id="orderRef"></p>
+    </div>
+    <div class="card">
+      <p class="muted">Queue</p>
+      <ul id="list"></ul>
+      <p class="err" id="err" style="display:none;"></p>
+    </div>
+  </main>
+  <script>
+    async function load() {
+      const errEl = document.getElementById("err");
+      errEl.style.display = "none";
+      try {
+        const r = await fetch("/api/operator/top-actions");
+        const j = await r.json();
+        if (!j.success) {
+          throw new Error(j.error || "load_failed");
+        }
+        const rows = (j.data && j.data.actions) || [];
+        const mine = rows.filter(function (x) {
+          return String(x.nextOwner || "").toLowerCase() === "jeremy";
+        });
+        const top = mine[0];
+        document.getElementById("bigAction").textContent = top && top.nextAction
+          ? top.nextAction
+          : "No Jeremy actions right now.";
+        document.getElementById("orderRef").textContent = top
+          ? (top.customerName || "") + " · #" + (top.orderNumber || top.id).toString().slice(0, 8)
+          : "";
+        const ul = document.getElementById("list");
+        ul.innerHTML = "";
+        mine.slice(0, 12).forEach(function (row) {
+          const li = document.createElement("li");
+          li.innerHTML = "<span><strong>" + (row.nextAction || "") + "</strong><br/><span class='muted'>" +
+            (row.customerName || "") + "</span></span><span class='muted'>" +
+            (row.status || "") + "</span>";
+          ul.appendChild(li);
+        });
+      } catch (e) {
+        errEl.textContent = String(e && e.message ? e.message : e);
+        errEl.style.display = "block";
+      }
+    }
+    load();
+    setInterval(load, 60000);
+  </script>
+</body>
+</html>

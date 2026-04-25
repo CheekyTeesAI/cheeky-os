@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cheeky Command</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #fff;
+      padding: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px;
+      font-size: 18px;
+      border-radius: 6px;
+      border: none;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      margin-top: 10px;
+      font-size: 18px;
+      border: none;
+      border-radius: 6px;
+      background: #22c55e;
+      color: #111;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #output {
+      margin-top: 20px;
+      font-size: 16px;
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 14px;
+      min-height: 44px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Cheeky Command</h2>
+
+  <input id="cmd" placeholder="Say or type a command..." />
+  <button onclick="run()">RUN</button>
+  <button onclick="startVoice()">🎤 Speak</button>
+  <button onclick="quick('what needs attention')">Needs Attention</button>
+  <button onclick="quick('run schedule')">Run Schedule</button>
+  <button onclick="quick('who needs follow up')">Follow Ups</button>
+
+  <div id="output"></div>
+
+  <script>
+    async function run() {
+      const output = document.getElementById("output");
+      const input = document.getElementById("cmd").value;
+      try {
+        const res = await fetch("/api/ai", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ input: input }),
+        });
+        const data = await res.json();
+        const msg =
+          data &&
+          data.result &&
+          data.result.message
+            ? data.result.message
+            : "Command not recognized";
+        output.innerHTML =
+          "<strong>AI Action:</strong><br>" +
+          JSON.stringify(data.parsed || { action: "UNKNOWN" }) +
+          "<br><br><strong>Result:</strong><br>" +
+          msg;
+      } catch (_e) {
+        output.innerHTML = "<strong>Result:</strong><br>Error: request failed";
+      }
+    }
+
+    function startVoice() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        document.getElementById("output").innerHTML =
+          "<strong>Result:</strong><br>Voice recognition not supported in this browser.";
+        return;
+      }
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.start();
+      recognition.onresult = function (event) {
+        const text =
+          event &&
+          event.results &&
+          event.results[0] &&
+          event.results[0][0] &&
+          event.results[0][0].transcript
+            ? event.results[0][0].transcript
+            : "";
+        document.getElementById("cmd").value = text;
+        run();
+      };
+    }
+
+    function quick(text) {
+      document.getElementById("cmd").value = text;
+      run();
+    }
+  </script>
+</body>
+</html>

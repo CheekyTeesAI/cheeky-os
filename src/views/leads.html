@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Leads</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #020617;
+      color: white;
+      padding: 10px;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 6px;
+    }
+
+    button {
+      padding: 8px;
+      background: #22c55e;
+      color: black;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .card {
+      background: #0f172a;
+      padding: 8px;
+      margin-bottom: 6px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>📞 LEAD CAPTURE</h2>
+
+<input id="name" placeholder="Name" />
+<input id="phone" placeholder="Phone" />
+<input id="notes" placeholder="Notes" />
+
+<button onclick="add()">Add Lead</button>
+
+<h2>🔥 FOLLOW UPS</h2>
+<div id="followups"></div>
+
+<script>
+async function add() {
+  await fetch("/api/leads", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: name.value,
+      phone: phone.value,
+      notes: notes.value,
+    }),
+  });
+
+  name.value = "";
+  phone.value = "";
+  notes.value = "";
+
+  load();
+}
+
+async function load() {
+  const res = await fetch("/api/leads/followups");
+  const data = await res.json();
+
+  document.getElementById("followups").innerHTML =
+    (data.data || []).map((l) => `
+      <div class="card">
+        ${l.name || ""}
+        <br>${l.phone || ""}
+        <br>${l.notes || ""}
+        <br>
+        <button onclick="contact('${l.id}')">Contacted</button>
+      </div>
+    `).join("");
+}
+
+async function contact(id) {
+  await fetch("/api/leads/" + id + "/contacted", {
+    method: "POST",
+  });
+  load();
+}
+
+load();
+</script>
+
+</body>
+</html>
