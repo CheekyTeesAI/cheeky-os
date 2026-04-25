@@ -2,31 +2,18 @@
 
 const express = require("express");
 const router = express.Router();
-const { getPrisma } = require("../services/decisionEngine");
-const { sendEmailReminder, sendSmsReminder } = require("../services/communicationService");
+const {
+  CHEEKY_sendFollowupReminder,
+  CHEEKY_markFollowupDone,
+} = require("../services/orderService");
 
 router.post("/send/:orderId", async (req, res) => {
+  // [CHEEKY-GATE] Delegated to orderService.CHEEKY_sendFollowupReminder.
   try {
-    const prisma = getPrisma();
-    if (!prisma) {
-      return res.json({ success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" });
-    }
-
-    const order = await prisma.order.findUnique({
-      where: { id: req.params.orderId },
-    });
-    if (!order) {
-      return res.json({ success: false, error: "Order not found", code: "ORDER_NOT_FOUND" });
-    }
-
     const { channel = "EMAIL" } = req.body || {};
-    let result;
-    if (String(channel).toUpperCase() === "SMS") {
-      result = await sendSmsReminder(order);
-    } else {
-      result = await sendEmailReminder(order);
-    }
-    return res.json({ success: true, data: { result } });
+    const out = await CHEEKY_sendFollowupReminder(req.params.orderId, channel);
+    if (!out.success) return res.json({ success: false, error: out.error, code: out.code || "FOLLOWUP_SEND_FAILED" });
+    return res.json(out);
   } catch (e) {
     return res.json({
       success: false,
@@ -37,17 +24,11 @@ router.post("/send/:orderId", async (req, res) => {
 });
 
 router.post("/done/:orderId", async (req, res) => {
+  // [CHEEKY-GATE] Delegated to orderService.CHEEKY_markFollowupDone.
   try {
-    const prisma = getPrisma();
-    if (!prisma) {
-      return res.json({ success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" });
-    }
-
-    const updated = await prisma.order.update({
-      where: { id: req.params.orderId },
-      data: { followupDone: true },
-    });
-    return res.json({ success: true, data: { orderId: updated.id, followupDone: updated.followupDone } });
+    const out = await CHEEKY_markFollowupDone(req.params.orderId);
+    if (!out.success) return res.json({ success: false, error: out.error, code: out.code || "FOLLOWUP_DONE_FAILED" });
+    return res.json(out);
   } catch (e) {
     return res.json({
       success: false,

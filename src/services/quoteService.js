@@ -44,4 +44,68 @@ async function createQuote(orderId) {
   return quote;
 }
 
-module.exports = { createQuote };
+// [CHEEKY-GATE] CHEEKY_acceptQuote — extracted from POST /api/quotes/:id/accept.
+// Pure relocation: quote.update ACCEPTED + createDepositFromQuote + order.update.
+async function CHEEKY_acceptQuote(quoteId) {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable" };
+  let createDepositFromQuote;
+  try {
+    createDepositFromQuote = require("./depositService").createDepositFromQuote;
+  } catch (_) {
+    createDepositFromQuote = null;
+  }
+
+  const quote = await prisma.quote.update({
+    where: { id: String(quoteId || "") },
+    data: { status: "ACCEPTED" },
+  });
+
+  let deposit = null;
+  if (typeof createDepositFromQuote === "function") {
+    try {
+      deposit = await createDepositFromQuote(quote.id);
+    } catch (squareError) {
+      console.log(
+        "[DEPOSIT ENGINE SKIPPED]",
+        squareError && squareError.message ? squareError.message : squareError
+      );
+    }
+  }
+
+  await prisma.order.update({
+    where: { id: quote.orderId },
+    data: {
+      status: deposit ? "DEPOSIT_PENDING" : "QUOTE_ACCEPTED",
+      nextAction: deposit ? "Collect deposit" : "Create deposit invoice",
+      nextOwner: "Cheeky",
+      blockedReason: deposit ? "WAITING_ON_DEPOSIT" : "INVOICE_NOT_CREATED",
+    },
+  });
+
+  return {
+    success: true,
+    data: {
+      quote,
+      depositCreated: !!deposit,
+      paymentLink:
+        deposit && deposit.invoice && deposit.invoice.paymentLink
+          ? deposit.invoice.paymentLink
+          : null,
+    },
+  };
+}
+
+// [CHEEKY-GATE] CHEEKY_listQuotes — extracted from GET /api/quotes.
+// Pure relocation: quote.findMany desc order.
+async function CHEEKY_listQuotes() {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable", data: null };
+  const list = await prisma.quote.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 500,
+  });
+  return { success: true, data: list };
+}
+
+module.exports = { createQuote, CHEEKY_acceptQuote, CHEEKY_listQuotes };

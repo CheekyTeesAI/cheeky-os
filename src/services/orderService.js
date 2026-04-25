@@ -278,10 +278,43 @@ async function CHEEKY_listOrders({ take = 200, orderBy = { createdAt: "desc" } }
   }
 }
 
+// [CHEEKY-GATE] CHEEKY_sendFollowupReminder — extracted from POST /send/:orderId.
+// Pure relocation: order lookup + channel-dispatch to communicationService.
+async function CHEEKY_sendFollowupReminder(orderId, channel) {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" };
+  const order = await prisma.order.findUnique({ where: { id: String(orderId || "") } });
+  if (!order) return { success: false, error: "Order not found", code: "ORDER_NOT_FOUND" };
+  let communicationService;
+  try { communicationService = require("./communicationService"); } catch (_) { communicationService = null; }
+  if (!communicationService) return { success: false, error: "communicationService unavailable", code: "SERVICE_UNAVAILABLE" };
+  let result;
+  if (String(channel || "").toUpperCase() === "SMS") {
+    result = await communicationService.sendSmsReminder(order);
+  } else {
+    result = await communicationService.sendEmailReminder(order);
+  }
+  return { success: true, data: { result } };
+}
+
+// [CHEEKY-GATE] CHEEKY_markFollowupDone — extracted from POST /done/:orderId.
+// Pure relocation: order.update followupDone = true.
+async function CHEEKY_markFollowupDone(orderId) {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" };
+  const updated = await prisma.order.update({
+    where: { id: String(orderId || "") },
+    data: { followupDone: true },
+  });
+  return { success: true, data: { orderId: updated.id, followupDone: updated.followupDone } };
+}
+
 module.exports = {
   createQuickOrder,
   computeRoutingHint,
   CHEEKY_listOrders,
   CHEEKY_listPayableOrders,
   CHEEKY_advanceOrderSmart,
+  CHEEKY_sendFollowupReminder,
+  CHEEKY_markFollowupDone,
 };
