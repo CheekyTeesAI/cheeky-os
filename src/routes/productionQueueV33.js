@@ -7,62 +7,19 @@
 const express = require("express");
 const router = express.Router();
 
-const { getPrisma } = require("../services/decisionEngine");
 const { logError } = require("../middleware/logger");
+const { CHEEKY_listProductionQueueV33 } = require("../services/orderService");
 
 router.get("/queue", async (_req, res) => {
+  // [CHEEKY-GATE] Delegated to orderService.CHEEKY_listProductionQueueV33.
   try {
     console.log("[STABLE MODE] Executing: GET /api/production/queue");
-    const prisma = getPrisma();
-    if (!prisma) {
-      return res.status(503).json({
-        success: false,
-        error: "Database unavailable",
-        code: "DB_UNAVAILABLE",
-      });
-    }
-    const rows = await prisma.order.findMany({
-      where: {
-        nextOwner: "Jeremy",
-        status: "PRINTING",
-        garmentsReceived: true,
-        productionComplete: false,
-        OR: [
-          { depositReceived: true },
-          { depositPaid: true },
-          { depositStatus: "PAID" },
-        ],
-      },
-      orderBy: [{ garmentsReceived: "desc" }, { depositPaid: "desc" }],
-      take: 150,
-      select: {
-        id: true,
-        customerName: true,
-        nextAction: true,
-        nextOwner: true,
-        status: true,
-        blockedReason: true,
-        garmentsReceived: true,
-        depositReceived: true,
-        depositPaid: true,
-        printMethod: true,
-        updatedAt: true,
-      },
-    });
-    return res.status(200).json({
-      success: true,
-      data: {
-        queue: rows,
-        engine: "v3.3",
-      },
-    });
+    const out = await CHEEKY_listProductionQueueV33();
+    if (!out.success) return res.status(503).json({ success: false, error: out.error, code: out.code });
+    return res.status(200).json({ success: true, data: out.data });
   } catch (err) {
     logError("GET /api/production/queue v3.3", err);
-    return res.status(500).json({
-      success: false,
-      error: err && err.message ? err.message : "internal_error",
-      code: "INTERNAL_ERROR",
-    });
+    return res.status(500).json({ success: false, error: err && err.message ? err.message : "internal_error", code: "INTERNAL_ERROR" });
   }
 });
 

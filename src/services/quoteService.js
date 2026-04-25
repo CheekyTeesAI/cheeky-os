@@ -108,4 +108,18 @@ async function CHEEKY_listQuotes() {
   return { success: true, data: list };
 }
 
-module.exports = { createQuote, CHEEKY_acceptQuote, CHEEKY_listQuotes };
+// [CHEEKY-GATE] CHEEKY_resolveQuoteId — extracted from resolveQuoteId helper in actions.js.
+// Pure relocation: quote.findUnique by id, fallback to quote.findFirst by orderId.
+async function CHEEKY_resolveQuoteId(inputId) {
+  const prisma = getPrisma();
+  if (!prisma) throw new Error("DB_UNAVAILABLE");
+  const id = String(inputId || "");
+  if (!id) throw new Error("ID_REQUIRED");
+  const direct = await prisma.quote.findUnique({ where: { id }, select: { id: true } });
+  if (direct) return direct.id;
+  const latestForOrder = await prisma.quote.findFirst({ where: { orderId: id }, orderBy: { createdAt: "desc" }, select: { id: true } });
+  if (!latestForOrder) throw new Error("QUOTE_NOT_FOUND");
+  return latestForOrder.id;
+}
+
+module.exports = { createQuote, CHEEKY_acceptQuote, CHEEKY_listQuotes, CHEEKY_resolveQuoteId };

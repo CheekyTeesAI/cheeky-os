@@ -132,6 +132,39 @@ async function CHEEKY_completeQC(orderId) {
   return { success: true, data: { order: data } };
 }
 
+// [CHEEKY-GATE] CHEEKY_listGarmentsToOrder — extracted from GET /api/garments/to-order.
+// Pure relocation: order.findMany depositPaid + !garmentsOrdered.
+async function CHEEKY_listGarmentsToOrder() {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" };
+  const orders = await prisma.order.findMany({ where: { depositPaid: true, garmentsOrdered: false }, include: { lineItems: true, artFiles: true }, take: 300, orderBy: [{ updatedAt: "asc" }] });
+  return { success: true, data: orders };
+}
+
+// [CHEEKY-GATE] CHEEKY_placeGarmentOrder — extracted from POST /api/garments/order/:orderId.
+// Pure relocation: $transaction garmentOrder.create + order.update with decision engine.
+async function CHEEKY_placeGarmentOrder(orderId) {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" };
+  const { evaluateOrderState, mapDecisionToPrismaStatus } = require("./decisionEngine");
+  const { determineVendorRoute } = require("./vendorRoutingService");
+  const { buildGarmentPacket } = require("./garmentPacketService");
+  const id = String(orderId || "").trim();
+  if (!id) return { success: false, error: "orderId required", code: "VALIDATION_ERROR" };
+  const result = await prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({ where: { id }, include: { lineItems: true, artFiles: true, customer: true, tasks: true } });
+    if (!order || !order.depositPaid) return { ok: false, error: "Deposit required", code: "DEPOSIT_REQUIRED" };
+    const route = determineVendorRoute(order);
+    const packet = buildGarmentPacket(order);
+    await tx.garmentOrder.create({ data: { orderId: order.id, vendor: route.vendorName, packet: JSON.stringify(packet) } });
+    const decision = evaluateOrderState({ ...order, garmentsOrdered: true });
+    const updated = await tx.order.update({ where: { id: order.id }, data: { garmentsOrdered: true, garmentOrderPlacedAt: order.garmentOrderPlacedAt || new Date(), status: mapDecisionToPrismaStatus(decision.status), nextAction: decision.nextAction, nextOwner: decision.nextOwner, blockedReason: decision.blockedReason } });
+    return { ok: true, data: { order: updated, route, packet } };
+  });
+  if (!result.ok) return { success: false, error: result.error, code: result.code || "CONFLICT" };
+  return { success: true, data: result.data };
+}
+
 module.exports = {
   createGarmentOrder,
   markGarmentsReceived,
@@ -139,4 +172,6 @@ module.exports = {
   CHEEKY_markGarmentsReceivedOnOrder,
   CHEEKY_completeProduction,
   CHEEKY_completeQC,
+  CHEEKY_listGarmentsToOrder,
+  CHEEKY_placeGarmentOrder,
 };

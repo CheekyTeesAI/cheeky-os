@@ -371,6 +371,52 @@ async function CHEEKY_getDailyReport() {
   return { success: true, data: { revenueAtRisk: { estimatedTotal: (atRiskAgg._sum && atRiskAgg._sum.quotedAmount) || 0, orderCount: atRiskCount }, stuckOrders: stuck, topActions: top3 } };
 }
 
+// [CHEEKY-GATE] CHEEKY_listProductionQueueV33 — extracted from GET /api/production/queue (v3.3).
+async function CHEEKY_listProductionQueueV33() {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" };
+  const rows = await prisma.order.findMany({
+    where: { nextOwner: "Jeremy", status: "PRINTING", garmentsReceived: true, productionComplete: false, OR: [{ depositReceived: true }, { depositPaid: true }, { depositStatus: "PAID" }] },
+    orderBy: [{ garmentsReceived: "desc" }, { depositPaid: "desc" }],
+    take: 150,
+    select: { id: true, customerName: true, nextAction: true, nextOwner: true, status: true, blockedReason: true, garmentsReceived: true, depositReceived: true, depositPaid: true, printMethod: true, updatedAt: true },
+  });
+  return { success: true, data: { queue: rows, engine: "v3.3" } };
+}
+
+// [CHEEKY-GATE] CHEEKY_getPortalOrder — extracted from GET /api/portal/:token.
+async function CHEEKY_getPortalOrder(token) {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" };
+  const order = await prisma.order.findFirst({ where: { portalToken: String(token || ""), portalEnabled: true }, include: { lineItems: true, artFiles: true } });
+  if (!order) return { success: false, error: "Portal link not found", code: "PORTAL_NOT_FOUND" };
+  return { success: true, data: order };
+}
+
+// [CHEEKY-GATE] CHEEKY_approvePortalArt — extracted from POST /api/portal/:token/art/:artId/approve.
+async function CHEEKY_approvePortalArt(token, artId) {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" };
+  const order = await prisma.order.findFirst({ where: { portalToken: String(token || ""), portalEnabled: true }, select: { id: true } });
+  if (!order) return { success: false, error: "Portal link not found", code: "PORTAL_NOT_FOUND" };
+  const art = await prisma.artFile.findFirst({ where: { id: String(artId || ""), orderId: order.id } });
+  if (!art) return { success: false, error: "Art file not found", code: "ART_NOT_FOUND" };
+  const updated = await prisma.artFile.update({ where: { id: art.id }, data: { approvalStatus: "APPROVED" } });
+  return { success: true, data: updated };
+}
+
+// [CHEEKY-GATE] CHEEKY_createIntakeOrder — extracted from POST / in intake.js.
+// Pure relocation: order.create + lineItem.create for web intake flow.
+async function CHEEKY_createIntakeOrder({ customerName, email, phone, notes, product, quantity, generatePortalToken }) {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE" };
+  const order = await prisma.order.create({
+    data: { customerName, email, phone, notes, status: "INTAKE", portalToken: generatePortalToken(), portalEnabled: true, depositPaid: false, garmentsOrdered: false, garmentsReceived: false, productionComplete: false, qcComplete: false, nextAction: "Collect deposit", nextOwner: "Cheeky", blockedReason: "WAITING_ON_DEPOSIT" },
+  });
+  await prisma.lineItem.create({ data: { orderId: order.id, description: product, quantity } });
+  return { success: true, data: order };
+}
+
 module.exports = {
   createQuickOrder,
   computeRoutingHint,
@@ -383,4 +429,8 @@ module.exports = {
   CHEEKY_listPickupReady,
   CHEEKY_markPickupNotified,
   CHEEKY_getDailyReport,
+  CHEEKY_listProductionQueueV33,
+  CHEEKY_getPortalOrder,
+  CHEEKY_approvePortalArt,
+  CHEEKY_createIntakeOrder,
 };

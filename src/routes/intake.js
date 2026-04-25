@@ -7,9 +7,9 @@ const crypto = require("crypto");
 
 const intake = require("../services/intakeService");
 const { buildMissingInfoResponse } = require("../services/intakeResponseService");
-const { getPrisma } = require("../services/decisionEngine");
 const { generatePortalToken } = require("../services/portalTokenService");
 const { logAction } = require("../services/auditService");
+const { CHEEKY_createIntakeOrder } = require("../services/orderService");
 
 function fallbackEmail(name, phone) {
   const raw = `${String(name || "new")}:${String(phone || "")}:${Date.now()}`;
@@ -133,16 +133,8 @@ router.post("/sms", async (req, res) => {
 
 // v6.6 website intake: POST /api/intake
 router.post("/", async (req, res) => {
+  // [CHEEKY-GATE] Delegated to orderService.CHEEKY_createIntakeOrder.
   try {
-    const prisma = getPrisma();
-    if (!prisma) {
-      return res.status(503).json({
-        success: false,
-        error: "Database unavailable",
-        code: "DB_UNAVAILABLE",
-      });
-    }
-
     const body = req.body && typeof req.body === "object" ? req.body : {};
     const customerName = String(body.customerName || "").trim() || "New Customer";
     const email = String(body.email || "").trim() || fallbackEmail(customerName, body.phone);
@@ -151,42 +143,12 @@ router.post("/", async (req, res) => {
     const quantity = Math.max(1, parseInt(String(body.quantity || "1"), 10) || 1);
     const notes = String(body.notes || "").trim();
 
-    const order = await prisma.order.create({
-      data: {
-        customerName,
-        email,
-        phone,
-        notes,
-        status: "INTAKE",
-        portalToken: generatePortalToken(),
-        portalEnabled: true,
-        depositPaid: false,
-        garmentsOrdered: false,
-        garmentsReceived: false,
-        productionComplete: false,
-        qcComplete: false,
-        nextAction: "Collect deposit",
-        nextOwner: "Cheeky",
-        blockedReason: "WAITING_ON_DEPOSIT",
-      },
-    });
+    const out = await CHEEKY_createIntakeOrder({ customerName, email, phone, notes, product, quantity, generatePortalToken });
+    if (!out.success) return res.status(503).json({ success: false, error: out.error, code: out.code });
 
-    await prisma.lineItem.create({
-      data: {
-        orderId: order.id,
-        description: product,
-        quantity,
-      },
-    });
+    await logAction("CREATE_ORDER", "Order", out.data.id, { customer: out.data.customerName });
 
-    await logAction("CREATE_ORDER", "Order", order.id, {
-      customer: order.customerName,
-    });
-
-    return res.json({
-      success: true,
-      data: order,
-    });
+    return res.json({ success: true, data: out.data });
   } catch (e) {
     return res.json({
       success: false,
