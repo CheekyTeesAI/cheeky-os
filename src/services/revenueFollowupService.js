@@ -143,8 +143,45 @@ async function CHEEKY_listCommunicationQueue() {
   return { success: true, data: drafts };
 }
 
+// [CHEEKY-GATE] CHEEKY_approveFollowup — extracted from POST /api/communications/approve/:id.
+async function CHEEKY_approveFollowup(id) {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "DB_UNAVAILABLE", code: "DB_UNAVAILABLE" };
+  const f = await prisma.revenueFollowup.findUnique({ where: { id: String(id || "") } });
+  if (!f) return { success: false, error: "NOT_FOUND", code: "NOT_FOUND" };
+  const updated = await prisma.revenueFollowup.update({ where: { id: f.id }, data: { status: "APPROVED" } });
+  return { success: true, data: updated };
+}
+
+// [CHEEKY-GATE] CHEEKY_sendFollowupById — extracted from POST /api/communications/send/:id.
+// Lookup only; actual send delegated to safeSend (passed as sendFn to avoid circular dep).
+async function CHEEKY_sendFollowupById(id) {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "DB_UNAVAILABLE", code: "DB_UNAVAILABLE" };
+  const f = await prisma.revenueFollowup.findUnique({ where: { id: String(id || "") } });
+  if (!f) return { success: false, error: "NOT_FOUND", code: "NOT_FOUND" };
+  return { success: true, followup: f };
+}
+
+// [CHEEKY-GATE] CHEEKY_bulkFetchFollowups — extracted from POST /api/communications/bulk-send.
+// Returns array of followup records for the given ids (missing = { id, notFound: true }).
+async function CHEEKY_bulkFetchFollowups(ids) {
+  const prisma = getPrisma();
+  if (!prisma) return { success: false, error: "DB_UNAVAILABLE", code: "DB_UNAVAILABLE", items: null };
+  const safeIds = Array.isArray(ids) ? ids.map((x) => String(x)) : [];
+  const items = [];
+  for (const id of safeIds) {
+    const f = await prisma.revenueFollowup.findUnique({ where: { id } });
+    items.push(f ? { id, followup: f, notFound: false } : { id, followup: null, notFound: true });
+  }
+  return { success: true, items };
+}
+
 module.exports = {
   runRevenueFollowupScan,
   startRevenueFollowupCron,
   CHEEKY_listCommunicationQueue,
+  CHEEKY_approveFollowup,
+  CHEEKY_sendFollowupById,
+  CHEEKY_bulkFetchFollowups,
 };
