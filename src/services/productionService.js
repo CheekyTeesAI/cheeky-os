@@ -1,6 +1,6 @@
 "use strict";
 
-const { getPrisma } = require("./decisionEngine");
+const { getPrisma, normalizeForDecision, evaluateOrderState, mapDecisionToPrismaStatus } = require("./decisionEngine");
 
 async function createProductionJob(orderId) {
   const prisma = getPrisma();
@@ -32,4 +32,43 @@ async function createProductionJob(orderId) {
   return job;
 }
 
-module.exports = { createProductionJob };
+// [CHEEKY-GATE] CHEEKY_bulkAdvanceOrders — extracted from POST /api/production/bulk-advance.
+// Pure relocation: $transaction findUnique + evaluateOrderState + update for each orderId.
+async function CHEEKY_bulkAdvanceOrders(orderIds) {
+  const ids = Array.isArray(orderIds)
+    ? orderIds.map((x) => String(x || "").trim()).filter(Boolean)
+    : [];
+  if (ids.length === 0) {
+    return { success: false, error: "orderIds required", code: "VALIDATION_ERROR", data: null };
+  }
+  const prisma = getPrisma();
+  if (!prisma) {
+    return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE", data: null };
+  }
+  const results = [];
+  for (const id of ids) {
+    const updated = await prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { id },
+        include: { artFiles: true, lineItems: true, customer: true, tasks: true },
+      });
+      if (!order) return null;
+      const normalized = normalizeForDecision(order);
+      const next = evaluateOrderState(normalized);
+      return tx.order.update({
+        where: { id },
+        data: {
+          status: mapDecisionToPrismaStatus(next.status),
+          nextAction: next.nextAction,
+          nextOwner: next.nextOwner,
+          blockedReason: next.blockedReason,
+        },
+        include: { artFiles: true, lineItems: true, customer: true, tasks: true },
+      });
+    });
+    if (updated) results.push(updated);
+  }
+  return { success: true, data: results };
+}
+
+module.exports = { createProductionJob, CHEEKY_bulkAdvanceOrders };
