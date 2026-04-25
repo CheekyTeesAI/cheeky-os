@@ -3,8 +3,10 @@
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const { Resend } = require("resend");
-const twilio = require("twilio");
+let Resend = null;
+try { Resend = require("resend").Resend; } catch (_) {}
+let twilio = null;
+try { twilio = require("twilio"); } catch (_) {}
 const { getPrisma } = require("./decisionEngine");
 const {
   buildDepositReminder,

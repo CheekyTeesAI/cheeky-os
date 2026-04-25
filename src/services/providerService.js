@@ -1,7 +1,9 @@
 "use strict";
 
-const { Resend } = require("resend");
-const twilio = require("twilio");
+let Resend = null;
+try { Resend = require("resend").Resend; } catch (_) {}
+let twilio = null;
+try { twilio = require("twilio"); } catch (_) {}
 
 function getResendClient() {
   if (!process.env.RESEND_API_KEY) return null;

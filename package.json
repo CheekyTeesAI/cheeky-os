@@ -10,9 +10,25 @@
     "node": "18.x"
   },
   "scripts": {
-    "start": "node email-intake/cheeky-os/server.js"
+    "start": "node email-intake/cheeky-os/server.js",
+    "chatgpt:selftest": "node scripts/chatgpt-selftest.js",
+    "chatgpt:smoketest": "node scripts/chatgpt-live-smoketest.js",
+    "chatgpt:readiness": "node scripts/generate-chatgpt-readiness-report.js",
+    "chatgpt:launch-validate": "node scripts/chatgpt-launch-validate.js"
   },
   "dependencies": {
-    "@azure/identity": "^4.13.1"
+    "@azure/identity": "^4.13.1",
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "node-cron": "^3.0.3",
+    "node-fetch": "^2.7.0",
+    "openai": "^6.33.0",
+    "pdf-lib": "^1.17.1",
+    "pdfkit": "^0.15.2",
+    "resend": "^4.8.0",
+    "square": "^35.0.0",
+    "twilio": "^5.13.1"
   }
 }
