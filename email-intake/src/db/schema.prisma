@@ -1,3 +1,17 @@
+// [CHEEKY-GATE] Legacy schema — originally used for email-intake prototype.
+// Canonical production schema: email-intake/prisma/schema.prisma (PostgreSQL).
+// Provider added so this file passes prisma validate if targeted directly.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
 model Customer {
   id        String   @id @default(cuid())
   name      String

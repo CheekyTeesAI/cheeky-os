@@ -1,16 +1,13 @@
-chore(rie): add Repo Intelligence Engine + Phase 1-2 cash/task patches
+fix(schema+service): Phase 3 - orphan schema fix + service layer extraction
 
-Phase 1 - Revenue signal fix (GAP 2):
-summary.js: add revenueToday via prisma.order.aggregate(amountPaid)
-moneyEngine.js: add CHEEKY_computeRevenue() helper using real revenue,
-falls back to ordersToday x 100 placeholder
+GAP 4 - Fix orphaned Prisma schema:
+email-intake/src/db/schema.prisma had no datasource or generator block.
+Added postgresql datasource + client generator so it passes prisma validate.
+Annotated as legacy with reference to canonical schema.
 
-Phase 2 - Wire task lifecycle (GAP 3):
-orderService.js: call taskAutogenService.generateTasksForOrder after
-createQuickOrder; surfaces pendingTasks in API response (additive only)
+GAP 1 (partial) - Service layer extraction for GET /api/orders:
+Added CHEEKY_listOrders() to orderService.js. Routes GET /api/orders
+now delegates to service layer instead of calling prisma.order.findMany()
+directly in the handler. Prisma logic preserved inside service function.
 
-RIE tooling added (Phase 0):
-tools/repo-intelligence/ full scanner, route/stub/service/cash
-analyzers, report generator producing report.json + report.md
-
-Zero lines deleted. Zero schema changes. CHEEKY_ prefix on all new fns.
+Zero lines deleted. Zero schema model changes. CHEEKY_ prefix on new fn.

@@ -3,7 +3,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { createQuickOrder } = require("../services/orderService");
+const { createQuickOrder, CHEEKY_listOrders } = require("../services/orderService");
 const { getPrisma, runDecisionEngineInTransaction } = require("../services/decisionEngine");
 const { applyManualDeposit } = require("../services/squareEngine");
 const { logError } = require("../middleware/logger");
@@ -50,20 +50,15 @@ router.post("/quick", async (req, res) => {
 });
 
 router.get("/", async (_req, res) => {
+  // [CHEEKY-GATE] Delegated to service layer via CHEEKY_listOrders.
+  // Direct prisma call extracted to orderService.CHEEKY_listOrders (service layer).
   try {
-    const prisma = getPrisma();
-    if (!prisma) {
-      return res.status(503).json({
-        success: false,
-        error: "Database unavailable",
-        code: "DB_UNAVAILABLE",
-      });
+    const out = await CHEEKY_listOrders();
+    if (!out.success) {
+      const status = out.code === "DB_UNAVAILABLE" ? 503 : 500;
+      return res.status(status).json({ success: false, error: out.error, code: out.code });
     }
-    const orders = await prisma.order.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 200,
-    });
-    return res.status(200).json({ success: true, data: orders });
+    return res.status(200).json({ success: true, data: out.data });
   } catch (err) {
     logError("GET /api/orders", err);
     return res.status(500).json({

@@ -139,7 +139,28 @@ async function createQuickOrder(body) {
   }
 }
 
+// [CHEEKY-GATE] CHEEKY_listOrders — service-layer wrapper for order list queries.
+// Moves direct Prisma access out of route handlers into the service layer.
+async function CHEEKY_listOrders({ take = 200, orderBy = { createdAt: "desc" } } = {}) {
+  const prisma = getPrisma();
+  if (!prisma) {
+    return { success: false, error: "Database unavailable", code: "DB_UNAVAILABLE", data: null };
+  }
+  try {
+    const orders = await prisma.order.findMany({ orderBy, take });
+    return { success: true, data: orders };
+  } catch (err) {
+    return {
+      success: false,
+      error: err && err.message ? err.message : "list_orders_failed",
+      code: "QUERY_FAILED",
+      data: null,
+    };
+  }
+}
+
 module.exports = {
   createQuickOrder,
   computeRoutingHint,
+  CHEEKY_listOrders,
 };
