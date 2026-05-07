@@ -11,11 +11,22 @@ async function getEligibleOrders() {
   const prisma = getPrisma();
   if (!prisma) throw new Error("DB_UNAVAILABLE");
 
+  /** Explicit select avoids Prisma loading columns missing from DB (schema drift vs migrations). */
   const orders = await prisma.order.findMany({
     where: {
       squareInvoiceId: { not: null },
       depositPaid: false,
       followupDone: false,
+    },
+    select: {
+      id: true,
+      customerName: true,
+      squareInvoiceId: true,
+      depositPaid: true,
+      followupDone: true,
+      followupCount: true,
+      lastFollowupAt: true,
+      createdAt: true,
     },
     orderBy: { createdAt: "desc" },
     take: 500,

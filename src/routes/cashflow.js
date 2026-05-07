@@ -6,6 +6,7 @@ const router = express.Router();
 const { getCashflow } = require("../services/cashflowService");
 const { getDailyTarget } = require("../services/targetService");
 
+/** Legacy revenue-style cashflow summary at GET / (mounted at /api/cashflow in server). */
 router.get("/", async (_req, res) => {
   try {
     const cash = await getCashflow();

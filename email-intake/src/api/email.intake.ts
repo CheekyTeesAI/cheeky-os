@@ -1,4 +1,8 @@
 import { Request, Response } from "express";
+import {
+  normalizeEmailIntake,
+  toCreateOrderPipelineBody,
+} from "../lib/intakeNormalizer";
 import { createOrder } from "./orders.create";
 
 export async function emailIntake(req: Request, res: Response) {
@@ -12,19 +16,11 @@ export async function emailIntake(req: Request, res: Response) {
       });
     }
 
-    // VERY SIMPLE PARSING (safe)
-    const customerName = from || "Email Customer";
-    const email = from || "";
-    const items = [subject || "Custom Order Request"];
-    const notes = text || "";
+    const normalized = normalizeEmailIntake(req.body);
+    const pipelineBody = toCreateOrderPipelineBody(normalized);
 
     const mockReq: any = {
-      body: {
-        customerName,
-        email,
-        items,
-        notes
-      }
+      body: pipelineBody,
     };
 
     const mockRes: any = {

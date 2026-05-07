@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "allowJs": true,
+    "allowJs": false,
     "target": "ES2020",
     "module": "CommonJS",
     "moduleResolution": "node",
@@ -10,7 +10,19 @@
     "strict": false,
     "skipLibCheck": true,
     "types": ["node"],
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["src"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "cheeky-os/**",
+    "social",
+    "./scripts",
+    "src/**/*.js",
+    "src/engines/**",
+    "src/services/social/**",
+    "src/routes/socialRoutes.ts"
+  ]
 }

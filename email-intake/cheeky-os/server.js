@@ -17,7 +17,44 @@
 require("dotenv").config({
   path: require("path").join(__dirname, "..", ".env"),
 });
+if (!String(process.env.CHEEKY_OS_BOOT_INTAKE_SELFTEST || "").trim())
+  process.env.CHEEKY_OS_BOOT_INTAKE_SELFTEST = "false";
+if (!String(process.env.CHEEKY_OS_STRICT_SCHEMA_CHECK || "").trim())
+  process.env.CHEEKY_OS_STRICT_SCHEMA_CHECK = "false";
+if (!String(process.env.CHEEKY_OS_ALLOW_PARTIAL_BOOT || "").trim())
+  process.env.CHEEKY_OS_ALLOW_PARTIAL_BOOT = "true";
 const path = require("path");
+const fs = require("fs");
+const { execSync } = require("child_process");
+
+/**
+ * Marketing Prisma (SQLite) — empty CHEEKY_MARKETING_DATABASE_URL breaks captureOrder reads.
+ * Default to cheeky-os/prisma/marketing.db and create schema once if missing.
+ */
+(function ensureMarketingDatabaseEnv() {
+  if (String(process.env.CHEEKY_MARKETING_DATABASE_URL || "").trim()) return;
+  const dbFile = path.join(__dirname, "prisma", "marketing.db");
+  process.env.CHEEKY_MARKETING_DATABASE_URL = `file:${dbFile.replace(/\\/g, "/")}`;
+  try {
+    fs.mkdirSync(path.dirname(dbFile), { recursive: true });
+    if (!fs.existsSync(dbFile)) {
+      const schemaPath = path.join(__dirname, "prisma", "schema.prisma");
+      const quoted = JSON.stringify(schemaPath);
+      execSync(`npx prisma db push --schema ${quoted} --accept-data-loss --skip-generate`, {
+        cwd: path.join(__dirname, ".."),
+        stdio: "pipe",
+        env: process.env,
+        shell: true,
+      });
+      console.log("[marketing-db] created SQLite + schema at cheeky-os/prisma/marketing.db");
+    }
+  } catch (e) {
+    console.warn(
+      "[marketing-db] bootstrap warning (set CHEEKY_MARKETING_DATABASE_URL or run prisma db push):",
+      e && e.message ? e.message : e
+    );
+  }
+})();
 
 try {
   const envValidation = require(path.join(__dirname, "..", "..", "src", "services", "envValidation"));
@@ -39,12 +76,26 @@ const {
   logReadinessLines,
   warnStrictEnv,
 } = require("./config/env");
+const { listenPort, logV4StartupValidation } = require("./services/cheekyOsRuntimeConfig.service");
+try {
+  logV4StartupValidation();
+} catch (v4CfgErr) {
+  console.warn(
+    "[cheeky-v4] startup validation error:",
+    v4CfgErr && v4CfgErr.message ? v4CfgErr.message : v4CfgErr
+  );
+}
+
+try {
+  require("./services/cheekyOsStructuredLog.service").initCheekyOsStructuredLog();
+} catch (_sl) {
+  /* optional */
+}
 const { generateCursorPrompt } = require("./src/ai/chadCodeGenerator");
 const { applyPatch } = require("./src/ai/chadApply");
 const { getLatestTask, readTask } = require("./src/ai/chadExecutor");
 const { startAutomation } = require("./src/services/automationRunner");
 const { startAgentScheduler } = require("./src/services/agentScheduler");
-const fs = require("fs");
 
 const express = require("express");
 const { initializeSquareIntegration } = require("./integrations/square");
@@ -53,6 +104,47 @@ const revenueRouter = require("./routes/revenue");
 const mobileDashboardRouter = require("./routes/mobileDashboard");
 const dashboardNextRouter = require("./routes/dashboardNext");
 const dashboardRouter = require("./routes/dashboard");
+const approvalRoutesV5 = require("./routes/approvalRoutes");
+const dashboardRoutesV5 = require("./routes/dashboardRoutes");
+const systemHealthRoutesV5 = require("./routes/systemHealthRoutes");
+const operatorConsoleJarvis = require("./routes/operatorConsole");
+const executiveBriefingJarvis = require("./routes/executiveBriefing");
+const observabilityRoutesV7 = require("./routes/observabilityRoutes");
+const trustDashboardV7 = require("./routes/trustDashboard");
+const operatorWorkflowRoutesV7 = require("./routes/operatorWorkflowRoutes");
+const operatorEntryRoutesV8 = require("./routes/mainOperator");
+const operatorDashboardRoutesV8 = require("./routes/operatorDashboard");
+const workOrdersV8Router = require("./routes/workOrdersV8.route");
+const garmentOrdersRoutesV8 = require("./routes/garmentOrders");
+/** Cockpit Week Phase 1 — blocker-first reads + friction log + what-now (additive). */
+const blockerDashboardRouter = require("./routes/blockerDashboard");
+const whatNowRoutes = require("./routes/whatNowRoutes");
+const frictionLogRoutes = require("./routes/frictionLogRoutes");
+const draftingRoutes = require("./routes/draftingRoutes");
+const shiftHandoffRoutes = require("./routes/shiftHandoffRoutes");
+/** Phase 3 — growth scoring, outreach drafts (approval-gated), morning brief */
+const growthRoutes = require("./routes/growthRoutes");
+const outreachRoutes = require("./routes/outreachRoutes");
+const morningBriefRoutes = require("./routes/morningBriefRoutes");
+/** Phase 4 v4 — KPI, ads review, notifications, reporting, nightly exec review (additive). */
+const kpiRoutes = require("./routes/kpiRoutes");
+const googleAdsRoutes = require("./routes/googleAdsRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const reportingRoutes = require("./routes/reportingRoutes");
+const nightlyGrowthReviewRoutes = require("./routes/nightlyGrowthReviewRoutes");
+const customerQuickSearchRoutes = require("./routes/customerQuickSearchRoutes");
+/** Phase 5 — customer status, self-service intake POST, monitoring envelope. */
+const customerRoutes = require("./routes/customerRoutes");
+const intakeRoutes = require("./routes/intakeRoutes");
+const monitoringRoutes = require("./routes/monitoringRoutes");
+/** Phase 7 — view descriptor, Cheeky-AI helpbot, accounting visibility, reporting/backup, team activity, full system status. */
+const dashboardViewRoutes = require("./routes/dashboardViewRoutes");
+const cheekyAiRoutes = require("./routes/cheekyAiRoutes");
+const accountingRoutes = require("./routes/accountingRoutes");
+const reportingAdvancedRoutes = require("./routes/reportingAdvancedRoutes");
+const backupRoutes = require("./routes/backupRoutes");
+const teamActivityRoutes = require("./routes/teamActivityRoutes");
+const systemFullStatusRoutes = require("./routes/systemFullStatusRoutes");
 const squareDraftRouter = require("./routes/squareDraft");
 const salesRouter = require("./routes/sales");
 const captureRouter = require("./routes/capture");
@@ -100,6 +192,7 @@ const workOrdersRouter = require("./routes/workOrders");
 const quotesRouter = require("./routes/quotes");
 const aiExecuteRouter = require("./routes/aiExecute");
 const aiContextRouter = require("./routes/aiContext");
+const aiOperatorBrainRouter = require("./routes/aiOperator.route");
 const autopilotApiRouter = require("./routes/autopilotApi");
 const reportsRouter = require("./routes/reports");
 const commandsRouter = require("./routes/commands");
@@ -123,6 +216,10 @@ const commandRouterExpress = require(path.join(__dirname, "..", "..", "src", "ro
 const aiCommandRouterV57 = require(path.join(__dirname, "..", "..", "src", "routes", "ai.command"));
 const aiStatusRouterV58 = require(path.join(__dirname, "..", "..", "src", "routes", "ai.status"));
 const cashflowRouterV59 = require(path.join(__dirname, "..", "..", "src", "routes", "cashflow"));
+const cashflowSentinelRouterLocal = require("./routes/cashflow.route");
+const cashflowApiCombined = express.Router();
+cashflowApiCombined.use(cashflowSentinelRouterLocal);
+cashflowApiCombined.use(cashflowRouterV59);
 const dealsRouterV60 = require(path.join(__dirname, "..", "..", "src", "routes", "deals"));
 const customerHistoryRouterV61 = require(path.join(__dirname, "..", "..", "src", "routes", "customers.history"));
 const garmentsRouterV63 = require(path.join(__dirname, "..", "..", "src", "routes", "garments.v63"));
@@ -131,6 +228,7 @@ const artQueueRouterV65 = require(path.join(__dirname, "..", "..", "src", "route
 const quotesRouterV67 = require(path.join(__dirname, "..", "..", "src", "routes", "quotes"));
 const squareWebhookV69 = require(path.join(__dirname, "..", "..", "src", "routes", "square.webhook"));
 const shopBoardRouter = require(path.join(__dirname, "..", "..", "src", "routes", "shop"));
+const squareCommandLayerRouter = require("./routes/squareCommand.route");
 const scheduleRouter = require(path.join(__dirname, "..", "..", "src", "routes", "schedule"));
 const inventoryHttpRouter = require(path.join(__dirname, "..", "..", "src", "routes", "inventoryHttp"));
 const vendorOutboundRouter = require(path.join(__dirname, "..", "..", "src", "routes", "vendorOutbound"));
@@ -151,36 +249,26 @@ const notesHttpRouter = require(path.join(__dirname, "..", "..", "src", "routes"
 const goLiveHttpRouter = require(path.join(__dirname, "..", "..", "src", "routes", "goLiveHttp"));
 const tasksHttpRouter = require(path.join(__dirname, "..", "..", "src", "routes", "tasksHttp"));
 const operatorRouter = require(path.join(__dirname, "..", "..", "src", "routes", "operator"));
+const aiOperatorBridgeHttpRouter = require("./routes/aiOperatorBridgeHttp.route");
+const bridgeHttpRouter = require("./routes/bridgeHttp.route");
+const memoryHttpRouter = require("./routes/memoryHttp.route");
+const bridgeTaskRoutes = require("./routes/bridgeTasks");
+const agentStatusRoute = require("./routes/agentStatus");
+const transportRoutes = require("./bridge/transportServer");
+const operatorBridgeRouter = require(path.join(__dirname, "..", "operatorBridge", "operator.routes"));
+const squareSyncRouter = require(path.join(__dirname, "..", "squareSync", "squareSync.routes"));
+const productionRoutingRouter = require(path.join(__dirname, "..", "productionRouting", "routing.routes"));
+const activationRouter = require(path.join(__dirname, "..", "activation", "activation.routes"));
+const activationRunner = require(path.join(__dirname, "..", "activation", "activation.runner"));
 
-/** Render/cloud: PORT; local override: CHEEKY_OS_PORT. */
-const PORT = Number(process.env.PORT || process.env.CHEEKY_OS_PORT || 3000);
+/** Render/cloud: PORT; local override: CHEEKY_OS_PORT (see cheekyOsRuntimeConfig.service.js). */
+const PORT = listenPort();
 const HOST = "0.0.0.0";
-console.log("🚀 CHEEKY OS LOCKED — v8.7 STABLE");
 
 const app = express();
 
-process.on("uncaughtException", (err) => {
-  console.error(
-    "[PROCESS] uncaughtException | fail |",
-    err && err.stack ? err.stack : err
-  );
-});
-
-process.on("unhandledRejection", (reason) => {
-  console.error("[PROCESS] unhandledRejection | fail |", reason);
-});
-
-app.get("/", (_req, res) => {
-  res.send("Cheeky OS is running");
-});
-
-app.get("/health", (_req, res) => {
-  res.json({
-    status: "ok",
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-  });
-});
+const { installProcessHandlers, startSelfFixSystem } = require("./services/selfFixService");
+installProcessHandlers();
 
 function bootEntryLabel() {
   const main = require.main && require.main.filename;
@@ -232,6 +320,19 @@ function logBootContext(phase) {
       "[boot] warn=SQUARE_WEBHOOK_SIGNATURE_SKIP_VERIFY=true (avoid in production)"
     );
   }
+  const ctRaw = String(process.env.CHEEKY_CT_INTAKE_GATE_STRICT || "").trim().toLowerCase();
+  const ctStrict =
+    ctRaw === "true" || ctRaw === "1" || ctRaw === "on"
+      ? true
+      : ctRaw === "false" || ctRaw === "0" || ctRaw === "off"
+        ? false
+        : String(process.env.NODE_ENV || "").trim().toLowerCase() === "production";
+  console.log(
+    `[boot] ctIntakeGateStrict=${ctStrict ? "ON (unset in prod defaults ON; Dataverse intake required before deposit applies)" : "off"}`
+  );
+  console.log(
+    `[boot] observability=v4 (dashboard GET /dashboard, metrics GET /metrics) → GET /health, /api/health, /system/health`
+  );
   logReadinessLines();
   console.log("[boot] route inventory: GET /system/routes");
 }
@@ -255,20 +356,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/", (req, res) => {
-  const accept = String(req.headers.accept || "");
-  if (accept.includes("text/html")) {
-    return res.sendFile(path.join(__dirname, "..", "public", "control-tower.html"));
-  }
-  res.status(200).json({
-    status: "ok",
-    service: "cheeky-api",
-    env: process.env.NODE_ENV || "production",
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-    controlTower: "GET /control-tower · browser UI: send Accept: text/html to GET /",
-  });
-});
+app.get("/", (_req, res) => res.redirect(302, "/dashboard"));
 
 app.get("/healthz", (_req, res) => {
   res.send("ok");
@@ -276,12 +364,28 @@ app.get("/healthz", (_req, res) => {
 
 app.get("/health", (_req, res) => {
   const sv = global.__CHEEKY_STARTUP_VALIDATION__;
-  res.json({
+  let observability = null;
+  try {
+    observability =
+      require("./services/cheekyOsRuntimeObservability.service").getObservabilitySnapshot();
+  } catch (_e) {
+    observability = null;
+  }
+  const degradedMode = !!(
+    sv &&
+    ((Array.isArray(sv.critical) && sv.critical.length) ||
+      (Array.isArray(sv.warnings) && sv.warnings.length))
+  );
+  res.status(200).json({
     ok: true,
     status: "ok",
+    degradedMode,
+    timestamp: new Date().toISOString(),
     service: "cheeky-os",
     port: PORT,
+    node_env: process.env.NODE_ENV || "development",
     time: new Date().toISOString(),
+    activeCrons: observability && Array.isArray(observability.activeCrons) ? observability.activeCrons : [],
     deploy: sv
       ? {
           startupOk: sv.ok,
@@ -289,19 +393,28 @@ app.get("/health", (_req, res) => {
           warningCount: sv.warnings.length,
         }
       : null,
+    observability,
   });
 });
 
 /** Cheeky OS v3.2 — strict JSON envelope for probes + automation */
 app.get("/api/health", (_req, res) => {
   try {
+    let observability = null;
+    try {
+      observability =
+        require("./services/cheekyOsRuntimeObservability.service").getObservabilitySnapshot();
+    } catch (_e2) {}
+    const { cheekyOsVersion } = require("./services/cheekyOsRuntimeConfig.service");
     return res.status(200).json({
       success: true,
       data: {
         status: "ok",
         service: "cheeky-os",
-        version: "3.3",
+        version: cheekyOsVersion(),
         time: new Date().toISOString(),
+        node_env: process.env.NODE_ENV || "development",
+        observability,
       },
     });
   } catch (err) {
@@ -314,13 +427,31 @@ app.get("/api/health", (_req, res) => {
   }
 });
 
+try {
+  const { mountProductionBoard } = require("./routes/productionBoard.route");
+  mountProductionBoard(app);
+  console.log("[production-board] GET /api/production-board (PRODUCTION_READY, PRINTING, QC, COMPLETED, STUCK)");
+} catch (pbErr) {
+  console.warn(
+    "[production-board] mount failed:",
+    pbErr && pbErr.message ? pbErr.message : pbErr
+  );
+}
+
 app.get("/system/health", (_req, res) => {
   const report = getSystemHealthReport(app);
+  let observability = null;
+  try {
+    observability =
+      require("./services/cheekyOsRuntimeObservability.service").getObservabilitySnapshot();
+  } catch (_e3) {}
   res.json({
     ok: report.status !== "RED",
     service: "cheeky-os",
     port: PORT,
+    node_env: process.env.NODE_ENV || "development",
     ...report,
+    observability,
     time: new Date().toISOString(),
   });
 });
@@ -382,7 +513,71 @@ try {
     }
   });
 } catch (err) {
-  console.warn("[server] /system/state mount failed:", err && err.message ? err.message : err);
+    console.warn("[server] /system/state mount failed:", err && err.message ? err.message : err);
+}
+
+try {
+  const { mountOperatorStatus } = require("./routes/operatorStatus.route");
+  mountOperatorStatus(app);
+  console.log("[operator-status] GET /api/operator/status (system, cashGate, production, risks)");
+} catch (opStErr) {
+  console.warn(
+    "[operator-status] mount failed:",
+    opStErr && opStErr.message ? opStErr.message : opStErr
+  );
+}
+
+try {
+  const ownerRouter = require("./routes/owner.route");
+  app.use("/api/owner", ownerRouter);
+  console.log("[owner-command] GET /api/owner/summary (cash, production, comms, sales, risks)");
+} catch (ownerErr) {
+  console.warn(
+    "[owner-command] mount failed:",
+    ownerErr && ownerErr.message ? ownerErr.message : ownerErr
+  );
+}
+
+/** Phase 3: morning brief registers before generic /api/operator stacks (path shadowing). */
+try {
+  app.use(morningBriefRoutes);
+  console.log("[cockpit-phase3-morning] GET /api/operator/morning-brief (early mount)");
+} catch (mbErr) {
+  console.warn("[cockpit-phase3-morning] mount failed:", mbErr && mbErr.message ? mbErr.message : mbErr);
+}
+
+try {
+  app.use(nightlyGrowthReviewRoutes);
+  app.use(customerQuickSearchRoutes);
+  console.log(
+    "[cockpit-phase4] GET /api/operator/nightly-growth-review + GET /api/customers/quick-search (early mount before /api/operator umbrella)"
+  );
+} catch (p4EarlyErr) {
+  console.warn("[cockpit-phase4] early mount failed:", p4EarlyErr && p4EarlyErr.message ? p4EarlyErr.message : p4EarlyErr);
+}
+
+// AI Operator Bridge (v1 scaffold) — mounted before main operator bridge so /test-last-email is reachable.
+try {
+  app.use("/api/operator", aiOperatorBridgeHttpRouter);
+  console.log("[ai-operator-bridge] GET /api/operator/test-last-email (mailbox read scaffold)");
+} catch (aiOpBrErr) {
+  console.warn(
+    "[ai-operator-bridge] mount failed:",
+    aiOpBrErr && aiOpBrErr.message ? aiOpBrErr.message : aiOpBrErr
+  );
+}
+
+// Operator Bridge — mounted first on /api/operator so /context/full and bridge routes are not shadowed.
+try {
+  app.use("/api/operator", operatorBridgeRouter);
+  console.log(
+    "[operator-bridge] v1 primary mount /api/operator (context/full, health, command/*, audit, capabilities)"
+  );
+} catch (bridgePrimaryErr) {
+  console.warn(
+    "[operator-bridge] primary mount failed:",
+    bridgePrimaryErr && bridgePrimaryErr.message ? bridgePrimaryErr.message : bridgePrimaryErr
+  );
 }
 
 app.use("/api/operator", depositFollowupsRouter);
@@ -397,6 +592,516 @@ if (typeof squareWebhook.mountCanonicalInvoiceRaw === "function") {
 }
 app.use("/webhooks/square", express.raw({ type: "*/*" }));
 app.use(express.json());
+
+try {
+  app.use(require("./routes/cheekyOsV4.route"));
+  console.log("[cheeky-v4] GET /dashboard · GET /metrics · GET /api/cheeky-os/dashboard-data (Power Apps) · POST /admin/* · GET /admin/health");
+} catch (v4RouteErr) {
+  console.warn(
+    "[cheeky-v4] route mount skipped:",
+    v4RouteErr && v4RouteErr.message ? v4RouteErr.message : v4RouteErr
+  );
+}
+
+// CORS — allow external apps (Power Apps, browser clients) to call this API
+const cors = require("cors");
+app.use(cors());
+
+try {
+  app.use(bridgeTaskRoutes);
+  console.log(
+    "[agent-orchestration] v1.1 POST /api/bridge/tasks · GET pending/approved/history · approve/reject/run · JSONL queue"
+  );
+} catch (btErr) {
+  console.warn("[agent-orchestration] bridgeTasks mount failed:", btErr && btErr.message ? btErr.message : btErr);
+}
+
+try {
+  app.use("/api/approvals", approvalRoutesV5);
+  console.log(
+    "[v5-operational] GET /api/approvals/pending · GET /api/approvals/history · POST /api/approvals/:id/approve|reject"
+  );
+} catch (apErr) {
+  console.warn("[v5-operational] approvals routes mount failed:", apErr && apErr.message ? apErr.message : apErr);
+}
+
+try {
+  app.use(require("./routes/agentIntelV31.route"));
+  console.log("[agent-intel-v31] /api/agent-intel/v31/* (additive read surfaces + keyed event append/graph seed)");
+} catch (aiErr) {
+  console.warn("[agent-intel-v31] mount failed:", aiErr && aiErr.message ? aiErr.message : aiErr);
+}
+
+try {
+  const emailIntelligenceRoutes = require("./routes/emailIntelligence");
+  const squareIntelligenceRoutes = require("./routes/squareIntelligence");
+  const productionIntelligenceRoutes = require("./routes/productionIntelligence");
+  const operatorQueryRoutes = require("./routes/operatorQuery");
+  const dailyCommandCenterRoutes = require("./routes/dailyCommandCenter");
+  app.use(emailIntelligenceRoutes);
+  app.use(squareIntelligenceRoutes);
+  app.use(productionIntelligenceRoutes);
+  app.use(operatorQueryRoutes);
+  app.use(dailyCommandCenterRoutes);
+  app.use(operatorWorkflowRoutesV7);
+  console.log(
+    "[live-business-v4] GET /api/intelligence/* (email,square,production,daily,workflows) · POST /api/operator/query · read-only"
+  );
+} catch (lb4Err) {
+  console.warn("[live-business-v4] mount failed:", lb4Err && lb4Err.message ? lb4Err.message : lb4Err);
+}
+
+try {
+  app.use(operatorEntryRoutesV8);
+  app.use(operatorDashboardRoutesV8);
+  app.use(blockerDashboardRouter);
+  app.use(whatNowRoutes);
+  app.use(frictionLogRoutes);
+  app.use(draftingRoutes);
+  app.use(shiftHandoffRoutes);
+  app.use(growthRoutes);
+  app.use(outreachRoutes);
+  app.use(kpiRoutes);
+  app.use(googleAdsRoutes);
+  app.use(notificationRoutes);
+  app.use(reportingRoutes);
+  app.use(customerRoutes);
+  app.use(intakeRoutes);
+  app.use(monitoringRoutes);
+  app.use(dashboardViewRoutes);
+  app.use(cheekyAiRoutes);
+  app.use(accountingRoutes);
+  app.use(reportingAdvancedRoutes);
+  app.use(backupRoutes);
+  app.use(teamActivityRoutes);
+  app.use(workOrdersV8Router);
+  app.use(garmentOrdersRoutesV8);
+  app.use("/cheeky-os-ui", express.static(path.join(__dirname, "public"), { index: false }));
+  console.log(
+    "[cheeky-v8-entry] POST /api/operator/command · GET /api/operator/today|blocks|approvals|production-board|cash-risks · GET /api/dashboard/* · /api/workorders/* · /api/garments/* · static /cheeky-os-ui/"
+  );
+  console.log(
+    "[cockpit-week-p1] GET /api/dashboard/blockers · GET /api/dashboard/production-cockpit · GET /api/operator/what-now · POST/GET /api/ops/friction-log"
+  );
+  console.log(
+    "[cockpit-phase2] POST /api/drafts/generate · GET /api/drafts/pending · POST /api/drafts/consolidate-garments · POST /api/approvals/approve|reject · GET /api/ops/shift-summary"
+  );
+  console.log(
+    "[cockpit-phase3] GET /api/growth/leads/scores · POST /api/outreach/generate · GET /api/outreach/drafts · GET /api/operator/morning-brief"
+  );
+  console.log(
+    "[cockpit-phase4] GET /api/kpi/summary · GET /api/notifications · GET /api/reporting/exceptions · /api/growth/google-ads/* · nightly review"
+  );
+  console.log(
+    "[cockpit-phase5] GET /api/customer/search · GET /api/customer/status · POST /api/intake/self-service · GET /api/intake/queue · GET /api/monitoring/system-health · /cheeky-os-ui/customer-intake.html"
+  );
+  console.log(
+    "[cockpit-phase7] GET /api/dashboard/view-descriptor · POST /api/cheeky-ai/ask · GET /api/cheeky-ai/search · GET /api/accounting/* · GET /api/reporting/advanced/* · GET /api/backup/* · GET /api/team/activity · GET /api/system/full-status"
+  );
+} catch (v8EntryErr) {
+  console.warn(
+    "[cheeky-v8-entry] mount failed:",
+    v8EntryErr && v8EntryErr.message ? v8EntryErr.message : v8EntryErr
+  );
+}
+
+try {
+  app.use(transportRoutes);
+  console.log("[agent-mesh] v2 transport POST /api/transport/task · GET status · GET logs");
+} catch (trErr) {
+  console.warn("[agent-mesh] transport mount failed:", trErr && trErr.message ? trErr.message : trErr);
+}
+
+try {
+  app.use(agentStatusRoute);
+  console.log("[agent-orchestration] GET /api/agent/status");
+} catch (asErr) {
+  console.warn("[agent-orchestration] agentStatus mount failed:", asErr && asErr.message ? asErr.message : asErr);
+}
+
+try {
+  app.use("/api/semantic-memory", memoryHttpRouter);
+  console.log(
+    "[semantic-memory] v1 GET /api/semantic-memory/search · /customer · /timeline · /stats · POST /api/semantic-memory/rebuild-indexes"
+  );
+} catch (memHttpErr) {
+  console.warn("[semantic-memory] mount failed:", memHttpErr && memHttpErr.message ? memHttpErr.message : memHttpErr);
+}
+
+try {
+  app.use("/api/bridge", bridgeHttpRouter);
+  console.log(
+    "[bridge-layer] v1 GET /api/bridge/events/recent · GET /api/bridge/customer-context · POST /api/bridge/events/test · GET /api/bridge/persistence/stats"
+  );
+} catch (bridgeHttpErr) {
+  console.warn("[bridge-layer] mount failed:", bridgeHttpErr && bridgeHttpErr.message ? bridgeHttpErr.message : bridgeHttpErr);
+}
+
+try {
+  app.use("/api/time-clock", require("./routes/timeClock.route"));
+  console.log("[time-clock] /api/time-clock (clock-in, clock-out, status, today)");
+} catch (tcErr) {
+  console.warn("[time-clock] mount failed:", tcErr && tcErr.message ? tcErr.message : tcErr);
+}
+try {
+  require("./routes/jeremyTasks.route").mountJeremyTasks(app);
+  console.log("[jeremy] GET /api/jeremy/tasks");
+} catch (jerErr) {
+  console.warn("[jeremy] mount failed:", jerErr && jerErr.message ? jerErr.message : jerErr);
+}
+
+// Square Sync Layer v1 — Financial truth for Cheeky OS (additive, safe, no auto-send)
+try {
+  app.use("/api/square-sync", squareSyncRouter);
+  console.log("[square-sync] v1 mounted at /api/square-sync (health, status, manual, reconcile, audit, webhook-test)");
+} catch (syncEarlyErr) {
+  console.warn("[square-sync] early mount failed:", syncEarlyErr && syncEarlyErr.message ? syncEarlyErr.message : syncEarlyErr);
+}
+
+// Production Routing Engine v1 — WHAT DO WE PRINT NEXT? (additive, safe, deposit-gated)
+try {
+  app.use("/api/production", productionRoutingRouter);
+  console.log("[production-routing] v1 mounted at /api/production (health, queue, run, assign, jobs, tasks, audit)");
+} catch (routingErr) {
+  console.warn("[production-routing] v1 failed to mount:", routingErr && routingErr.message ? routingErr.message : routingErr);
+}
+
+// Activation Layer v1 — Makes the system RUN automatically (additive, thin)
+try {
+  app.use("/api/activation", activationRouter);
+  console.log("[activation] v1 mounted at /api/activation (health, today, jeremy, task/advance, run, status)");
+} catch (activationErr) {
+  console.warn("[activation] v1 failed to mount:", activationErr && activationErr.message ? activationErr.message : activationErr);
+}
+
+// AI Decision Layer v1 — Snapshot + Brain endpoints (additive, read-only, fail-safe)
+(function mountAICore() {
+  try {
+    const snapshotService = require("./services/snapshot.service");
+    const aiDecision = require("./services/ai.decision.service");
+
+    app.get("/api/cheeky/snapshot", async (req, res) => {
+      try {
+        const snapshot = await snapshotService.buildSnapshot();
+        res.setHeader("Content-Type", "application/json");
+        return res.json({ success: true, snapshot });
+      } catch (err) {
+        return res.status(500).json({ success: false, error: err && err.message ? err.message : String(err) });
+      }
+    });
+
+    app.get("/api/cheeky/brain", async (req, res) => {
+      try {
+        const snapshot = await snapshotService.buildSnapshot();
+        const decision = aiDecision.getDailyDirective(snapshot);
+        res.setHeader("Content-Type", "application/json");
+        return res.json({ success: true, snapshot, decision });
+      } catch (err) {
+        return res.status(500).json({ success: false, error: err && err.message ? err.message : String(err) });
+      }
+    });
+
+    console.log("[ai-core] v1 mounted — GET /api/cheeky/snapshot · GET /api/cheeky/brain");
+  } catch (aiCoreErr) {
+    console.warn("[ai-core] v1 failed to mount:", aiCoreErr && aiCoreErr.message ? aiCoreErr.message : aiCoreErr);
+  }
+})();
+
+(function mountDepositNudgePolicyPlaceholder() {
+  try {
+    const depositNudgePlaceholder = require("./services/depositNudgePlaceholder.service");
+    app.get("/api/cheeky/deposit-nudge/policy", (_req, res) => {
+      return res.json({
+        success: true,
+        ...depositNudgePlaceholder.getDepositNudgePolicySummary(),
+      });
+    });
+    console.log("[deposit-nudge] GET /api/cheeky/deposit-nudge/policy (Phase 3 placeholder)");
+  } catch (e) {
+    console.warn(
+      "[deposit-nudge] placeholder mount skipped:",
+      e && e.message ? e.message : e
+    );
+  }
+})();
+
+// Cash Engine v1 — Follow-up draft generation + controlled send (additive, no auto-send)
+(function mountCashEngine() {
+  try {
+    const followupData = require("./services/followup.data.service");
+    const followupAI   = require("./services/followup.ai.service");
+    const store        = require("./services/followup.store");
+    const sendService  = require("./services/followup.send.service");
+
+    // GET /api/cheeky/followups — list all drafts
+    app.get("/api/cheeky/followups", (req, res) => {
+      const statusFilter = req.query.status || undefined;
+      const drafts = store.getDrafts(statusFilter);
+      res.setHeader("Content-Type", "application/json");
+      return res.json({ success: true, summary: store.getSummary(), drafts });
+    });
+
+    // POST /api/cheeky/followups/generate — find unpaid invoices + create drafts
+    app.post("/api/cheeky/followups/generate", async (req, res) => {
+      try {
+        const body = req.body || {};
+        const limit = Math.min(Number(body.limit) || 10, 50);
+        const invoices = await followupData.getUnpaidInvoices(limit);
+        const drafts = [];
+
+        for (const invoice of invoices) {
+          const message = followupAI.generateFollowUp(invoice);
+          const draft = store.saveDraft({ ...invoice, ...message, status: "draft" });
+          drafts.push(draft);
+        }
+
+        res.setHeader("Content-Type", "application/json");
+        return res.json({ success: true, generated: drafts.length, drafts });
+      } catch (err) {
+        return res.status(500).json({ success: false, error: err && err.message ? err.message : String(err) });
+      }
+    });
+
+    // POST /api/cheeky/followups/send/:id — simulate send (approval required)
+    app.post("/api/cheeky/followups/send/:id", async (req, res) => {
+      try {
+        const body = req.body || {};
+        const approvedBy = body.approvedBy || "operator";
+        const result = await sendService.sendDraft(req.params.id, { approvedBy });
+        res.setHeader("Content-Type", "application/json");
+        return res.json({ success: result.ok, result });
+      } catch (err) {
+        return res.status(500).json({ success: false, error: err && err.message ? err.message : String(err) });
+      }
+    });
+
+    // POST /api/cheeky/followups/approve/:id — approve without sending yet
+    app.post("/api/cheeky/followups/approve/:id", (req, res) => {
+      const body = req.body || {};
+      const result = sendService.approveDraft(req.params.id, body.approvedBy || "operator");
+      res.setHeader("Content-Type", "application/json");
+      return res.json({ success: result.ok, ...result });
+    });
+
+    // GET /api/cheeky/followups/log — view send log (now backed by communication.log)
+    app.get("/api/cheeky/followups/log", (_req, res) => {
+      res.setHeader("Content-Type", "application/json");
+      return res.json({ success: true, log: sendService.getSendLog() });
+    });
+
+    // POST /api/cheeky/followups/send-all — PHASE 4: send all approved/draft emails
+    app.post("/api/cheeky/followups/send-all", async (req, res) => {
+      try {
+        const body = req.body || {};
+        const approvedBy = body.approvedBy || "operator";
+        const statusFilter = body.status || "approved";  // default: only approved drafts
+        const eligible = store.getDrafts(statusFilter);
+
+        const results = [];
+        for (const draft of eligible) {
+          const result = await sendService.sendDraft(draft.id, { approvedBy });
+          results.push({ draftId: draft.id, customerName: draft.customerName, ...result });
+        }
+
+        const sent    = results.filter((r) => r.ok).length;
+        const failed  = results.filter((r) => !r.ok && r.status !== "already_sent").length;
+        const skipped = results.filter((r) => r.status === "already_sent").length;
+
+        res.setHeader("Content-Type", "application/json");
+        return res.json({ success: true, sent, failed, skipped, total: results.length, results });
+      } catch (err) {
+        return res.status(500).json({ success: false, error: err && err.message ? err.message : String(err) });
+      }
+    });
+
+    // GET /api/cheeky/comms/log — PHASE 2: full communication log
+    const commsLog = require("./services/communication.log");
+    app.get("/api/cheeky/comms/log", (req, res) => {
+      const statusFilter = req.query.status || undefined;
+      const logs = commsLog.getLogs(statusFilter);
+      res.setHeader("Content-Type", "application/json");
+      return res.json({ success: true, summary: commsLog.getSummary(), logs });
+    });
+
+    // GET /api/cheeky/email/status — PHASE 1+5: send config + draft status summary
+    const emailSvc = require("./services/email.send.service");
+    app.get("/api/cheeky/email/status", (req, res) => {
+      res.setHeader("Content-Type", "application/json");
+      return res.json({
+        success: true,
+        sendMode: emailSvc.getSendMode(),
+        drafts: store.getSummary(),
+        comms: commsLog.getSummary(),
+      });
+    });
+
+    console.log("[cash-engine] v1 mounted — /api/cheeky/followups (generate, send/:id, send-all, approve/:id, log) | /api/cheeky/comms/log | /api/cheeky/email/status");
+  } catch (cashErr) {
+    console.warn("[cash-engine] v1 failed to mount:", cashErr && cashErr.message ? cashErr.message : cashErr);
+  }
+})();
+
+// Auto Cash System v1 — Daily runner + cash report (additive, no auto-send)
+(function mountAutoCashSystem() {
+  try {
+    const dailyRunner   = require("./services/daily.cash.runner");
+    const cashReport    = require("./services/cash.report.service");
+    const store         = require("./services/followup.store");
+
+    // GET /api/cheeky/cash/report — daily cash summary
+    app.get("/api/cheeky/cash/report", async (req, res) => {
+      try {
+        const report = await cashReport.getCashReport();
+        res.setHeader("Content-Type", "application/json");
+        return res.json({ success: true, report });
+      } catch (err) {
+        return res.status(500).json({ success: false, error: err && err.message ? err.message : String(err) });
+      }
+    });
+
+    // GET /api/cheeky/cash/status — scheduler status
+    app.get("/api/cheeky/cash/status", (req, res) => {
+      res.setHeader("Content-Type", "application/json");
+      return res.json({ success: true, scheduler: dailyRunner.getStatus(), store: store.getSummary() });
+    });
+
+    // POST /api/cheeky/cash/run — manual trigger (bypasses schedule, respects dedup)
+    app.post("/api/cheeky/cash/run", async (req, res) => {
+      try {
+        const body = req.body || {};
+        const forceRun = body.force === true;  // force=true overrides 48h cooldown
+        const result = await dailyRunner.runDailyCashCheck({
+          triggeredBy: body.requestedBy || "manual",
+          limit: body.limit || 20,
+          cooldownHours: forceRun ? 0 : 48,
+        });
+        res.setHeader("Content-Type", "application/json");
+        return res.json({ success: true, result });
+      } catch (err) {
+        return res.status(500).json({ success: false, error: err && err.message ? err.message : String(err) });
+      }
+    });
+
+    // GET /api/cheeky/cash/history — follow-up contact history
+    app.get("/api/cheeky/cash/history", (req, res) => {
+      res.setHeader("Content-Type", "application/json");
+      return res.json({ success: true, history: store.getAllHistory() });
+    });
+
+    // PHASE 5 — Daily Scheduler (opt-in via DAILY_SCHEDULER=true, or always-on default)
+    const schedulerEnabled = process.env.DAILY_SCHEDULER !== "false";
+    if (schedulerEnabled) {
+      dailyRunner.start();
+    } else {
+      console.log("[auto-cash] DAILY_SCHEDULER=false — scheduler disabled, use POST /api/cheeky/cash/run");
+    }
+
+    console.log("[auto-cash] v1 mounted — /api/cheeky/cash (report, status, run, history) | scheduler=" + schedulerEnabled);
+  } catch (autoCashErr) {
+    console.warn("[auto-cash] v1 failed to mount:", autoCashErr && autoCashErr.message ? autoCashErr.message : autoCashErr);
+  }
+})();
+
+// Inbound + AI reply layer v1 — log, match, draft suggestions only (no auto-reply)
+(function mountInboundSystem() {
+  try {
+    const inboundStore = require("./services/inbound.store");
+    const inboundMatch = require("./services/inbound.match.service");
+    const inboundAi = require("./services/inbound.ai.reply.service");
+    const opportunityDetector = require("./services/opportunity.detector");
+    let commsLog = null;
+    try {
+      commsLog = require("./services/communication.log");
+    } catch (_) {}
+
+    app.post("/api/cheeky/inbound/email", async (req, res) => {
+      try {
+        const body = req.body || {};
+        const saved = inboundStore.saveInbound({
+          from: body.from,
+          subject: body.subject,
+          body: body.body,
+        });
+
+        let enriched = saved;
+        try {
+          const match = await inboundMatch.matchInbound(saved);
+          const opportunityType = opportunityDetector.detectOpportunity(saved);
+          const aiReplyDraft = await inboundAi.generateReplyDraft(saved, {
+            opportunityType,
+            matchedCustomerName: match.matchedCustomerName,
+          });
+
+          enriched = inboundStore.updateInbound(saved.id, {
+            matchedInvoiceId: match.matchedInvoiceId,
+            matchedCustomerName: match.matchedCustomerName,
+            matchConfidence: match.confidence,
+            orderId: match.orderId || null,
+            opportunityType,
+            aiReplyDraft,
+            status: "processed",
+          });
+        } catch (innerErr) {
+          console.warn("[inbound] enrich failed (message still saved):", innerErr && innerErr.message ? innerErr.message : innerErr);
+        }
+
+        if (commsLog && typeof commsLog.logMessage === "function") {
+          try {
+            commsLog.logMessage({
+              status: "inbound",
+              email: enriched.from,
+              subject: enriched.subject,
+              body: enriched.body,
+              invoiceId: enriched.matchedInvoiceId,
+              draftId: enriched.id,
+              mode: "inbound_webhook",
+              error: null,
+            });
+          } catch (_) {}
+        }
+
+        res.setHeader("Content-Type", "application/json");
+        return res.json({ success: true, inbound: enriched || saved });
+      } catch (err) {
+        return res.status(500).json({ success: false, error: err && err.message ? err.message : String(err) });
+      }
+    });
+
+    app.get("/api/cheeky/inbound/review", async (req, res) => {
+      try {
+        const messages = inboundStore.getInboundMessages();
+        res.setHeader("Content-Type", "application/json");
+        return res.json({ success: true, count: messages.length, messages });
+      } catch (err) {
+        return res.status(500).json({ success: false, error: err && err.message ? err.message : String(err) });
+      }
+    });
+
+    // AI Closer — conversion plan per inbound (review only; no auto-send / no DB writes)
+    const { buildCloserReviewForMessage } = require("./services/closer.review.pack");
+
+    app.get("/api/cheeky/closer/review", async (req, res) => {
+      try {
+        const messages = inboundStore.getInboundMessages();
+
+        const reviews = messages.map((message) => buildCloserReviewForMessage(message));
+
+        res.setHeader("Content-Type", "application/json");
+        return res.json({ success: true, count: reviews.length, reviews });
+      } catch (err) {
+        return res.status(500).json({
+          success: false,
+          error: err && err.message ? err.message : String(err),
+        });
+      }
+    });
+
+    console.log("[inbound] v1 mounted — POST /api/cheeky/inbound/email · GET /api/cheeky/inbound/review · GET /api/cheeky/closer/review");
+  } catch (inboundErr) {
+    console.warn("[inbound] v1 failed to mount:", inboundErr && inboundErr.message ? inboundErr.message : inboundErr);
+  }
+})();
+
 app.use(require("./src/routes/aiExecute.route"));
 app.use(require("./src/routes/operator.route"));
 app.use(require("./src/routes/dashboard.route"));
@@ -423,7 +1128,81 @@ console.log(
 app.use(require("./src/routes/mobileOperator.route"));
 app.use(require("./src/routes/decision.route"));
 app.use(require("./src/routes/cash.route"));
+app.use(require("./src/routes/revenueRecovery.route"));
+app.use(require("./src/routes/pricingEvaluate.route"));
 app.use(require("./src/routes/flow.route"));
+app.use(require("./src/routes/programs.route"));
+
+try {
+  app.use("/api/fulfillment", require("./routes/fulfillment.route"));
+  console.log(
+    "[fulfillment] GET /api/fulfillment/queue · POST …/pirate-ship/draft · POST …/:orderId/customer-draft"
+  );
+} catch (fulErr) {
+  console.warn("[fulfillment] mount failed:", fulErr && fulErr.message ? fulErr.message : fulErr);
+}
+
+try {
+  app.use("/api/digest", require("./routes/digest.route"));
+  console.log("[digest] GET /api/digest/today · POST /api/digest/generate · GET /api/digest/history");
+} catch (digErr) {
+  console.warn("[digest] mount failed:", digErr && digErr.message ? digErr.message : digErr);
+}
+
+try {
+  app.use("/api/purchasing", require("./routes/purchasing.route"));
+  console.log(
+    "[purchasing] GET /api/purchasing/plans · POST /api/purchasing/orders/:orderId/plan · PATCH approve/ordered/receive"
+  );
+} catch (purErr) {
+  console.warn("[purchasing] mount failed:", purErr && purErr.message ? purErr.message : purErr);
+}
+
+try {
+  app.use("/api/cheeky-intake", require("./routes/intakeQuote.route"));
+  console.log(
+    "[cheeky-intake] GET /api/cheeky-intake/health · POST /api/cheeky-intake/quote-parse (QUOTE_PENDING / PARSED)"
+  );
+} catch (intakeMnt) {
+  console.warn(
+    "[cheeky-intake] mount failed:",
+    intakeMnt && intakeMnt.message ? intakeMnt.message : intakeMnt
+  );
+}
+
+try {
+  app.use("/api/qc", require("./routes/qc.route"));
+  console.log("[qc] GET /api/qc/board · GET /api/qc/:orderId · POST /api/qc/:orderId (PASS|FAIL|OVERRIDE_PASS)");
+} catch (qcMnt) {
+  console.warn("[qc] mount failed:", qcMnt && qcMnt.message ? qcMnt.message : qcMnt);
+}
+
+// Power Apps orders endpoint — fulfillment PATCH routes must register before connection loop :id
+try {
+  app.use("/api/orders", require("./routes/orderFulfillment.route"));
+  console.log("[fulfillment-order] PATCH /api/orders/:id/fulfillment · PATCH …/fulfillment/status");
+} catch (foErr) {
+  console.warn(
+    "[fulfillment-order] mount failed:",
+    foErr && foErr.message ? foErr.message : foErr
+  );
+}
+
+try {
+  const connectionLoopOrders = require(path.join(__dirname, "routes", "connection.loop.orders.route"));
+  app.use("/api/orders", connectionLoopOrders);
+  console.log("[connection-loop] GET|PATCH /api/orders/:id mounted (before powerapps list)");
+} catch (err) {
+  console.warn("[connection-loop] mount failed:", err && err.message ? err.message : err);
+}
+
+try {
+  const ordersPowerApps = require(path.join(__dirname, "..", "src", "api", "orders.powerapps"));
+  app.use("/api/orders", ordersPowerApps);
+  console.log("[orders/powerapps] GET /api/orders mounted (Power Apps integration)");
+} catch (err) {
+  console.warn("[orders/powerapps] mount failed:", err && err.message ? err.message : err);
+}
 
 try {
   const ordersV32Router = require(path.join(__dirname, "..", "..", "src", "routes", "orders"));
@@ -563,14 +1342,14 @@ try {
   const communicationsV41 = require(path.join(__dirname, "..", "..", "src", "routes", "communications"));
   app.use(communicationsV41);
 } catch (err) {
-  console.warn("[cheeky-os] v4.1 communications mount failed:", err && err.message ? err.message : err);
+  console.warn("[cheeky-os] v4.3 communications mount failed:", err && err.message ? err.message : err);
 }
 
 try {
   const sendApprovalV42 = require(path.join(__dirname, "..", "..", "src", "routes", "send.approval"));
   app.use(sendApprovalV42);
 } catch (err) {
-  console.warn("[cheeky-os] v4.2 send approval mount failed:", err && err.message ? err.message : err);
+  console.warn("[cheeky-os] v4.3 send approval mount failed:", err && err.message ? err.message : err);
 }
 
 try {
@@ -863,8 +1642,27 @@ try {
 const operatorRunRouter = require("./routes/operatorRun");
 app.use("/api/operator", operatorRunRouter);
 app.use("/operator", operatorRunRouter);
+try {
+  app.use("/api/operator", operatorConsoleJarvis);
+  console.log(
+    "[jarvis-v6] POST /api/operator/ask · POST /execute · GET /jarvis/context|/context/v6 · GET /recommendations|/alerts|/focus"
+  );
+} catch (jarvisRouteErr) {
+  console.warn("[jarvis-v6] operator console mount failed:", jarvisRouteErr && jarvisRouteErr.message ? jarvisRouteErr.message : jarvisRouteErr);
+}
 app.use("/api/ai", aiExecuteRouter);
 app.use("/api/ai", aiContextRouter);
+try {
+  app.use("/api/ai", aiOperatorBrainRouter);
+  console.log(
+    "[ai-operator-brain] GET /api/ai/brief · POST /api/ai/command (safe drafts, no auto-send)"
+  );
+} catch (aiBrainErr) {
+  console.warn(
+    "[ai-operator-brain] mount failed:",
+    aiBrainErr && aiBrainErr.message ? aiBrainErr.message : aiBrainErr
+  );
+}
 app.use("/api/autopilot", autopilotApiRouter);
 try {
   const reportsDailyV33 = require(path.join(__dirname, "..", "..", "src", "routes", "reportsDailyV33"));
@@ -901,6 +1699,7 @@ app.use("/jobs", jobsRouter);
 app.use("/tasks", tasksHttpRouter);
 app.use("/operator", operatorRouter);
 app.use("/api/operator", operatorRouter);
+
 app.use("/webhooks", webhooksEmailRouter);
 app.use("/ops/dashboard", cheekyDashboardRouter);
 app.use("/dashboard/summary", cheekyDashboardRouter);
@@ -912,7 +1711,29 @@ app.use("/command", commandRouterExpress);
 app.use("/api/command", commandRouterExpress);
 app.use("/api/ai", aiCommandRouterV57);
 app.use("/api/ai-status", aiStatusRouterV58);
-app.use("/api/cashflow", cashflowRouterV59);
+app.use("/api/cashflow", cashflowApiCombined);
+console.log("[cashflow] sentinel: GET /api/cashflow/snapshot · obligations · events (legacy GET /api/cashflow/)");
+try {
+  app.use("/api/executive", executiveBriefingJarvis);
+  console.log("[jarvis-v6] GET /api/executive/daily · GET /api/executive/weekly");
+} catch (execBriefErr) {
+  console.warn(
+    "[jarvis-v6] executive briefing mount failed:",
+    execBriefErr && execBriefErr.message ? execBriefErr.message : execBriefErr
+  );
+}
+try {
+  app.use(observabilityRoutesV7);
+  app.use(trustDashboardV7);
+  console.log(
+    "[v7-activation] GET /api/observability/traces|metrics|latency|failures|readiness · GET /api/trust/score|warnings|recommendations"
+  );
+} catch (v7ActErr) {
+  console.warn(
+    "[v7-activation] observability/trust mount failed:",
+    v7ActErr && v7ActErr.message ? v7ActErr.message : v7ActErr
+  );
+}
 app.use(dealsRouterV60);
 app.use(customerHistoryRouterV61);
 app.use(garmentsRouterV63);
@@ -1004,8 +1825,13 @@ app.use("/api/production", productionRouter);
 app.use("/api/sales", salesRouter);
 app.use("/api/summary", summaryTodayRouter);
 app.use("/api/automation", automationRouter);
+app.use("/api/dashboard", dashboardRoutesV5);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/dashboard", dashboardNextRouter);
+app.use("/api/square", squareCommandLayerRouter);
+console.log(
+  "[square-command-layer] /api/square/drafts, PATCH approve, POST create-square-draft, GET /order/:id/status"
+);
 app.use("/api/square", squareTruthRouter);
 app.use("/api/square", squareDraftRouter);
 app.use("/api/ops", opsTodayRouter);
@@ -1015,7 +1841,15 @@ app.use("/api/schedule", scheduleRouter);
 app.use("/api/inventory", inventoryHttpRouter);
 app.use("/api/vendor/outbound", vendorOutboundRouter);
 app.use("/api/intake", intakeRouter);
+console.log(
+  "[universal-intake] POST /api/intake — v3.5 branch (request_text + source + customer) → Dataverse; legacy web form unchanged"
+);
+console.log(
+  "[cheeky-intake-brain] POST /api/intake/ai-parse { intake_id, force? } · auto-parse after new intake if CHEEKY_INTAKE_AI_AUTO_PARSE not false"
+);
 app.use("/api/ads", adsAnalyzeRouter);
+app.use("/api/system", systemHealthRoutesV5);
+app.use("/api/system", systemFullStatusRoutes);
 app.use("/api/system", kaizenRouter);
 app.use("/api/art", artRouter);
 app.use("/api/proofs", proofsRouter);
@@ -1361,7 +2195,7 @@ async function main() {
       console.error("[startupValidation] CRITICAL:", sv.critical.join(" | "));
     }
     if (sv.warnings.length) {
-      console.warn("[startupValidation] warnings:", sv.warnings.slice(0, 25).join(" | "));
+      console.log("[startupValidation] warnings:", sv.warnings.slice(0, 25).join(" | "));
     }
     await logOpsEvent(
       "STARTUP_VALIDATION",
@@ -1372,12 +2206,12 @@ async function main() {
       process.exit(1);
     }
   } catch (e) {
-    console.warn("[startupValidation] failed:", e && e.message ? e.message : e);
+    console.warn("[BOOT WARNING] startupValidation failed:", e && e.message ? e.message : e);
   }
   try {
     await initializeSquareIntegration();
   } catch (e) {
-    console.warn("[cheeky-os/server] Square init non-fatal:", e.message || e);
+    console.warn("[BOOT WARNING] Square init non-fatal:", e.message || e);
   }
   try {
     const startupReport = getSystemHealthReport(app);
@@ -1385,7 +2219,7 @@ async function main() {
       `[systemEngine] startup status=${startupReport.status} missingKeys=${startupReport.missing_keys.length} brokenRoutes=${startupReport.broken_routes.length}`
     );
   } catch (e) {
-    console.warn("[systemEngine] startup health scan failed:", e && e.message ? e.message : e);
+    console.warn("[BOOT WARNING] systemEngine startup scan failed:", e && e.message ? e.message : e);
   }
   if (String(process.env.BRIEFING_CRON_ENABLED || "").trim().toLowerCase() === "true") {
     try {
@@ -1411,8 +2245,18 @@ async function main() {
     }
   }
 
-  setTimeout(() => {
-    console.log("[ROUTE DUMP START]");
+  const skipRouteDump =
+    String(process.env.CHEEKY_BOOT_ROUTE_DUMP || "").trim() === "0" ||
+    (String(process.env.NODE_ENV || "").toLowerCase() === "production" &&
+      !String(process.env.CHEEKY_BOOT_ROUTE_DUMP || "").match(/^(1|true|yes|on)$/i));
+
+  if (skipRouteDump) {
+    console.log("[boot] route dump skipped (NODE_ENV=production or CHEEKY_BOOT_ROUTE_DUMP=0); set CHEEKY_BOOT_ROUTE_DUMP=1 to list routes");
+  }
+
+  if (!skipRouteDump) {
+    setTimeout(() => {
+      console.log("[ROUTE DUMP START]");
     try {
       if (app && app._router && app._router.stack) {
         app._router.stack
@@ -1437,18 +2281,112 @@ async function main() {
     }
     console.log("[ROUTE DUMP END]");
   }, 500);
+  }
 
-  app.listen(PORT, HOST, () => {
+  const http = require("http");
+  const httpServer = http.createServer(app);
+  httpServer.listen(PORT, HOST, () => {
+    let cheekyVer = "4.3.0";
+    try {
+      cheekyVer = require("./services/cheekyOsRuntimeConfig.service").cheekyOsVersion();
+    } catch (_v) {
+      /* keep default */
+    }
     const statelessMode = process.env.CHEEKY_STATELESS_MODE !== "false";
-    console.log("[CHEEKY-OS v3.3] DECISION ENGINE + SQUARE INGEST LIVE");
+    console.log(`[CHEEKY-OS v${cheekyVer}] Production Ready — Power Apps dashboard tiles + HealthSummary (degraded-safe)`);
+    console.log(
+      `[boot] Power Apps: connector GET /api/cheeky-os/dashboard-data — bind First(colCheekyTile).OrdersOnHold … HealthSummary (see docs/power-apps-dashboard-integration-playbook.md)`
+    );
+    console.log(
+      `[boot] schema alignment: Prisma DB ≡ schema.prisma (run migrations from email-intake). Dataverse intake columns → CHEEKY_DV_INTAKE_* (see dvPublisherColumns.service.js).`
+    );
+    console.log(`✅ CHEEKY OS RUNNING ON PORT ${PORT}`);
     console.log(`Cheeky OS running on port ${PORT}`);
+
+    try {
+      const { runStaleRunningRecovery } = require("./agent/orchestrationRecovery");
+      runStaleRunningRecovery();
+    } catch (_rec) {}
+
+    try {
+      if (String(process.env.AGENT_PROCESSOR_ENABLED || "").trim().toLowerCase() === "true") {
+        const { startProcessor } = require("./agent/taskProcessor");
+        startProcessor(Number(process.env.AGENT_PROCESSOR_INTERVAL_MS || 30000));
+      } else {
+        console.log("[agent-processor] disabled (AGENT_PROCESSOR_ENABLED is not true)");
+      }
+    } catch (apErr) {
+      console.warn("[agent-processor] failed to start:", apErr && apErr.message ? apErr.message : apErr);
+    }
+
+    startSelfFixSystem();
     console.log(`[boot] phase=listen ok=1 url=http://${HOST}:${PORT}`);
     console.log(`[cheeky-os] listening on http://${HOST}:${PORT}`);
+    try {
+      const { startDailyDigestScheduler } = require("./services/dailyDigestScheduler.service");
+      startDailyDigestScheduler();
+    } catch (dsch) {
+      console.warn("[digest-scheduler] failed to start:", dsch && dsch.message ? dsch.message : dsch);
+    }
+    try {
+      const { installGracefulShutdown } = require("./services/cheekyOsShutdown.service");
+      installGracefulShutdown(httpServer);
+    } catch (sdErr) {
+      console.warn("[shutdown] graceful handlers not installed:", sdErr && sdErr.message ? sdErr.message : sdErr);
+    }
+
+    try {
+      const { startCheekyOsAlertTicker } = require("./services/cheekyOsAlerts.service");
+      startCheekyOsAlertTicker();
+    } catch (alErr) {
+      console.warn("[alert-ticker]", alErr && alErr.message ? alErr.message : alErr);
+    }
+
+    try {
+      const { startOperatorAutonomousWorker } = require("./services/operatorAutonomousWorker.service");
+      startOperatorAutonomousWorker();
+    } catch (wk) {
+      console.warn("[operator-worker] start failed:", wk && wk.message ? wk.message : String(wk));
+    }
+
+    /** v4 canonical boot line (Patrick-facing) — uses actual listen PORT */
+    try {
+      const runtimeObs = require("./services/cheekyOsRuntimeObservability.service");
+      const snapshot = runtimeObs.getObservabilitySnapshot();
+      const ww = snapshot.worker || {};
+      const dashUrl = `http://localhost:${PORT}/dashboard`;
+      const workerPhrase = !ww.enabled
+        ? "idle (WORKER_ENABLED=false)"
+        : !ww.running
+          ? "stopped"
+          : ww.breakerOpenUntil && Date.now() < ww.breakerOpenUntil
+            ? "recovering (circuit breaker)"
+            : "running";
+      console.log(
+        `🎉 CHEEKY OS v${cheekyVer} FULLY UNLOCKED & AUTONOMOUS 🚀 Operator Worker ${workerPhrase} | HTML /dashboard | Power Apps GET /api/cheeky-os/dashboard-data | ${dashUrl}`
+      );
+    } catch (_) {
+      console.log(
+        `🎉 CHEEKY OS v${cheekyVer} FULLY UNLOCKED & AUTONOMOUS 🚀 HTML /dashboard · Power Apps tiles /api/cheeky-os/dashboard-data · http://localhost:${PORT}/dashboard`
+      );
+    }
+
+    const probeDelayMs = Number(process.env.CHEEKY_OS_INTAKE_SELFTEST_DELAY_MS || "2800") || 2800;
+    setTimeout(() => {
+      try {
+        const { logIntakeV31StartupProbe } = require("./services/intakeFlowHealth.service");
+        const localBase = `http://127.0.0.1:${PORT}`;
+        Promise.resolve(logIntakeV31StartupProbe(localBase)).catch(() => {});
+      } catch (_) {
+        console.warn("[BOOT WARNING] intake self-test module unavailable; continuing partial boot");
+      }
+    }, probeDelayMs);
+
     console.log(`[cheeky-os] health: http://127.0.0.1:${PORT}/health`);
     console.log(`[cheeky-os] system/health: http://127.0.0.1:${PORT}/system/health`);
     console.log(`[cheeky-os] system check: GET http://127.0.0.1:${PORT}/system/check`);
     console.log(
-      `[cheeky-os] control tower: browser GET / · snapshot GET /control-tower · command POST /command`
+      `[cheeky-os] control tower: GET /control-tower (HTML) · operator dashboard: GET /dashboard · command POST /command`
     );
     console.log(`[cheeky-os] adoption: GET /setup/status · GET /help/:section · training POST /setup/training/enable`);
     console.log(`[cheeky-os] inbound+timeline: POST /inbound/email · GET /timeline/recent · GET /art/queue · POST /notes`);
@@ -1567,6 +2505,24 @@ async function main() {
     startAutomation();
     startAgentScheduler();
 
+    try {
+      const obs = require(path.join(__dirname, "services", "cheekyOsRuntimeObservability.service"));
+      obs.registerCron("activation_production_engine", "every 10 min", 10 * 60 * 1000);
+      obs.registerCron("followup_email", "hourly when ENABLE_FOLLOWUP_ENGINE=true", 3600000);
+      obs.registerCron("sales_opportunity_scan", "every 10 min", 10 * 60 * 1000);
+      obs.registerCron("dashboard_summary_cache", "every 20 min", 20 * 60 * 1000);
+      obs.registerCron("dead_lead_recovery", "weekly (7d placeholder)", 7 * 24 * 3600000);
+      obs.registerCron("outreach_loop_weekdays", "daily (24h placeholder; drafts approval-gated)", 24 * 3600000);
+    } catch (_cronReg) {}
+
+    // Activation Layer — auto-runner (every 10 min, deposit-gated, no auto-send)
+    try {
+      activationRunner.start();
+      console.log(`[activation] auto-runner started — /api/activation/today · /api/activation/jeremy`);
+    } catch (activationStartErr) {
+      console.warn("[activation] runner failed to start:", activationStartErr && activationStartErr.message ? activationStartErr.message : activationStartErr);
+    }
+
     if (!statelessMode && process.env.ENABLE_FOLLOWUP_ENGINE === "true") {
       try {
         const { runFollowups } = require(path.join(
@@ -1577,7 +2533,11 @@ async function main() {
           "followupEngine.js"
         ));
         if (typeof runFollowups === "function") {
+          const obs = require(path.join(__dirname, "services", "cheekyOsRuntimeObservability.service"));
           setInterval(() => {
+            try {
+              obs.noteCronRun("followup_email");
+            } catch (_n) {}
             runFollowups().catch((e) =>
               console.error("[followupEngine]", e && e.message ? e.message : e)
             );
@@ -1617,6 +2577,41 @@ async function main() {
       }
     } else {
       console.log("[SAFE MODE] Stateless mode enabled; automation scheduler disabled");
+    }
+
+    if (!statelessMode) {
+      try {
+        const salesScanEng = require(path.join(__dirname, "services", "salesOpportunityEngine.service"));
+        const obs = require(path.join(__dirname, "services", "cheekyOsRuntimeObservability.service"));
+        setInterval(() => {
+          try {
+            obs.noteCronRun("sales_opportunity_scan");
+          } catch (_n) {}
+          salesScanEng.maybeRunDailySalesScan().catch((err) =>
+            console.warn("[sales-scan]", err && err.message ? err.message : err)
+          );
+        }, 10 * 60 * 1000);
+        console.log(
+          "[sales-engine] daily opportunity scan hook (CHEEKY_SALES_SCAN_ENABLED=false default; hour=CHEEKY_SALES_SCAN_HOUR; CHEEKY_SALES_AUTO_DRAFT=false default)"
+        );
+      } catch (salesSchErr) {
+        console.warn("[sales-engine] scan hook not started:", salesSchErr && salesSchErr.message ? salesSchErr.message : salesSchErr);
+      }
+    }
+
+    if (!statelessMode) {
+      try {
+        const obs = require(path.join(__dirname, "services", "cheekyOsRuntimeObservability.service"));
+        const dashSum = require(path.join(__dirname, "services", "dashboardSummaryService"));
+        setInterval(() => {
+          try {
+            obs.noteCronRun("dashboard_summary_cache");
+          } catch (_n) {}
+          dashSum.buildDashboardSummary().catch((err) =>
+            console.warn("[dashboard-summary-cron]", err && err.message ? err.message : err)
+          );
+        }, 20 * 60 * 1000);
+      } catch (_dashCron) {}
     }
 
     if (!statelessMode) {

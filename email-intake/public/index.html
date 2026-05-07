@@ -1,82 +1,120 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Cheeky OS Board</title>
-  <style>
-    body {
-      font-family: Arial;
-      display: flex;
-      gap: 20px;
-      padding: 20px;
-    }
-
-    .column {
-      width: 30%;
-      background: #f4f4f4;
-      padding: 10px;
-      border-radius: 8px;
-    }
-
-    .card {
-      background: white;
-      padding: 10px;
-      margin-bottom: 10px;
-      border-radius: 6px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cheeky OS — Shop Mode</title>
+  <link rel="stylesheet" href="/shop.css" />
 </head>
 <body>
 
-  <div class="column">
-    <h2>READY</h2>
-    <div id="ready"></div>
+  <header class="shop-header">
+    <div class="brand">
+      <span class="dot"></span>
+      <h1>Cheeky OS <span class="thin">Shop Mode</span></h1>
+    </div>
+    <div class="header-actions">
+      <span class="pill" id="status-pill">—</span>
+      <button data-action="refresh" class="btn">Refresh</button>
+      <button data-action="run" class="btn">Run System</button>
+      <button data-action="batches" class="btn">Batches</button>
+      <button data-action="tasks" class="btn">Tasks</button>
+      <a href="/command-center" class="btn link">Command Center</a>
+      <a href="/owner.html" class="btn link">Owner center</a>
+    </div>
+  </header>
+
+  <div class="stat-row">
+    <div class="stat"><span class="stat-label">Ready</span><span class="stat-value" id="s-ready">0</span></div>
+    <div class="stat"><span class="stat-label">In Production</span><span class="stat-value" id="s-prod">0</span></div>
+    <div class="stat"><span class="stat-label">Blocked</span><span class="stat-value" id="s-blocked">0</span></div>
+    <div class="stat"><span class="stat-label">Completed</span><span class="stat-value" id="s-done">0</span></div>
+    <div class="stat muted"><span class="stat-label">Auto-refresh</span><span class="stat-value" id="s-timer">30s</span></div>
   </div>
 
-  <div class="column">
-    <h2>IN PRODUCTION</h2>
-    <div id="production"></div>
-  </div>
+  <main class="board">
 
-  <div class="column">
-    <h2>COMPLETED</h2>
-    <div id="completed"></div>
-  </div>
+    <section class="col col-ready">
+      <div class="col-head">
+        <h2>Ready to Print</h2>
+        <span class="col-count" id="count-ready">0</span>
+      </div>
+      <div class="col-body" id="col-ready" data-col="ready"></div>
+    </section>
 
-<script>
-const API = "http://localhost:3099/cheeky/orders";
+    <section class="col col-prod">
+      <div class="col-head">
+        <h2>In Production</h2>
+        <span class="col-count" id="count-prod">0</span>
+      </div>
+      <div class="col-body" id="col-prod" data-col="inProduction"></div>
+    </section>
 
-async function loadColumn(endpoint, elementId) {
-  const res = await fetch(API + endpoint);
-  const data = await res.json();
+    <section class="col col-blocked">
+      <div class="col-head">
+        <h2>Blocked</h2>
+        <span class="col-count" id="count-blocked">0</span>
+      </div>
+      <div class="col-body" id="col-blocked" data-col="blocked"></div>
+    </section>
 
-  const container = document.getElementById(elementId);
-  container.innerHTML = "";
+  </main>
 
-  if (!data.orders) return;
+  <section class="completed-row">
+    <div class="completed-head">
+      <h3>Completed Today</h3>
+      <span class="completed-count" id="count-done">0</span>
+    </div>
+    <div class="completed-body" id="col-done"></div>
+  </section>
 
-  data.orders.forEach(order => {
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerHTML = `
-      <strong>${order.customerName}</strong><br/>
-      ${order.quantity} @ $${order.unitPrice}<br/>
-      $${order.total}
-    `;
-    container.appendChild(div);
-  });
-}
+  <!-- Task / detail panel -->
+  <aside id="panel" class="panel hidden" aria-hidden="true">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title" id="panel-title">Job</div>
+        <div class="panel-sub" id="panel-sub">—</div>
+      </div>
+      <button id="panel-close" class="panel-close" aria-label="Close panel">×</button>
+    </div>
 
-function loadBoard() {
-  loadColumn("/ready", "ready");
-  loadColumn("/production", "production");
-  loadColumn("/completed", "completed");
-}
+    <div class="panel-section">
+      <div class="panel-label">Details</div>
+      <div id="panel-details" class="panel-details"></div>
+    </div>
 
-setInterval(loadBoard, 5000);
-loadBoard();
-</script>
+    <div class="panel-section">
+      <div class="panel-label">Checklist</div>
+      <ul id="panel-tasks" class="checklist"></ul>
+    </div>
 
+    <div class="panel-section">
+      <div class="panel-label">Notes</div>
+      <div id="panel-notes" class="panel-notes">—</div>
+    </div>
+
+    <div class="panel-actions">
+      <button data-move="READY" class="btn ghost">Back to Ready</button>
+      <button data-move="IN_PRODUCTION" class="btn primary">Start Job</button>
+      <button data-move="BLOCKED" class="btn warn">Block</button>
+      <button data-move="COMPLETED" class="btn success">Complete</button>
+    </div>
+  </aside>
+
+  <div id="panel-scrim" class="scrim hidden"></div>
+
+  <audio id="ding" preload="auto">
+    <source src="data:audio/wav;base64,UklGRkQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YSAAAAAAAAAAAP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/" type="audio/wav" />
+  </audio>
+
+  <footer class="foot">
+    <span id="foot-time">—</span>
+    <span class="sep">•</span>
+    <span id="foot-mode">mode: ?</span>
+    <span class="sep">•</span>
+    <span id="foot-total">0 jobs</span>
+  </footer>
+
+  <script src="/shop.js" defer></script>
 </body>
 </html>
-

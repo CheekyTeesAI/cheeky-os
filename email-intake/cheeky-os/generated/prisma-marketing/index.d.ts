@@ -4360,6 +4360,7 @@ export namespace Prisma {
     depositReceived: boolean | null
     balanceDue: number | null
     paymentNotes: string | null
+    memoryJson: string | null
     createdAt: Date | null
   }
 
@@ -4376,6 +4377,7 @@ export namespace Prisma {
     depositReceived: boolean | null
     balanceDue: number | null
     paymentNotes: string | null
+    memoryJson: string | null
     createdAt: Date | null
   }
 
@@ -4392,6 +4394,7 @@ export namespace Prisma {
     depositReceived: number
     balanceDue: number
     paymentNotes: number
+    memoryJson: number
     createdAt: number
     _all: number
   }
@@ -4420,6 +4423,7 @@ export namespace Prisma {
     depositReceived?: true
     balanceDue?: true
     paymentNotes?: true
+    memoryJson?: true
     createdAt?: true
   }
 
@@ -4436,6 +4440,7 @@ export namespace Prisma {
     depositReceived?: true
     balanceDue?: true
     paymentNotes?: true
+    memoryJson?: true
     createdAt?: true
   }
 
@@ -4452,6 +4457,7 @@ export namespace Prisma {
     depositReceived?: true
     balanceDue?: true
     paymentNotes?: true
+    memoryJson?: true
     createdAt?: true
     _all?: true
   }
@@ -4555,6 +4561,7 @@ export namespace Prisma {
     depositReceived: boolean
     balanceDue: number
     paymentNotes: string
+    memoryJson: string
     createdAt: Date
     _count: CaptureOrderCountAggregateOutputType | null
     _avg: CaptureOrderAvgAggregateOutputType | null
@@ -4590,6 +4597,7 @@ export namespace Prisma {
     depositReceived?: boolean
     balanceDue?: boolean
     paymentNotes?: boolean
+    memoryJson?: boolean
     createdAt?: boolean
     tasks?: boolean | CaptureOrder$tasksArgs<ExtArgs>
     _count?: boolean | CaptureOrderCountOutputTypeDefaultArgs<ExtArgs>
@@ -4608,6 +4616,7 @@ export namespace Prisma {
     depositReceived?: boolean
     balanceDue?: boolean
     paymentNotes?: boolean
+    memoryJson?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["captureOrder"]>
 
@@ -4624,6 +4633,7 @@ export namespace Prisma {
     depositReceived?: boolean
     balanceDue?: boolean
     paymentNotes?: boolean
+    memoryJson?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["captureOrder"]>
 
@@ -4640,10 +4650,11 @@ export namespace Prisma {
     depositReceived?: boolean
     balanceDue?: boolean
     paymentNotes?: boolean
+    memoryJson?: boolean
     createdAt?: boolean
   }
 
-  export type CaptureOrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "customerName" | "quantity" | "product" | "printType" | "dueDate" | "status" | "paymentStatus" | "depositRequired" | "depositReceived" | "balanceDue" | "paymentNotes" | "createdAt", ExtArgs["result"]["captureOrder"]>
+  export type CaptureOrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "customerName" | "quantity" | "product" | "printType" | "dueDate" | "status" | "paymentStatus" | "depositRequired" | "depositReceived" | "balanceDue" | "paymentNotes" | "memoryJson" | "createdAt", ExtArgs["result"]["captureOrder"]>
   export type CaptureOrderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     tasks?: boolean | CaptureOrder$tasksArgs<ExtArgs>
     _count?: boolean | CaptureOrderCountOutputTypeDefaultArgs<ExtArgs>
@@ -4669,6 +4680,7 @@ export namespace Prisma {
       depositReceived: boolean
       balanceDue: number
       paymentNotes: string
+      memoryJson: string
       createdAt: Date
     }, ExtArgs["result"]["captureOrder"]>
     composites: {}
@@ -5106,6 +5118,7 @@ export namespace Prisma {
     readonly depositReceived: FieldRef<"CaptureOrder", 'Boolean'>
     readonly balanceDue: FieldRef<"CaptureOrder", 'Float'>
     readonly paymentNotes: FieldRef<"CaptureOrder", 'String'>
+    readonly memoryJson: FieldRef<"CaptureOrder", 'String'>
     readonly createdAt: FieldRef<"CaptureOrder", 'DateTime'>
   }
     
@@ -6652,6 +6665,7 @@ export namespace Prisma {
     depositReceived: 'depositReceived',
     balanceDue: 'balanceDue',
     paymentNotes: 'paymentNotes',
+    memoryJson: 'memoryJson',
     createdAt: 'createdAt'
   };
 
@@ -6922,6 +6936,7 @@ export namespace Prisma {
     depositReceived?: BoolFilter<"CaptureOrder"> | boolean
     balanceDue?: FloatFilter<"CaptureOrder"> | number
     paymentNotes?: StringFilter<"CaptureOrder"> | string
+    memoryJson?: StringFilter<"CaptureOrder"> | string
     createdAt?: DateTimeFilter<"CaptureOrder"> | Date | string
     tasks?: CaptureTaskListRelationFilter
   }
@@ -6939,6 +6954,7 @@ export namespace Prisma {
     depositReceived?: SortOrder
     balanceDue?: SortOrder
     paymentNotes?: SortOrder
+    memoryJson?: SortOrder
     createdAt?: SortOrder
     tasks?: CaptureTaskOrderByRelationAggregateInput
   }
@@ -6959,6 +6975,7 @@ export namespace Prisma {
     depositReceived?: BoolFilter<"CaptureOrder"> | boolean
     balanceDue?: FloatFilter<"CaptureOrder"> | number
     paymentNotes?: StringFilter<"CaptureOrder"> | string
+    memoryJson?: StringFilter<"CaptureOrder"> | string
     createdAt?: DateTimeFilter<"CaptureOrder"> | Date | string
     tasks?: CaptureTaskListRelationFilter
   }, "id">
@@ -6976,6 +6993,7 @@ export namespace Prisma {
     depositReceived?: SortOrder
     balanceDue?: SortOrder
     paymentNotes?: SortOrder
+    memoryJson?: SortOrder
     createdAt?: SortOrder
     _count?: CaptureOrderCountOrderByAggregateInput
     _avg?: CaptureOrderAvgOrderByAggregateInput
@@ -7000,6 +7018,7 @@ export namespace Prisma {
     depositReceived?: BoolWithAggregatesFilter<"CaptureOrder"> | boolean
     balanceDue?: FloatWithAggregatesFilter<"CaptureOrder"> | number
     paymentNotes?: StringWithAggregatesFilter<"CaptureOrder"> | string
+    memoryJson?: StringWithAggregatesFilter<"CaptureOrder"> | string
     createdAt?: DateTimeWithAggregatesFilter<"CaptureOrder"> | Date | string
   }
 
@@ -7267,6 +7286,7 @@ export namespace Prisma {
     depositReceived?: boolean
     balanceDue?: number
     paymentNotes?: string
+    memoryJson?: string
     createdAt?: Date | string
     tasks?: CaptureTaskCreateNestedManyWithoutOrderInput
   }
@@ -7284,6 +7304,7 @@ export namespace Prisma {
     depositReceived?: boolean
     balanceDue?: number
     paymentNotes?: string
+    memoryJson?: string
     createdAt?: Date | string
     tasks?: CaptureTaskUncheckedCreateNestedManyWithoutOrderInput
   }
@@ -7301,6 +7322,7 @@ export namespace Prisma {
     depositReceived?: BoolFieldUpdateOperationsInput | boolean
     balanceDue?: FloatFieldUpdateOperationsInput | number
     paymentNotes?: StringFieldUpdateOperationsInput | string
+    memoryJson?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tasks?: CaptureTaskUpdateManyWithoutOrderNestedInput
   }
@@ -7318,6 +7340,7 @@ export namespace Prisma {
     depositReceived?: BoolFieldUpdateOperationsInput | boolean
     balanceDue?: FloatFieldUpdateOperationsInput | number
     paymentNotes?: StringFieldUpdateOperationsInput | string
+    memoryJson?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tasks?: CaptureTaskUncheckedUpdateManyWithoutOrderNestedInput
   }
@@ -7335,6 +7358,7 @@ export namespace Prisma {
     depositReceived?: boolean
     balanceDue?: number
     paymentNotes?: string
+    memoryJson?: string
     createdAt?: Date | string
   }
 
@@ -7351,6 +7375,7 @@ export namespace Prisma {
     depositReceived?: BoolFieldUpdateOperationsInput | boolean
     balanceDue?: FloatFieldUpdateOperationsInput | number
     paymentNotes?: StringFieldUpdateOperationsInput | string
+    memoryJson?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -7367,6 +7392,7 @@ export namespace Prisma {
     depositReceived?: BoolFieldUpdateOperationsInput | boolean
     balanceDue?: FloatFieldUpdateOperationsInput | number
     paymentNotes?: StringFieldUpdateOperationsInput | string
+    memoryJson?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -7700,6 +7726,7 @@ export namespace Prisma {
     depositReceived?: SortOrder
     balanceDue?: SortOrder
     paymentNotes?: SortOrder
+    memoryJson?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -7721,6 +7748,7 @@ export namespace Prisma {
     depositReceived?: SortOrder
     balanceDue?: SortOrder
     paymentNotes?: SortOrder
+    memoryJson?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -7737,6 +7765,7 @@ export namespace Prisma {
     depositReceived?: SortOrder
     balanceDue?: SortOrder
     paymentNotes?: SortOrder
+    memoryJson?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -8143,6 +8172,7 @@ export namespace Prisma {
     depositReceived?: boolean
     balanceDue?: number
     paymentNotes?: string
+    memoryJson?: string
     createdAt?: Date | string
   }
 
@@ -8159,6 +8189,7 @@ export namespace Prisma {
     depositReceived?: boolean
     balanceDue?: number
     paymentNotes?: string
+    memoryJson?: string
     createdAt?: Date | string
   }
 
@@ -8191,6 +8222,7 @@ export namespace Prisma {
     depositReceived?: BoolFieldUpdateOperationsInput | boolean
     balanceDue?: FloatFieldUpdateOperationsInput | number
     paymentNotes?: StringFieldUpdateOperationsInput | string
+    memoryJson?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -8207,6 +8239,7 @@ export namespace Prisma {
     depositReceived?: BoolFieldUpdateOperationsInput | boolean
     balanceDue?: FloatFieldUpdateOperationsInput | number
     paymentNotes?: StringFieldUpdateOperationsInput | string
+    memoryJson?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

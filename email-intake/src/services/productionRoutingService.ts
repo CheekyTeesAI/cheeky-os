@@ -1,3 +1,7 @@
+import {
+  INITIAL_PRODUCTION_QUEUE_STATE,
+  persistedQueueStatusForNormalized,
+} from "../lib/productionQueue";
 import { db } from "../db/client";
 import { OrderNotFoundError } from "./orderEvaluator";
 import { assertActionAllowed } from "./safetyGuard.service";
@@ -251,6 +255,10 @@ export async function routeProductionForOrder(
 
   const now = new Date();
 
+  const queueReady = persistedQueueStatusForNormalized(
+    INITIAL_PRODUCTION_QUEUE_STATE
+  );
+
   await db.$transaction(async (tx) => {
     const route = await tx.productionRoute.create({
       data: {
@@ -282,7 +290,7 @@ export async function routeProductionForOrder(
       await tx.job.update({
         where: { id: job.id },
         data: {
-          status: "PRODUCTION_READY",
+          status: queueReady,
           assignedTo: decision.assignee,
           productionType: decision.productionType,
           routingNotes: decision.rationale.trim(),

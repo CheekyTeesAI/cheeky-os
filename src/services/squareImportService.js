@@ -63,6 +63,7 @@ async function persistSquareOrder(sqOrder) {
       where: {
         OR: [{ squareId: extId }, { squareOrderId: extId }],
       },
+      select: { id: true },
     });
     if (existing) {
       console.log("[squareImport] skip existing squareId=", extId, "orderId=", existing.id);
@@ -172,7 +173,15 @@ async function persistSquareOrder(sqOrder) {
         },
       });
 
-      const finalOrder = await runDecisionEngineInTransaction(tx, order.id);
+      let finalOrder = order;
+      try {
+        finalOrder = await runDecisionEngineInTransaction(tx, order.id);
+      } catch (deErr) {
+        console.warn(
+          "[squareImport] decision engine skipped (often DB schema behind Prisma — run migrations):",
+          deErr && deErr.message ? deErr.message : deErr
+        );
+      }
       return { order: finalOrder };
     });
 

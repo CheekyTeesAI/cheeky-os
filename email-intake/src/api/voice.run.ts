@@ -79,8 +79,7 @@ import ordersRouter from "./orders.route";
 import followUpsRunRouter from "./followups.run.route";
 import followUpsRouter from "./followups.route";
 import dashboardRouter from "./dashboard.route";
-// TEMP stability: see startScheduler() call below
-// import { startScheduler } from "../modules/command-layer/services/scheduler.service";
+import { startScheduler } from "../modules/command-layer/services/scheduler.service";
 
 // Prevent runaway memory in dev
 process.setMaxListeners(20);
@@ -111,17 +110,45 @@ app.get("/system/check", (_req: Request, res: Response) => {
   });
 });
 
-// TEMP stability: defer command-layer scheduler (hourly/daily jobs) — re-enable after boot is stable
-// startScheduler();
+// Command-layer scheduler (hourly event check + daily war room): off unless ENABLE_SCHEDULER=true
+if (process.env.ENABLE_SCHEDULER === "true") {
+  try {
+    startScheduler();
+    logger.info("Command-layer scheduler started (ENABLE_SCHEDULER=true)");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    logger.error(`Command-layer scheduler failed to start: ${message}`);
+  }
+} else {
+  logger.info(
+    "Command-layer scheduler disabled (set ENABLE_SCHEDULER=true to enable hourly/daily jobs)"
+  );
+}
+
 app.use((req, res, next) => {
   console.log(`📡 INCOMING: ${req.method} ${req.url}`);
   next();
 });
-console.log("🔥 MOUNTING SQUARE WEBHOOK ROUTE");
+// --- Square webhook mounts (canonical + legacy) ---
+// CANONICAL production contract (raw body BEFORE express.json; HMAC-safe):
+//   POST /api/square/webhook → squareApiWebhookRouter (routes/squareWebhook.ts).
+//   Use this URL in Square Developer Dashboard for full invoice/payment pipeline.
+// Legacy / compatibility (do not remove; not interchangeable with canonical):
+//   POST /cheeky/webhooks/square → webhooks.square.ts (legacy pipeline; differs from canonical)
+//   POST /webhooks/square       → square.webhook.ts (JSON; payment.completed → handleSquarePaymentWebhook only)
+// Note: cheeky-os production also exposes POST /webhooks/square/webhook as a mirror of canonical (see src/webhooks/squareWebhook.js); voice.run does not mount that path.
+console.log(
+  "[boot] squareWebhook=canonical POST /api/square/webhook | legacy POST /cheeky/webhooks/square | compat POST /webhooks/square (payment JSON)"
+);
 app.use(
   "/cheeky/webhooks/square",
   express.raw({ type: "application/json" }),
   squareWebhookRouter
+);
+app.use(
+  "/api/square/webhook",
+  express.raw({ type: "application/json", limit: "2mb" }),
+  squareApiWebhookRouter
 );
 app.use(express.json());
 
@@ -138,7 +165,8 @@ app.use(orderIntakeRouter);
 app.use(emailIntakeRouter);
 app.use(emailIntakeAiRouter);
 app.use(outlookIntakeWebhookRouter);
-app.use(squareApiWebhookRouter);
+// Canonical POST /api/square/webhook is mounted above with express.raw (byte-exact HMAC).
+// Legacy storefront payment hook: POST /webhooks/square (see routes/square.webhook.ts)
 app.use(squarePaymentWebhookRouter);
 
 app.use("/cheeky/system/url", systemUrlRouter);
@@ -160,6 +188,31 @@ app.use("/orders", ordersRouter);
 app.use("/followups/run", followUpsRunRouter);
 app.use("/followups", followUpsRouter);
 app.use("/dashboard", dashboardRouter);
+
+// Cash Command Center (GET /api/cash/command-center, /api/cash/brief — read-only + draft queue;
+// same router as cheeky-os/server.js)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+app.use(require("../../cheeky-os/src/routes/cash.route"));
+
+// Sales Engine v1 (GET /api/sales/pipeline, /api/sales/today — draft + priority only)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+app.use("/api/sales", require("../../cheeky-os/routes/sales"));
+
+// Operator summary + brief (incl. sales snapshot for /api/operator/brief)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+app.use(require("../../cheeky-os/src/routes/operator.route"));
+
+// Revenue recovery v1 (GET /api/followups/today)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+app.use(require("../../cheeky-os/src/routes/revenueRecovery.route"));
+
+// Profit engine v1 (POST /api/pricing/evaluate)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+app.use(require("../../cheeky-os/src/routes/pricingEvaluate.route"));
+
+// Comms routes incl. GET /api/comms/queue + PATCH /api/comms/:id (recovery queue)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+app.use("/api/comms", require("../../cheeky-os/routes/comms"));
 
 // GLOBAL AUTH
 app.use(requireApiKey);

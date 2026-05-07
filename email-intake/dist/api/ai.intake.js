@@ -5,6 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.aiIntake = aiIntake;
 const openai_1 = __importDefault(require("openai"));
+const aiIntakeParser_1 = require("../lib/aiIntakeParser");
+const intakeNormalizer_1 = require("../lib/intakeNormalizer");
 const pipeline_run_1 = require("./pipeline.run");
 // TEMP stability: construct client on first request only (avoids OpenAI init during server boot)
 let openaiClient = null;
@@ -85,15 +87,17 @@ Do not include any extra text.
                 notes: text
             };
         }
+        const intakeParse = (0, aiIntakeParser_1.buildAiIntakeParseResult)({
+            source: "ai",
+            rawText: text,
+            parsedAiJson: parsed,
+        });
+        const normalized = (0, intakeNormalizer_1.normalizeAiIntake)(parsed, text);
+        const pipelineBody = (0, intakeNormalizer_1.toCreateOrderPipelineBody)(normalized);
         // RUN FULL PIPELINE
         let pipelineResult = {};
         await (0, pipeline_run_1.runPipeline)({
-            body: {
-                customerName: parsed.customerName,
-                email: parsed.email,
-                items: parsed.items.map((i) => `${i.quantity} ${i.type}`),
-                notes: parsed.notes
-            }
+            body: pipelineBody,
         }, {
             json: (data) => (pipelineResult = data),
             status: () => ({ json: (data) => (pipelineResult = data) })
@@ -102,7 +106,8 @@ Do not include any extra text.
             success: true,
             input: text,
             parsed,
-            pipeline: pipelineResult.pipeline
+            intakeParse,
+            pipeline: pipelineResult.pipeline,
         });
     }
     catch (err) {

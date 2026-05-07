@@ -1,4 +1,5 @@
 import type { Order } from "@prisma/client";
+import { OrderDepositStatus } from "@prisma/client";
 import { db } from "../db/client";
 import type { ParsedEmailIntake } from "./emailIntakeParser";
 import { evaluateOrderById } from "./orderEvaluator";
@@ -8,6 +9,8 @@ import {
   notifyNewIntake,
 } from "./teamsNotificationService";
 import { logger } from "../utils/logger";
+import { ART_STATUS, ensureArtPrepTask } from "./artRoutingService";
+import { PROOF_STATUS, ensureProofApprovalTask } from "./proofRoutingService";
 
 export type EmailIntakePipelineResult = {
   parsed: ParsedEmailIntake;
@@ -45,6 +48,14 @@ export async function executeEmailIntakePipeline(
     notes = notes.trim().length > 0 ? `${notes}\n\n${extra}` : extra;
   }
 
+  const quotedAmount = parsed.quotedAmount ?? undefined;
+  const totalAmount =
+    parsed.quotedAmount != null && parsed.quotedAmount > 0
+      ? parsed.quotedAmount
+      : 0;
+  const depositRequired =
+    totalAmount > 0 ? Math.round(totalAmount * 0.5 * 100) / 100 : undefined;
+
   const order = await db.order.create({
     data: {
       customerName: parsed.customerName,
@@ -54,14 +65,33 @@ export async function executeEmailIntakePipeline(
       quantity: parsed.quantity ?? undefined,
       garmentType: parsed.garmentType ?? undefined,
       printMethod: parsed.printMethod ?? undefined,
-      quotedAmount: parsed.quotedAmount ?? undefined,
+      quotedAmount,
+      totalAmount,
+      depositRequired,
       estimatedCost: parsed.estimatedCost ?? undefined,
-      status: "INTAKE",
+      status: "QUOTE_SENT",
+      depositStatus: OrderDepositStatus.NONE,
       outlookMessageId: options.outlookMessageId?.trim() || undefined,
-    },
+      artFileStatus: ART_STATUS.NOT_READY,
+      proofRequired: true,
+      proofStatus: PROOF_STATUS.NOT_SENT,
+    } as any,
   });
 
   const evaluated = await evaluateOrderById(order.id);
+
+  try {
+    await ensureArtPrepTask(evaluated.id);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    logger.warn(`ensureArtPrepTask after email intake ${evaluated.id}: ${msg}`);
+  }
+  try {
+    await ensureProofApprovalTask(evaluated.id);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    logger.warn(`ensureProofApprovalTask after email intake ${evaluated.id}: ${msg}`);
+  }
 
   let sharepoint: { success: boolean; error?: string } = { success: true };
   try {

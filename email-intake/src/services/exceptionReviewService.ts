@@ -16,6 +16,7 @@ export async function createExceptionReview(
   input: CreateExceptionReviewInput
 ): Promise<ExceptionReview> {
   const message = String(input.message ?? "").slice(0, 4000);
+  const now = new Date();
   return db.exceptionReview.create({
     data: {
       orderId: input.orderId ?? null,
@@ -25,6 +26,7 @@ export async function createExceptionReview(
       severity: input.severity,
       message,
       detailsJson: input.detailsJson ?? null,
+      updatedAt: now,
     },
   });
 }

@@ -1,9 +1,11 @@
 import { Router, Request, Response } from "express";
+import { isLikelyCustomerReplyEmail } from "../lib/customerReplyClassifier";
 import { parseEmailIntake } from "../services/emailIntakeParser";
 import {
   executeEmailIntakePipeline,
   findDuplicateOutlookIntake,
 } from "../services/emailIntakeOrderService";
+import { processInboundCustomerReply } from "../services/customerReplyService";
 import { logger } from "../utils/logger";
 
 const router = Router();
@@ -78,6 +80,34 @@ router.post("/api/intake/outlook-webhook", async (req: Request, res: Response) =
       receivedAt,
       attachments
     );
+
+    if (isLikelyCustomerReplyEmail(subject, bodyForParser)) {
+      try {
+        const replyResult = await processInboundCustomerReply({
+          subject,
+          body: bodyForParser,
+          fromEmail,
+          customerName: fromName || null,
+        });
+        return res.json({
+          success: true,
+          path: replyResult.path,
+          classification: replyResult.classification,
+          orderId: replyResult.orderId,
+          matchConfidence: replyResult.matchConfidence,
+          needsReview: replyResult.needsReview,
+          actions: replyResult.actions,
+          source: "outlook-webhook",
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logger.warn(`Outlook customer reply handling failed: ${msg}`);
+        return res.status(500).json({
+          success: false,
+          error: "Customer reply handling failed",
+        });
+      }
+    }
 
     const parsed = parseEmailIntake({
       fromName,

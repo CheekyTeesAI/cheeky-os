@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.runCreateInvoice = runCreateInvoice;
+const client_1 = require("@prisma/client");
 const square_service_1 = require("../services/square.service");
-const client_1 = require("../db/client");
+const client_2 = require("../db/client");
 const customer_repo_1 = require("../db/repositories/customer.repo");
 const invoice_repo_1 = require("../db/repositories/invoice.repo");
 /**
@@ -24,16 +25,19 @@ async function runCreateInvoice(payload) {
         squareInvoiceId: invoiceId,
         status
     });
-    await client_1.db.order.create({
+    await client_2.db.order.create({
         data: {
             customerName: payload.customerName,
             email: customer.email,
             quantity: payload.quantity,
             unitPrice: payload.price,
-            total: payload.quantity * payload.price,
+            total,
+            totalAmount: total,
+            depositRequired: Math.round(total * 0.5 * 100) / 100,
             squareInvoiceId: invoiceId,
-            status: "SENT"
-        }
+            status: "QUOTE_SENT",
+            depositStatus: client_1.OrderDepositStatus.NONE,
+        },
     });
     return { success: true, invoiceId, status };
 }

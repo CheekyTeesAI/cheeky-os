@@ -142,7 +142,6 @@ async function getRevenueFollowups() {
       query: {
         filter: {
           location_ids: [locationId],
-          invoice_states: ["UNPAID", "PARTIALLY_PAID"],
         },
       },
       limit: 100,
@@ -156,6 +155,8 @@ async function getRevenueFollowups() {
       const invData = await invRes.json();
       const invoices = Array.isArray(invData.invoices) ? invData.invoices : [];
       for (const inv of invoices) {
+        const invState = String(inv.status || "").toUpperCase();
+        if (!["UNPAID", "PARTIALLY_PAID", "PAYMENT_PENDING"].includes(invState)) continue;
         const due =
           (inv.payment_requests &&
             inv.payment_requests[0] &&

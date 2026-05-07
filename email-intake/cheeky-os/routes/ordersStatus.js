@@ -26,10 +26,9 @@ router.post("/update-status", async (req, res) => {
     if (PRODUCTION_FACING.includes(nextNorm)) {
       const prisma = getPrisma();
       if (!prisma || !prisma.captureOrder) {
-        return res.json({
+        return res.status(400).json({
           success: false,
-          error:
-            "Order cannot move to READY until payment/deposit is confirmed",
+          error: "Deposit required before production.",
           gateStatus: "blocked",
           reason: "Database unavailable",
           flags: [],
@@ -48,10 +47,10 @@ router.post("/update-status", async (req, res) => {
 
       const gate = evaluatePaymentGate(captureOrderToGateInput(row));
       if (!gate.allowedToProduce) {
-        return res.json({
+        console.warn("[DEPOSIT_GATE][BLOCKED] captureOrder=" + id + " gate=" + String(gate.gateStatus || ""));
+        return res.status(400).json({
           success: false,
-          error:
-            "Order cannot move to READY until payment/deposit is confirmed",
+          error: "Deposit required before production.",
           gateStatus: gate.gateStatus,
           reason: gate.reason,
           flags: gate.flags,

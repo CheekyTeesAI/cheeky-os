@@ -1,3 +1,4 @@
+import { OrderDepositStatus } from "@prisma/client";
 import { ValidatedInvoicePayload } from "../core/gatekeeper";
 import { createInvoice } from "../services/square.service";
 import { db } from "../db/client";
@@ -37,10 +38,13 @@ export async function runCreateInvoice(
       email: customer.email,
       quantity: payload.quantity,
       unitPrice: payload.price,
-      total: payload.quantity * payload.price,
+      total,
+      totalAmount: total,
+      depositRequired: Math.round(total * 0.5 * 100) / 100,
       squareInvoiceId: invoiceId,
-      status: "SENT"
-    }
+      status: "QUOTE_SENT",
+      depositStatus: OrderDepositStatus.NONE,
+    },
   });
   return { success: true, invoiceId, status };
 }

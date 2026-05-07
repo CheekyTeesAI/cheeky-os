@@ -146,10 +146,30 @@ async function tryAdvancePostgresOrder(rawId) {
       }
     }
 
+    if (next === "COMPLETED") {
+      try {
+        const qcGateTa = require(path.join(__dirname, "..", "services", "qcGate.service"));
+        const qgt = await qcGateTa.assertMayCompleteOrder(order.id);
+        if (!qgt.ok) {
+          return { error: qgt.error || "qc_gate_blocked" };
+        }
+      } catch (e) {
+        return { error: e instanceof Error ? e.message : "qc_gate_error" };
+      }
+    }
+
     await prisma.order.update({
       where: { id: order.id },
       data: { status: next },
     });
+
+    if (next === "COMPLETED") {
+      try {
+        require(path.join(__dirname, "..", "services", "qcGate.service")).onOrderMarkedCompleted(order.id);
+      } catch (_qcx) {
+        /* optional */
+      }
+    }
 
     return {
       success: true,

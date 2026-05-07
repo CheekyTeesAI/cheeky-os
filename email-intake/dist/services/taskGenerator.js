@@ -1,7 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateTasksForOrder = generateTasksForOrder;
-const client_1 = require("../db/client");
+const client_1 = require("@prisma/client");
+const client_2 = require("../db/client");
+const artRoutingService_1 = require("./artRoutingService");
+const productionPrintGateService_1 = require("./productionPrintGateService");
+const proofRoutingService_1 = require("./proofRoutingService");
 const BASE_TASKS = ["Order Blanks", "QC + Pack"];
 function normalizePrintMethod(value) {
     if (typeof value !== "string")
@@ -19,8 +23,24 @@ function tasksForMethod(method) {
         return ["Press Heat Transfer"];
     return [];
 }
+function taskTypeForTitle(title) {
+    if (title === "Order Blanks")
+        return "ORDER_BLANKS";
+    if (title === "QC + Pack")
+        return "QC_PACK";
+    if (title.startsWith("Print ") ||
+        title === "Burn Screen" ||
+        title.startsWith("Press ")) {
+        return "PRINT";
+    }
+    return "OPS";
+}
 async function generateTasksForOrder(orderId) {
-    const order = await client_1.db.order.findUnique({
+    const job = await client_2.db.job.findUnique({ where: { orderId } });
+    if (!job) {
+        return;
+    }
+    const order = await client_2.db.order.findUnique({
         where: { id: orderId },
         include: {
             lineItems: true,
@@ -31,6 +51,10 @@ async function generateTasksForOrder(orderId) {
     });
     if (!order)
         return;
+    const ds = order.depositStatus ?? client_1.OrderDepositStatus.NONE;
+    if (ds !== client_1.OrderDepositStatus.PAID && order.depositReceived !== true) {
+        return;
+    }
     const required = new Set(BASE_TASKS);
     for (const lineItem of order.lineItems ?? []) {
         const li = lineItem;
@@ -41,14 +65,47 @@ async function generateTasksForOrder(orderId) {
     }
     const existingTitles = new Set((order.tasks ?? []).map((task) => task.title));
     const toCreate = [...required].filter((title) => !existingTitles.has(title));
-    if (toCreate.length === 0)
+    const blockPrint = (0, productionPrintGateService_1.shouldBlockPrintTasksForOrder)(order);
+    if (toCreate.length === 0) {
+        try {
+            await (0, artRoutingService_1.ensureArtPrepTask)(orderId);
+        }
+        catch {
+            /* non-fatal */
+        }
+        try {
+            await (0, proofRoutingService_1.ensureProofApprovalTask)(orderId);
+        }
+        catch {
+            /* non-fatal */
+        }
         return;
-    await client_1.db.task.createMany({
-        data: toCreate.map((title) => ({
-            orderId,
-            title,
-            status: "PENDING",
-            dueDate: null,
-        })),
+    }
+    await client_2.db.task.createMany({
+        data: toCreate.map((title) => {
+            const isPrintStep = title.startsWith("Print ") ||
+                title === "Burn Screen" ||
+                title.startsWith("Press ");
+            return {
+                orderId,
+                title,
+                status: isPrintStep && blockPrint ? "BLOCKED" : "PENDING",
+                dueDate: null,
+                jobId: job.id,
+                type: taskTypeForTitle(title),
+            };
+        }),
     });
+    try {
+        await (0, artRoutingService_1.ensureArtPrepTask)(orderId);
+    }
+    catch {
+        /* non-fatal */
+    }
+    try {
+        await (0, proofRoutingService_1.ensureProofApprovalTask)(orderId);
+    }
+    catch {
+        /* non-fatal */
+    }
 }

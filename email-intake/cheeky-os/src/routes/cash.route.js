@@ -8,8 +8,70 @@ const { getUpcomingObligations } = require("../services/obligationsTracker");
 const { estimateRunwayDays } = require("../services/runwayEstimator");
 const { getCashPriorities } = require("../services/cashPressureEngine");
 const { logCashEvent } = require("../services/cashAudit");
+const {
+  buildCashCommandCenter,
+  buildOwnerBrief,
+} = require("../../services/cashCommandCenter.service");
+const { generateCashFollowupDraft } = require("../../services/cashFollowupDraft.service");
 
 let lastRun = null;
+
+const CASH_COMMAND_CENTER_META = {
+  cashCommandCenter: "PASS",
+  cashRiskEngine: "ACTIVE",
+  followupDrafts: "DRAFT_ONLY",
+  cashProtection: "ENFORCED",
+};
+
+router.get("/api/cash/command-center", async (_req, res) => {
+  try {
+    const full = await buildCashCommandCenter();
+    const { risk: _omitRisk, ...body } = full;
+    return res.json({ ...body, ...CASH_COMMAND_CENTER_META });
+  } catch (error) {
+    return res.status(200).json({
+      today: {
+        paymentsReceived: 0,
+        depositsReceived: 0,
+        invoicesPaid: 0,
+        invoicesPartiallyPaid: 0,
+      },
+      openMoney: { unpaidQuotes: [], unpaidInvoices: [], partialDeposits: [], overdueBalances: [] },
+      productionRisk: { depositPaidButNotReady: [], blanksNeededButNotFunded: [], ordersAtRiskDueToCash: [] },
+      nextCashActions: [],
+      error: error.message,
+      ...CASH_COMMAND_CENTER_META,
+    });
+  }
+});
+
+router.get("/api/cash/brief", async (_req, res) => {
+  try {
+    const full = await buildCashCommandCenter();
+    const brief = buildOwnerBrief(full);
+    return res.json({ ...brief, ...CASH_COMMAND_CENTER_META });
+  } catch (error) {
+    return res.status(200).json({
+      headline: "Cash brief unavailable",
+      cashCollectedToday: 0,
+      cashStillCollectable: 0,
+      urgentCollections: [],
+      safestNextMove: "Check logs and database connectivity.",
+      top3CashActions: [],
+      error: error.message,
+      ...CASH_COMMAND_CENTER_META,
+    });
+  }
+});
+
+router.post("/api/cash/followup-draft", async (req, res) => {
+  try {
+    const out = await generateCashFollowupDraft(req.body || {});
+    return res.status(out.ok ? 200 : 400).json({ ...out, ...CASH_COMMAND_CENTER_META });
+  } catch (error) {
+    return res.status(200).json({ ok: false, error: error.message, ...CASH_COMMAND_CENTER_META });
+  }
+});
 
 router.get("/api/cash/health", async (_req, res) => {
   try {

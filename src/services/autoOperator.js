@@ -13,6 +13,7 @@ async function scanSystem() {
       squareInvoiceId: { not: null },
       depositPaid: false,
     },
+    select: { id: true },
     take: 500,
   });
   if (unpaid.length > 0) {
@@ -38,6 +39,7 @@ async function scanSystem() {
       garmentsReceived: true,
       productionComplete: false,
     },
+    select: { customerName: true },
     orderBy: { createdAt: "asc" },
   });
   if (next) {

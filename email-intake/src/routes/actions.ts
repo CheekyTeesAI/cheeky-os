@@ -13,10 +13,10 @@ import {
 const router = Router();
 
 function inferSource(order: {
-  squarePaymentId?: string | null;
+  squareId?: string | null;
   squareOrderId?: string | null;
 }): string {
-  if (order.squarePaymentId || order.squareOrderId) return "SQUARE";
+  if (order.squareId || order.squareOrderId) return "SQUARE";
   return "EMAIL";
 }
 

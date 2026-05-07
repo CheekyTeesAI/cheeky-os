@@ -5,10 +5,11 @@ const router = Router();
 
 router.get("/cheeky/orders", async (req, res) => {
   try {
-    const { status } = req.query;
+    const rawStatus = String(req.query.status || "").trim();
+    const status = rawStatus.length > 0 ? rawStatus : null;
 
     const orders = await db.order.findMany({
-      where: status ? { status: String(status) } : {},
+      where: status ? { status } : {},
       orderBy: { createdAt: "desc" }
     });
 

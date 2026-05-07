@@ -8,6 +8,7 @@
  */
 
 const { logger } = require("../utils/logger");
+const { fetchSafeTransientRetry, httpStatusFromError } = require("../services/cheekyOsHttpRetry.service");
 
 const squareState = {
   initialized: false,
@@ -119,19 +120,24 @@ async function initializeSquareIntegration() {
     };
 
     try {
-      const response = await fetch(baseUrl + "/locations", { method: "GET", headers });
-      const data = await response.json();
+      const r = await fetchSafeTransientRetry(
+        `${baseUrl}/locations`,
+        { method: "GET", headers },
+        { label: "square:locations" }
+      );
 
-      if (response.status === 401) {
-        squareState.lastError = "Token invalid";
-        warnOnce("token-invalid", "[SQUARE] ❌ Token invalid - Square integration disabled. Check SQUARE_ACCESS_TOKEN in .env");
-        logger.info("[SQUARE] Startup status: SKIPPED - invalid token");
-        squareState.initialized = true;
-        return squareState;
-      }
+      const data = r.ok && r.data ? r.data : null;
+      const st = httpStatusFromError(r.error || "");
 
-      if (!response.ok) {
-        squareState.lastError = JSON.stringify(data.errors || data);
+      if (!r.ok || !data) {
+        if (st === 401) {
+          squareState.lastError = "Token invalid";
+          warnOnce("token-invalid", "[SQUARE] ❌ Token invalid - Square integration disabled. Check SQUARE_ACCESS_TOKEN in .env");
+          logger.info("[SQUARE] Startup status: SKIPPED - invalid token");
+          squareState.initialized = true;
+          return squareState;
+        }
+        squareState.lastError = typeof data?.errors !== "undefined" ? JSON.stringify(data.errors || data) : r.error;
         logger.warn(`[SQUARE] Location self-test failed: ${squareState.lastError}`);
         squareState.initialized = true;
         return squareState;
@@ -250,15 +256,22 @@ async function createSquareInvoice(payload) {
       idempotency_key: "cheek-ord-" + Date.now(),
     };
 
-    const orderRes = await fetch(baseUrl + "/orders", {
-      method: "POST",
-      headers,
-      body: JSON.stringify(orderBody),
-    });
-    const orderData = await orderRes.json();
+    const orderRes = await fetchSafeTransientRetry(
+      baseUrl + "/orders",
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify(orderBody),
+        timeoutMs: 45000,
+      },
+      { label: "square:orders-create" }
+    );
+    const orderData = orderRes.data;
 
     if (!orderRes.ok) {
-      logger.error(`[SQUARE] Order creation failed: ${JSON.stringify(orderData.errors || orderData)}`);
+      logger.error(
+        `[SQUARE] Order creation failed: ${JSON.stringify((orderData && orderData.errors) || orderData || orderRes.error)}`
+      );
       return { mode: "error", invoiceId: null, orderId: null, status: "failed", total, deposit, raw: orderData };
     }
 
@@ -301,15 +314,22 @@ async function createSquareInvoice(payload) {
       idempotency_key: "cheek-inv-" + Date.now(),
     };
 
-    const invRes = await fetch(baseUrl + "/invoices", {
-      method: "POST",
-      headers,
-      body: JSON.stringify(invoiceBody),
-    });
-    const invData = await invRes.json();
+    const invRes = await fetchSafeTransientRetry(
+      baseUrl + "/invoices",
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify(invoiceBody),
+        timeoutMs: 60000,
+      },
+      { label: "square:invoices-create" }
+    );
+    const invData = invRes.data;
 
     if (!invRes.ok) {
-      logger.error(`[SQUARE] Invoice creation failed: ${JSON.stringify(invData.errors || invData)}`);
+      logger.error(
+        `[SQUARE] Invoice creation failed: ${JSON.stringify(invData.errors || invData || invRes.error)}`
+      );
       // Order was created — return as draft with the order reference
       return {
         mode: "square_draft",

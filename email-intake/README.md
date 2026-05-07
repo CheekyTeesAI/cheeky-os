@@ -30,6 +30,17 @@ npm start
 This extracts order details from the sample email and logs JSON. If Dataverse
 credentials are configured (see below), it also pushes the order automatically.
 
+## Cheeky OS v4.3 (full server) — verify
+
+`npm start` in **`email-intake`** runs **`cheeky-os/server.js`** (production surface). After the console shows **listening**:
+
+```bash
+npm run test:dashboard
+curl -s http://127.0.0.1:3000/health
+```
+
+Power Apps: **`docs/power-apps-dashboard-integration-playbook.md`** and **`docs/cheeky-os-power-apps-connector.openapi.yaml`**. Set **`CHEEKY_DASHBOARD_API_KEY`** when dashboard auth is required.
+
 ## Dataverse integration (optional)
 
 The script will send extracted orders to Dataverse when **either** env var is set:

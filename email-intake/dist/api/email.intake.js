@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.emailIntake = emailIntake;
+const intakeNormalizer_1 = require("../lib/intakeNormalizer");
 const orders_create_1 = require("./orders.create");
 async function emailIntake(req, res) {
     try {
@@ -11,18 +12,10 @@ async function emailIntake(req, res) {
                 error: "Empty email"
             });
         }
-        // VERY SIMPLE PARSING (safe)
-        const customerName = from || "Email Customer";
-        const email = from || "";
-        const items = [subject || "Custom Order Request"];
-        const notes = text || "";
+        const normalized = (0, intakeNormalizer_1.normalizeEmailIntake)(req.body);
+        const pipelineBody = (0, intakeNormalizer_1.toCreateOrderPipelineBody)(normalized);
         const mockReq = {
-            body: {
-                customerName,
-                email,
-                items,
-                notes
-            }
+            body: pipelineBody,
         };
         const mockRes = {
             json: () => { },

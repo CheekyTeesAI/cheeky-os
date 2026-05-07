@@ -5,9 +5,10 @@ const client_1 = require("../db/client");
 const router = (0, express_1.Router)();
 router.get("/cheeky/orders", async (req, res) => {
     try {
-        const { status } = req.query;
+        const rawStatus = String(req.query.status || "").trim();
+        const status = rawStatus.length > 0 ? rawStatus : null;
         const orders = await client_1.db.order.findMany({
-            where: status ? { status: String(status) } : {},
+            where: status ? { status } : {},
             orderBy: { createdAt: "desc" }
         });
         res.json({ success: true, orders });

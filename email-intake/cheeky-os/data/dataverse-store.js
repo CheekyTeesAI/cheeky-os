@@ -11,10 +11,36 @@ const { logger } = require("../utils/logger");
 
 // ── Configuration ───────────────────────────────────────────────────────────
 
-const DATAVERSE_URL = () => process.env.DATAVERSE_URL || "";
-const CLIENT_ID = () => process.env.DATAVERSE_CLIENT_ID || "";
-const CLIENT_SECRET = () => process.env.DATAVERSE_CLIENT_SECRET || "";
-const TENANT_ID = () => process.env.DATAVERSE_TENANT_ID || "";
+/** Multi-environment: CHEEKY_DATAVERSE_PROFILE=staging → DATAVERSE_URL_STAGING overrides DATAVERSE_URL. */
+function dvProfileSuffix() {
+  const p = String(process.env.CHEEKY_DATAVERSE_PROFILE || "").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
+  return p ? "_" + p.toUpperCase().replace(/-/g, "_") : "";
+}
+
+function envWithProfile(base) {
+  const suf = dvProfileSuffix();
+  if (!suf) return String(process.env[base] || "");
+  const named = process.env[`${base}${suf}`];
+  const fallback = process.env[base];
+  const v =
+    named != null && String(named).trim() !== "" ? named : fallback != null ? fallback : "";
+  return String(v || "");
+}
+
+function effectiveDataverseSummary() {
+  const raw = String(process.env.CHEEKY_DATAVERSE_PROFILE || "").trim();
+  const label = raw || "default";
+  return {
+    profile: label,
+    suffix: dvProfileSuffix().replace(/^_/, "") || null,
+    urlConfigured: !!String(envWithProfile("DATAVERSE_URL")).trim(),
+  };
+}
+
+const DATAVERSE_URL = () => envWithProfile("DATAVERSE_URL") || "";
+const CLIENT_ID = () => envWithProfile("DATAVERSE_CLIENT_ID") || "";
+const CLIENT_SECRET = () => envWithProfile("DATAVERSE_CLIENT_SECRET") || "";
+const TENANT_ID = () => envWithProfile("DATAVERSE_TENANT_ID") || "";
 
 const TABLES = {
   customers: "ct_customerses",
@@ -77,6 +103,12 @@ function isConfigured() {
 let _cachedToken = null;
 let _tokenExpiry = 0;
 
+/** Force new token fetch (401 recovery). */
+function invalidateAccessToken() {
+  _cachedToken = null;
+  _tokenExpiry = 0;
+}
+
 async function getToken() {
   if (_cachedToken && Date.now() < _tokenExpiry) return _cachedToken;
 
@@ -88,11 +120,17 @@ async function getToken() {
     scope: `${DATAVERSE_URL()}/.default`,
   });
 
-  const result = await fetchSafe(tokenUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body.toString(),
-  });
+  const { fetchSafeTransientRetry } = require("../services/cheekyOsHttpRetry.service");
+  const result = await fetchSafeTransientRetry(
+    tokenUrl,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: body.toString(),
+      timeoutMs: 25000,
+    },
+    { label: "dataverse-token" }
+  );
 
   if (!result.ok || !result.data?.access_token) {
     logger.error("[DATAVERSE] Token fetch failed: " + (result.error || "No access_token"));
@@ -100,7 +138,12 @@ async function getToken() {
   }
 
   _cachedToken = result.data.access_token;
-  _tokenExpiry = Date.now() + (result.data.expires_in || 3600) * 1000 - 60000;
+  let skew = parseInt(String(process.env.CHEEKY_DV_TOKEN_SKEW_MS || "120000"), 10);
+  if (!Number.isFinite(skew)) skew = 120000;
+  skew = Math.max(60000, Math.min(skew, 540000));
+
+  _tokenExpiry =
+    Date.now() + (result.data.expires_in || 3600) * 1000 - skew;
   return _cachedToken;
 }
 
@@ -123,6 +166,21 @@ function getHeaders(token) {
     "OData-MaxVersion": "4.0",
     "OData-Version": "4.0",
   };
+}
+
+function sleep(ms) {
+  return new Promise((res) => setTimeout(res, ms));
+}
+
+/** True when a retry might succeed (avoid retrying OData 400/401). */
+function isTransientODataFailure(result) {
+  if (!result || result.ok) return false;
+  const err = String(result.error || "");
+  if (/HTTP (429|502|503|504)\b/i.test(err)) return true;
+  if (/timed out|timeout|ECONNRESET|ETIMEDOUT|EAI_AGAIN|ENOTFOUND|socket hang up/i.test(err)) {
+    return true;
+  }
+  return false;
 }
 
 function notConfigured() {
@@ -187,6 +245,99 @@ async function dvGet(table, filter) {
   if (filter) url += `?$filter=${encodeURIComponent(filter)}`;
 
   return fetchSafe(url, { method: "GET", headers: getHeaders(token) });
+}
+
+/**
+ * Arbitrary OData path under /api/data/v9.2/ (e.g. "ct_intake_queues?$filter=...").
+ * Used by CHEEKY OS v1.0 ctSync (intake gate + audit).
+ */
+async function odataRequest(method, pathAfterVersion, body, extraHeaders, fetchOptions) {
+  if (!isConfigured()) return notConfigured();
+
+  const rel = String(pathAfterVersion || "").replace(/^\//, "");
+  const url = `${DATAVERSE_URL()}/api/data/v9.2/${rel}`;
+  const opts = { method: method || "GET", headers: {} };
+  if (body != null && method !== "GET" && method !== "HEAD") {
+    opts.body = typeof body === "string" ? body : JSON.stringify(body);
+  }
+  const tm = fetchOptions && fetchOptions.timeoutMs != null ? Number(fetchOptions.timeoutMs) : null;
+  if (tm != null && !Number.isNaN(tm) && tm > 0) opts.timeoutMs = tm;
+
+  let maxAttempts = parseInt(String(process.env.CHEEKY_DV_ODATA_RETRY_ATTEMPTS || "3"), 10);
+  if (!Number.isFinite(maxAttempts) || maxAttempts < 1) maxAttempts = 3;
+  if (maxAttempts > 8) maxAttempts = 8;
+  let last = { ok: false, data: null, error: "no_attempt" };
+  const baseBackoff = Number(process.env.CHEEKY_DV_ODATA_RETRY_BACKOFF_MS || 380);
+  const bump = Number.isFinite(baseBackoff) && baseBackoff > 0 ? baseBackoff : 380;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const token = await getToken();
+    if (!token) {
+      last = { ok: false, data: null, error: "Token unavailable" };
+      break;
+    }
+    opts.headers = { ...getHeaders(token), ...(extraHeaders || {}) };
+
+    last = await fetchSafe(url, opts);
+    const errStr = String(last.error || "");
+
+    const can401 =
+      String(process.env.CHEEKY_DV_RETRY_AFTER_401 || "true").toLowerCase() !== "false";
+    if (
+      !last.ok &&
+      can401 &&
+      /HTTP\s401\b/i.test(errStr)
+    ) {
+      invalidateAccessToken();
+      logger.warn("[DATAVERSE] OData 401 — refreshing token once path=" + rel.slice(0, 220));
+      const token2 = await getToken();
+      if (token2) {
+        opts.headers = { ...getHeaders(token2), ...(extraHeaders || {}) };
+        last = await fetchSafe(url, opts);
+      }
+    }
+
+    if (last.ok) return last;
+    if (!isTransientODataFailure(last) || attempt >= maxAttempts) {
+      try {
+        const preview =
+          last.data != null && typeof last.data === "object"
+            ? JSON.stringify(last.data).slice(0, 2200)
+            : String(last.data || "").slice(0, 500);
+        logger.warn(
+          "[DATAVERSE] OData " +
+            (method || "GET") +
+            " failed after " +
+            attempt +
+            "/" +
+            maxAttempts +
+            " path=api/data/v9.2/" +
+            rel.slice(0, 450) +
+            " error=" +
+            String(last.error || "").slice(0, 700) +
+            (preview ? " responseJson=" + preview : "")
+        );
+      } catch (_) {
+        /* ignore logging errors */
+      }
+      try {
+        require("../services/cheekyOsRuntimeObservability.service").recordODataFailureLogged();
+      } catch (_) {}
+      return last;
+    }
+    logger.warn(
+      "[DATAVERSE] OData transient failure attempt " +
+        attempt +
+        "/" +
+        maxAttempts +
+        " path=" +
+        rel.slice(0, 220) +
+        " backing off: " +
+        String(last.error || "").slice(0, 260)
+    );
+    await sleep(bump * attempt);
+  }
+  return last;
 }
 
 // ── Customers ───────────────────────────────────────────────────────────────
@@ -291,8 +442,11 @@ async function saveEvent(event) {
 module.exports = {
   isConfigured,
   ensureAuth,
+  invalidateAccessToken,
+  effectiveDataverseSummary,
   TABLES,
   FIELD_MAP,
+  odataRequest,
   saveCustomer,
   saveDeal,
   getOpenDeals,

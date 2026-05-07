@@ -8,6 +8,7 @@ const client_1 = require("../db/client");
 const logger_1 = require("../utils/logger");
 async function createExceptionReview(input) {
     const message = String(input.message ?? "").slice(0, 4000);
+    const now = new Date();
     return client_1.db.exceptionReview.create({
         data: {
             orderId: input.orderId ?? null,
@@ -17,6 +18,7 @@ async function createExceptionReview(input) {
             severity: input.severity,
             message,
             detailsJson: input.detailsJson ?? null,
+            updatedAt: now,
         },
     });
 }

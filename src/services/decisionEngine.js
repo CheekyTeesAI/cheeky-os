@@ -87,6 +87,24 @@ function evaluateOrderState(order) {
     };
   }
 
+  const custArt = String(order.artApprovalStatus || "NOT_REQUESTED").toUpperCase();
+  if (custArt === "CHANGES_REQUESTED") {
+    return {
+      status: "WAITING_ART",
+      nextAction: "Revise art per customer feedback",
+      nextOwner: "Cheeky",
+      blockedReason: "ART_CHANGES_REQUESTED",
+    };
+  }
+  if (custArt === "REQUESTED") {
+    return {
+      status: "WAITING_ART",
+      nextAction: "Awaiting customer art approval",
+      nextOwner: "Customer",
+      blockedReason: "ART_APPROVAL_PENDING",
+    };
+  }
+
   if (order.garmentsReceived && !order.productionComplete) {
     return {
       status: "PRINTING",

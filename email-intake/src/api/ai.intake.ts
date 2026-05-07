@@ -1,5 +1,10 @@
 import { Request, Response } from "express";
 import OpenAI from "openai";
+import { buildAiIntakeParseResult } from "../lib/aiIntakeParser";
+import {
+  normalizeAiIntake,
+  toCreateOrderPipelineBody,
+} from "../lib/intakeNormalizer";
 import { runPipeline } from "./pipeline.run";
 
 // TEMP stability: construct client on first request only (avoids OpenAI init during server boot)
@@ -92,17 +97,21 @@ Do not include any extra text.
       };
     }
 
+    const intakeParse = buildAiIntakeParseResult({
+      source: "ai",
+      rawText: text,
+      parsedAiJson: parsed,
+    });
+
+    const normalized = normalizeAiIntake(parsed, text);
+    const pipelineBody = toCreateOrderPipelineBody(normalized);
+
     // RUN FULL PIPELINE
     let pipelineResult: any = {};
 
     await runPipeline(
       {
-        body: {
-          customerName: parsed.customerName,
-          email: parsed.email,
-          items: parsed.items.map((i: any) => `${i.quantity} ${i.type}`),
-          notes: parsed.notes
-        }
+        body: pipelineBody,
       } as any,
       {
         json: (data: any) => (pipelineResult = data),
@@ -114,7 +123,8 @@ Do not include any extra text.
       success: true,
       input: text,
       parsed,
-      pipeline: pipelineResult.pipeline
+      intakeParse,
+      pipeline: pipelineResult.pipeline,
     });
 
   } catch (err) {

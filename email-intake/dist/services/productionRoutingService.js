@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.routeProductionForOrder = routeProductionForOrder;
+const productionQueue_1 = require("../lib/productionQueue");
 const client_1 = require("../db/client");
 const orderEvaluator_1 = require("./orderEvaluator");
 const safetyGuard_service_1 = require("./safetyGuard.service");
@@ -186,6 +187,7 @@ async function routeProductionForOrder(orderId) {
     });
     const decision = applyOutsourceAndRush({ notes: order.notes, isRush: order.isRush }, base);
     const now = new Date();
+    const queueReady = (0, productionQueue_1.persistedQueueStatusForNormalized)(productionQueue_1.INITIAL_PRODUCTION_QUEUE_STATE);
     await client_1.db.$transaction(async (tx) => {
         const route = await tx.productionRoute.create({
             data: {
@@ -214,7 +216,7 @@ async function routeProductionForOrder(orderId) {
             await tx.job.update({
                 where: { id: job.id },
                 data: {
-                    status: "PRODUCTION_READY",
+                    status: queueReady,
                     assignedTo: decision.assignee,
                     productionType: decision.productionType,
                     routingNotes: decision.rationale.trim(),

@@ -1,4 +1,4 @@
-import { runFollowUps } from "../services/followUpEngine";
+import { runFollowUps } from "../services/followupEngine";
 
 export async function runFollowUpJob(): Promise<void> {
   try {

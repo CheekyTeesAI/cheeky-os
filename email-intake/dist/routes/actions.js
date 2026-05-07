@@ -7,7 +7,7 @@ const client_1 = require("../db/client");
 const paymentCloseEngine_1 = require("../services/paymentCloseEngine");
 const router = (0, express_1.Router)();
 function inferSource(order) {
-    if (order.squarePaymentId || order.squareOrderId)
+    if (order.squareId || order.squareOrderId)
         return "SQUARE";
     return "EMAIL";
 }

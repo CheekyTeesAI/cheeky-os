@@ -1,11 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const client_1 = require("@prisma/client");
 const express_1 = require("express");
-const client_1 = require("../db/client");
+const client_2 = require("../db/client");
 const orderEvaluator_1 = require("../services/orderEvaluator");
 const sharepointOrderSync_1 = require("../services/sharepointOrderSync");
 const teamsNotificationService_1 = require("../services/teamsNotificationService");
 const logger_1 = require("../utils/logger");
+const artRoutingService_1 = require("../services/artRoutingService");
+const proofRoutingService_1 = require("../services/proofRoutingService");
 const router = (0, express_1.Router)();
 function optFiniteNumber(value) {
     if (value === null || value === undefined)
@@ -48,21 +51,47 @@ router.post("/api/orders/intake", async (req, res) => {
         const printMethod = typeof methodRaw === "string" && methodRaw.trim().length > 0
             ? methodRaw.trim()
             : undefined;
-        const order = await client_1.db.order.create({
+        const quotedAmount = optFiniteNumber(body.quotedAmount);
+        const totalAmount = optFiniteNumber(body.totalAmount) ??
+            quotedAmount ??
+            0;
+        const depositRequired = optFiniteNumber(body.depositRequired) ??
+            (totalAmount > 0 ? Math.round(totalAmount * 0.5 * 100) / 100 : undefined);
+        const order = await client_2.db.order.create({
             data: {
                 customerName: customerName.trim(),
                 email: email.trim(),
                 phone,
                 notes: notes.trim(),
-                quotedAmount: optFiniteNumber(body.quotedAmount),
+                quotedAmount,
+                totalAmount,
+                depositRequired,
                 estimatedCost: optFiniteNumber(body.estimatedCost),
                 quantity: optInt(body.quantity),
                 garmentType,
                 printMethod,
-                status: "INTAKE",
+                status: "QUOTE_SENT",
+                depositStatus: client_1.OrderDepositStatus.NONE,
+                artFileStatus: artRoutingService_1.ART_STATUS.NOT_READY,
+                proofRequired: true,
+                proofStatus: proofRoutingService_1.PROOF_STATUS.NOT_SENT,
             },
         });
         const evaluated = await (0, orderEvaluator_1.evaluateOrderById)(order.id);
+        try {
+            await (0, artRoutingService_1.ensureArtPrepTask)(evaluated.id);
+        }
+        catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            logger_1.logger.warn(`ensureArtPrepTask after intake ${evaluated.id}: ${msg}`);
+        }
+        try {
+            await (0, proofRoutingService_1.ensureProofApprovalTask)(evaluated.id);
+        }
+        catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            logger_1.logger.warn(`ensureProofApprovalTask after intake ${evaluated.id}: ${msg}`);
+        }
         let sharepoint;
         try {
             const spResult = await (0, sharepointOrderSync_1.syncOrderToSharePoint)(evaluated.id);

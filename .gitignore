@@ -10,6 +10,8 @@ deployment-config.json
 
 # ── Node.js ──────────────────────────────────────────────────────────────────
 node_modules/
+# Prisma secondary client (foundation SQLite) — regenerated via postinstall
+src/generated/
 
 # ── Logs ─────────────────────────────────────────────────────────────────────
 logs/

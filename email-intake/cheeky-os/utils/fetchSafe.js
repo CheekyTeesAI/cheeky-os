@@ -74,7 +74,24 @@ async function fetchSafe(url, opts = {}) {
     }
 
     if (!res.ok) {
-      return { ok: false, data, error: `HTTP ${res.status}: ${res.statusText}` };
+      let err = `HTTP ${res.status}: ${res.statusText}`;
+      try {
+        if (data && typeof data === "object") {
+          const em =
+            typeof data.message === "string"
+              ? data.message
+              : data.error?.message ||
+                data["odata.error"]?.message?.value ||
+                (Array.isArray(data.error?.details)
+                  ? data.error.details.map((d) => d.message).filter(Boolean).join("; ")
+                  : "") ||
+                "";
+          if (em) err += ` | ${String(em).slice(0, 800)}`;
+        }
+      } catch (_) {
+        /* ignore */
+      }
+      return { ok: false, data, error: err };
     }
     return { ok: true, data, error: null };
   } catch (err) {

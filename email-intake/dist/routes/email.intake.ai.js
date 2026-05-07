@@ -4,6 +4,8 @@ const express_1 = require("express");
 const brain_1 = require("../core/brain");
 const client_1 = require("../db/client");
 const taskGenerator_1 = require("../services/taskGenerator");
+const artRoutingService_1 = require("../services/artRoutingService");
+const proofRoutingService_1 = require("../services/proofRoutingService");
 const estimateSendService_1 = require("../services/estimateSendService");
 const salesAgent_1 = require("../services/salesAgent");
 const router = (0, express_1.Router)();
@@ -59,6 +61,9 @@ router.post("/email/intake", async (req, res) => {
             totalAmount: isComplete ? quantity * unitPrice : 0,
             depositAmount: 0,
             notes: isComplete ? (parsedNotes || undefined) : body,
+            artFileStatus: artRoutingService_1.ART_STATUS.NOT_READY,
+            proofRequired: true,
+            proofStatus: proofRoutingService_1.PROOF_STATUS.NOT_SENT,
         };
         const order = await client_1.db.order.create({
             data: orderData,
@@ -94,6 +99,18 @@ router.post("/email/intake", async (req, res) => {
         }
         const beforeCount = await client_1.db.task.count({ where: { orderId: order.id } });
         await (0, taskGenerator_1.generateTasksForOrder)(order.id);
+        try {
+            await (0, artRoutingService_1.ensureArtPrepTask)(order.id);
+        }
+        catch {
+            /* non-fatal */
+        }
+        try {
+            await (0, proofRoutingService_1.ensureProofApprovalTask)(order.id);
+        }
+        catch {
+            /* non-fatal */
+        }
         const afterCount = await client_1.db.task.count({ where: { orderId: order.id } });
         const tasksCreated = Math.max(0, afterCount - beforeCount);
         try {

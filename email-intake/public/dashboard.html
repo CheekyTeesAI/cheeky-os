@@ -2,42 +2,77 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Cheeky OS Dashboard</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #111; color: #eee; margin: 0; padding: 20px; }
-    h1 { text-align: center; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; max-width: 1000px; margin: 0 auto 20px; }
-    .card { background: #222; border-radius: 8px; padding: 12px; }
-    .card h2 { margin: 0 0 8px; font-size: 14px; color: #888; }
-    .num { font-size: 28px; font-weight: bold; color: #fff; }
-    pre { background: #1a1a1a; padding: 10px; border-radius: 6px; overflow: auto; font-size: 11px; max-height: 280px; }
-    .section { max-width: 1000px; margin: 0 auto 16px; }
-    .cash-strip {
-      max-width: 1000px; margin: 0 auto 16px; padding: 12px 16px;
-      background: #1a2a1a; border-radius: 8px; border: 1px solid #333;
-      display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;
-      font-size: 14px; color: #ccc;
-    }
-    .cash-strip strong { color: #8f8; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cheeky OS — Operations</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/components/ops-ui.css" />
+  <link rel="stylesheet" href="/ops-dashboard.css" />
 </head>
-<body>
-  <h1>CHEEKY OS COMMAND CENTER</h1>
-  <div class="cash-strip" id="cash-strip">Loading cash metrics…</div>
-  <div class="grid" id="metrics-grid"></div>
-  <div class="section">
-    <h2 style="font-size:14px;color:#888;">Orders (payment → production)</h2>
-    <div class="grid" id="orders-metrics-grid"></div>
+<body class="ops-app">
+  <div class="ops-shell">
+    <aside class="ops-sidebar" aria-label="Main navigation">
+      <div class="brand-mini">
+        <img src="/assets/logo.png" alt="" width="32" height="32" />
+        <h1>Cheeky OS</h1>
+      </div>
+      <nav class="ops-nav">
+        <a class="is-active" href="/dashboard">Operations</a>
+        <a href="/operator">Operator</a>
+        <a href="/staff-dashboard">Staff</a>
+        <a href="/command-center">Command center</a>
+      </nav>
+    </aside>
+
+    <div class="ops-main">
+      <header class="ops-header">
+        <div>
+          <h2>Operations dashboard</h2>
+          <p class="muted" style="margin: 0.25rem 0 0; font-size: 0.85rem;">
+            Live data from deposit follow-ups, garment orders, and production queue
+          </p>
+        </div>
+        <div class="ops-header-actions">
+          <span class="status-inline">
+            <span id="status-dot" class="status-dot"></span>
+            <span id="status-text">Idle</span>
+          </span>
+          <button id="manual-refresh" type="button" class="ops-btn">Refresh</button>
+        </div>
+      </header>
+
+      <div class="ops-body">
+        <div id="kpi-row" class="ops-kpi-row"></div>
+
+        <section>
+          <h3 class="ops-panel-title">Active orders</h3>
+          <div id="orders-table-wrap"></div>
+        </section>
+      </div>
+
+      <footer class="ops-footer-hint">
+        <span id="connection-status"></span>
+        · Last updated: <span id="last-updated">Never</span>
+        · Legacy list UI: <a href="/dashboard-classic.html">classic dashboard</a> (static copy)
+      </footer>
+    </div>
   </div>
-  <div class="section">
-    <h2 style="font-size:14px;color:#888;">Latest events</h2>
-    <pre id="events-box">Loading…</pre>
-  </div>
-  <div class="section">
-    <h2 style="font-size:14px;color:#888;">Latest intake</h2>
-    <pre id="intake-box">Loading…</pre>
-  </div>
-  <p style="text-align:center;"><a href="/board.html" style="color:#8af;">Production board</a></p>
-  <script src="/dashboard.js"></script>
+
+  <div id="drawer-backdrop" class="ops-drawer-backdrop hidden" aria-hidden="true"></div>
+
+  <aside id="detail-drawer" class="ops-drawer" aria-hidden="true" aria-label="Order detail">
+    <div class="ops-drawer-header">
+      <div>
+        <h2 style="margin: 0; font-size: 1.05rem;">Order detail</h2>
+        <p class="muted" style="margin: 0.35rem 0 0; font-size: 0.82rem;">UI-only checklist — no server writes</p>
+      </div>
+      <button type="button" id="drawer-close" class="ops-btn ops-btn-ghost" aria-label="Close panel">
+        Close
+      </button>
+    </div>
+    <div id="drawer-body" class="ops-drawer-body"></div>
+  </aside>
+
+  <script src="/components/ops-ui.js"></script>
+  <script src="/ops-dashboard.js" defer></script>
 </body>
 </html>

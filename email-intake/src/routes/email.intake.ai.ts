@@ -2,6 +2,8 @@ import { Router, Request, Response } from "express";
 import { brain } from "../core/brain";
 import { db } from "../db/client";
 import { generateTasksForOrder } from "../services/taskGenerator";
+import { ART_STATUS, ensureArtPrepTask } from "../services/artRoutingService";
+import { PROOF_STATUS, ensureProofApprovalTask } from "../services/proofRoutingService";
 import { sendEstimate } from "../services/estimateSendService";
 import { runSalesAgentForOrder } from "../services/salesAgent";
 
@@ -66,6 +68,9 @@ router.post("/email/intake", async (req: Request, res: Response) => {
       totalAmount: isComplete ? quantity * unitPrice : 0,
       depositAmount: 0,
       notes: isComplete ? (parsedNotes || undefined) : body,
+      artFileStatus: ART_STATUS.NOT_READY,
+      proofRequired: true,
+      proofStatus: PROOF_STATUS.NOT_SENT,
     };
 
     const order = await db.order.create({
@@ -104,6 +109,16 @@ router.post("/email/intake", async (req: Request, res: Response) => {
 
     const beforeCount = await db.task.count({ where: { orderId: order.id } });
     await generateTasksForOrder(order.id);
+    try {
+      await ensureArtPrepTask(order.id);
+    } catch {
+      /* non-fatal */
+    }
+    try {
+      await ensureProofApprovalTask(order.id);
+    } catch {
+      /* non-fatal */
+    }
     const afterCount = await db.task.count({ where: { orderId: order.id } });
     const tasksCreated = Math.max(0, afterCount - beforeCount);
 

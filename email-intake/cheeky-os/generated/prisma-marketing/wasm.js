@@ -155,6 +155,7 @@ exports.Prisma.CaptureOrderScalarFieldEnum = {
   depositReceived: 'depositReceived',
   balanceDue: 'balanceDue',
   paymentNotes: 'paymentNotes',
+  memoryJson: 'memoryJson',
   createdAt: 'createdAt'
 };
 

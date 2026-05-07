@@ -233,14 +233,18 @@ function evaluateRouteProduction(order) {
     return { allowed: true };
 }
 function evaluateCreateJob(order) {
-    if (!order.depositReceived) {
+    const ds = String(order.depositStatus ?? "NONE").toUpperCase();
+    const paid = order.depositReceived === true || ds === "PAID";
+    if (!paid) {
         return { allowed: false, reason: "Deposit has not been received" };
     }
     const st = statusUpper(order);
-    if (st !== "DEPOSIT_PAID" && st !== "PAID_IN_FULL") {
+    if (st !== "DEPOSIT_PAID" &&
+        st !== "PAID_IN_FULL" &&
+        st !== "PRODUCTION_READY") {
         return {
             allowed: false,
-            reason: `Creating a job requires status DEPOSIT_PAID or PAID_IN_FULL (current: ${order.status ?? "unknown"})`,
+            reason: `Creating a job requires status DEPOSIT_PAID, PRODUCTION_READY, or PAID_IN_FULL (current: ${order.status ?? "unknown"})`,
         };
     }
     if (order.jobCreated === true) {

@@ -153,3 +153,31 @@ cheeky email-scan
 | PAC auth | pac auth create | Configured |
 | Square credentials | square-config.json | Awaiting credentials |
 | Email IMAP | email-config.json | Awaiting credentials |
+
+## Cheeky OS HTTP (email-intake) — snapshot 2026-04-14
+
+The Node/Express app in `email-intake/cheeky-os/server.js` is the operational API + static staff UI. Recent additions include **customer reply capture** (`/api/comms/replies`, intake branches), **work order packets** (`/api/work-orders/*`, printable HTML under `/work-orders/:orderId/print`), and **quote intelligence** (`POST /api/quotes/calculate`). After TypeScript changes, run `npm run build` in `email-intake` so `dist/` matches `src/`.
+
+**End-of-day log:** see `control/history/2026-04-14-eod-cheeky-os.md` for routes, status, gaps, and next steps.
+
+## Current Status
+
+- Main server entrypoint: `email-intake/cheeky-os/server.js` (`npm start` from `email-intake`).
+- **v4.3 Production Ready** — Power Apps: import `docs/cheeky-os-power-apps-connector.openapi.yaml`, bind `GET /api/cheeky-os/dashboard-data` → `tiles.*` including `HealthSummary`; see `docs/power-apps-dashboard-integration-playbook.md`.
+- **One-shot local verify** (from `email-intake`, with server up): `npm run test:dashboard` and `curl -s http://127.0.0.1:3000/health`.
+- Dashboard URL: `http://127.0.0.1:3000/dashboard.html`.
+- Key routes:
+  - `POST /api/operator/run`
+  - `POST /api/ai/execute`
+  - `GET /api/production/queue`
+  - `GET /api/reports/run?period=today|week`
+  - `GET /api/reports/customer?email=...`
+  - `GET /api/sales/call-list`, `POST /api/sales/log`
+  - `GET /api/memory/insights`, `GET /api/memory/kaizen`
+- Command examples:
+  - `daily report`
+  - `weekly report`
+  - `outstanding invoices`
+  - `call list`
+  - `kaizen`
+  - `write follow-up`

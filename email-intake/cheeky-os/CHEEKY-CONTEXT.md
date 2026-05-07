@@ -71,7 +71,7 @@ Run from `email-intake/`:
 node cheeky-os/server.js
 ```
 
-Default listen: **`0.0.0.0:3001`** (override with `CHEEKY_OS_PORT` only; generic `PORT` is ignored so it does not clash with other apps).
+Default listen: **`0.0.0.0:3000`** when **`email-intake/.env`** sets **`PORT=3000`** and **`CHEEKY_OS_PORT=3000`**. Use **`npm start`**, which loads `.env` with **override** so a stale shell **`PORT`** (e.g. 3001) does not win.
 
 | Method | Path | Notes |
 |--------|------|--------|
@@ -92,7 +92,7 @@ None in this bundle.
 
 ## Blocked / caveats
 
-- **`email-intake/` TypeScript server (`voice.run`) is unchanged** — Bundle 1 HTTP entry is **`cheeky-os/server.js`** only. Use port **3001** for curl checks in the superprompt.
+- **`email-intake/` TypeScript server (`voice.run`) is unchanged** — Bundle 1 HTTP entry is **`cheeky-os/server.js`** only. Use port **3000** for local curl checks when `.env` matches.
 - **Reactivation** may return empty `hot`/`warm`/`cold` if marketing Prisma DB has no `Customer` rows and Square customer search returns none (still valid JSON).
 - **Unpaid invoices** depend on Square `invoices/search` and `invoice_states`; sandbox accounts may return none while **stale open orders** still populate.
 - **Stale “estimates”** are implemented as **Square `orders/search` with state `OPEN`** and `created_at` older than 5 days (read-only proxy for stale quotes).
@@ -115,3 +115,74 @@ None in this bundle.
 ## Integration tweak
 
 - `cheeky-os/integrations/square.js` — exports `getBaseUrl` for revenue services (additive).
+
+---
+
+## Phase 3 — Growth mode (additive, 2026)
+
+**Purpose:** Patrick shifts toward sales **without** disrupting Jeremy's production cockpit.
+
+### Business workflow (canonical recap)
+
+CLIENT REQUEST → Square estimate / invoice → **deposit gate** → art → approvals → garments → production → pickup / payment. Growth actions **never** skip deposit, art, or approval gates.
+
+### Design laws (Phase 3)
+
+1. **Blockers beat growth** — cashflow / production stalls appear before pipeline cheerleading.
+2. **Drafts-only outreach** — `growth/outreachDraftService.js` persists JSON under `data/outreach-drafts/` and **always** calls **`approvalGateService.createApproval`** with **`growth_outreach`**.
+3. **Jeremy isolation** — growth UI/doc copy is labeled **Patrick**; Jeremy may ignore **`/api/growth/*`**, **`/api/outreach/*`**, **`/api/operator/morning-brief`** entirely.
+4. **No autonomy** — no background mailers from these modules; no Square/Dataverse mutations in Phase 3 paths.
+5. **CommonJS-only** cockpit extensions — **`require()`** / **`module.exports`**.
+
+### Roles
+
+| Role | Focus |
+|------|-------|
+| **Patrick** | Approvals, customer-facing drafts, prioritization (`morning-brief`), lead/opportunity scans |
+| **Jeremy** | Blocker-first production execution, garment/work-order drafts after approval |
+| **Operator** | Friction logging, shift handoff notes |
+
+### Frozen / brittle areas (document only — do not "fix" blindly)
+
+Historical sections above reference **PostgreSQL migration debt**, intermittent **Prisma generate EPERM**, and **marketing vs foundation** DB divergence. Treat those as infra blockers—not something the growth bundle rewrites.
+
+### Coding rules recap
+
+Additive files only; **`try/catch`** on HTTP surfaces; deterministic co-pilot text where **no outbound LLM** package is mandated; **`GROWTH_AI_GUARDRAIL`** string echoed inside outreach **`aiReasoning`** fields for auditability.
+
+## Phase 5 v3.0 — customer transparency + Jeremy mobile maturity (additive, 2026)
+
+### What shipped
+
+- **Customer lookup / status:** **`GET /api/customer/search`**, **`GET /api/customer/status?token=`** backed by **`customer/customerSearchService.js`** — customer-safe wording only; tokens in **`data/customer-status-links.json`** (~30-day TTL when issued).
+- **Self-service intake:** **`POST /api/intake/self-service`**, **`GET /api/intake/queue`** via **`intake/selfServiceIntakeService.js`** — queue file **`data/intake-self-service-queue.json`**, blocker cards + approvals **`self_service_intake_review`**; no quoting or production mutations from the form.
+- **Monitoring:** **`GET /api/monitoring/system-health`** + **`monitoring/systemHealthService.js`** — surfaced in cockpit strip, morning brief, nightly growth review payloads where wired.
+- **UI:** **`public/customer-intake.html`**, **`public/customer-status.html`**, **`public/operator-dashboard.html`** enhancements (sticky strip, intake preview, Jeremy training toggle, Patrick remote unchanged contract).
+
+### Explicit non-goals (Phase 5)
+
+No customer authentication, no payment capture in the browser, no status mutations by customers, no email/SMS auto-send from these routes, no hidden cron for customer flows.
+
+### Phase 6 placeholders (documentation only)
+
+Future hooks: authenticated **customer portal**, **analytics export** contracts, **advanced CRM sync**, **advanced automation** with explicit governance — implement only after a dedicated Phase 6 spec; Phase 5 leaves comments/README hooks only.
+
+## Phase 7 v3.0 — enterprise usability + Cheeky-AI (additive, 2026)
+
+Three persisted cockpit views (**Cheeky Advisor default**, **Jeremy**, **Patrick**) + anchored Cheeky-AI Helpbot (deterministic composer — **no LLM npm add**).
+
+Key routes:
+
+- `GET /api/dashboard/view-descriptor`
+- `POST /api/cheeky-ai/ask`, `GET /api/cheeky-ai/search`, `GET /api/cheeky-ai/suggestions`
+- `GET /api/accounting/summary`, `GET /api/accounting/ar-aging`, `GET /api/accounting/export-preview`
+- `GET /api/reporting/advanced/weekly`, `monthly`, `GET /api/reporting/advanced/export/:type`
+- `GET /api/backup/snapshot`, `GET /api/backup/status`
+- `GET /api/team/activity`
+- `GET /api/system/full-status`
+- `GET /api/system/full-health-check`
+
+Operational law unchanged: blockers/cashflow first, approvals gate intact, absolutely **no autonomous sends or vendor mutations** from these modules.
+
+Hardening posture: Cheeky Advisor is now the operational command layer. It must always explain missing data, show safe cached fallbacks, and route humans to approval-gated actions instead of executing anything.
+

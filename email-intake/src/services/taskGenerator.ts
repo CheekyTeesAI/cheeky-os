@@ -1,4 +1,8 @@
+import { OrderDepositStatus } from "@prisma/client";
 import { db } from "../db/client";
+import { ensureArtPrepTask } from "./artRoutingService";
+import { shouldBlockPrintTasksForOrder } from "./productionPrintGateService";
+import { ensureProofApprovalTask } from "./proofRoutingService";
 
 const BASE_TASKS = ["Order Blanks", "QC + Pack"] as const;
 
@@ -15,7 +19,25 @@ function tasksForMethod(method: string): string[] {
   return [];
 }
 
+function taskTypeForTitle(title: string): string {
+  if (title === "Order Blanks") return "ORDER_BLANKS";
+  if (title === "QC + Pack") return "QC_PACK";
+  if (
+    title.startsWith("Print ") ||
+    title === "Burn Screen" ||
+    title.startsWith("Press ")
+  ) {
+    return "PRINT";
+  }
+  return "OPS";
+}
+
 export async function generateTasksForOrder(orderId: string): Promise<void> {
+  const job = await db.job.findUnique({ where: { orderId } });
+  if (!job) {
+    return;
+  }
+
   const order = await db.order.findUnique({
     where: { id: orderId },
     include: {
@@ -27,6 +49,11 @@ export async function generateTasksForOrder(orderId: string): Promise<void> {
   });
 
   if (!order) return;
+
+  const ds = order.depositStatus ?? OrderDepositStatus.NONE;
+  if (ds !== OrderDepositStatus.PAID && order.depositReceived !== true) {
+    return;
+  }
 
   const required = new Set<string>(BASE_TASKS);
 
@@ -46,14 +73,47 @@ export async function generateTasksForOrder(orderId: string): Promise<void> {
   );
 
   const toCreate = [...required].filter((title) => !existingTitles.has(title));
-  if (toCreate.length === 0) return;
+  const blockPrint = shouldBlockPrintTasksForOrder(order);
+  if (toCreate.length === 0) {
+    try {
+      await ensureArtPrepTask(orderId);
+    } catch {
+      /* non-fatal */
+    }
+    try {
+      await ensureProofApprovalTask(orderId);
+    } catch {
+      /* non-fatal */
+    }
+    return;
+  }
 
   await db.task.createMany({
-    data: toCreate.map((title) => ({
-      orderId,
-      title,
-      status: "PENDING",
-      dueDate: null,
-    })),
+    data: toCreate.map((title) => {
+      const isPrintStep =
+        title.startsWith("Print ") ||
+        title === "Burn Screen" ||
+        title.startsWith("Press ");
+      return {
+        orderId,
+        title,
+        status:
+          isPrintStep && blockPrint ? "BLOCKED" : "PENDING",
+        dueDate: null,
+        jobId: job.id,
+        type: taskTypeForTitle(title),
+      };
+    }),
   });
+
+  try {
+    await ensureArtPrepTask(orderId);
+  } catch {
+    /* non-fatal */
+  }
+  try {
+    await ensureProofApprovalTask(orderId);
+  } catch {
+    /* non-fatal */
+  }
 }

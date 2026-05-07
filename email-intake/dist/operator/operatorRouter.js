@@ -4,7 +4,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const depositFollowupService_1 = require("../services/depositFollowupService");
+const garmentOperatorService_1 = require("../services/garmentOperatorService");
+const artRoutingService_1 = require("../services/artRoutingService");
+const proofRoutingService_1 = require("../services/proofRoutingService");
+const customerCommsService_1 = require("../services/customerCommsService");
+const customerReplyService_1 = require("../services/customerReplyService");
+const workOrderService_1 = require("../services/workOrderService");
+const quoteEngine_1 = require("../services/quoteEngine");
 const jarvisSquareService_1 = require("../services/jarvisSquareService");
+const intakeQueuePrintingService_1 = require("../services/intakeQueuePrintingService");
 const MS_DAY = 24 * 60 * 60 * 1000;
 const roundPrice = (price) => {
     if (price < 20)
@@ -186,17 +195,234 @@ async function handleOperatorCommand(input) {
                 result = { invoiceId: "temp_456" };
                 break;
             }
-            case "what_needs_printing":
+            case "what_needs_printing": {
+                const pq = await (0, intakeQueuePrintingService_1.listIntakesEligibleForPrinting)();
+                if (!pq.ok) {
+                    return { ok: false, status: 502, error: pq.error || "print_queue_failed" };
+                }
+                const jobs = pq.jobs?.map((j) => ({
+                    orderId: j.orderId,
+                    intakeId: j.orderId,
+                    customer: j.customer,
+                    customerName: j.customer,
+                    status: j.status === "AI_PARSED" ? "parsed_ready_for_ops" : "intake_new",
+                    requestText: j.requestText,
+                    parsedJsonPreview: j.parsedJson?.slice?.(0, 500) ?? null,
+                    createdon: j.createdon,
+                })) ?? [];
                 result = {
-                    jobs: [
-                        {
-                            orderId: "123",
-                            customer: "SDPC",
-                            status: "ready"
-                        }
-                    ]
+                    jobs,
+                    source: "dataverse_intake_queue",
+                    count: jobs.length,
                 };
                 break;
+            }
+            case "get_deposit_followups": {
+                result = await (0, depositFollowupService_1.buildDepositFollowupsPayload)();
+                break;
+            }
+            case "get_garment_orders": {
+                result = await (0, garmentOperatorService_1.buildGarmentOrdersPayload)();
+                break;
+            }
+            case "mark_garments_ordered": {
+                const oid = String(data?.orderId ?? "").trim();
+                if (!oid) {
+                    return { ok: false, status: 400, error: "orderId is required" };
+                }
+                result = await (0, garmentOperatorService_1.markGarmentsOrdered)(oid);
+                break;
+            }
+            case "mark_garments_received": {
+                const oid = String(data?.orderId ?? "").trim();
+                if (!oid) {
+                    return { ok: false, status: 400, error: "orderId is required" };
+                }
+                result = await (0, garmentOperatorService_1.markGarmentsReceived)(oid);
+                break;
+            }
+            case "orders_needing_art": {
+                result = { orders: await (0, artRoutingService_1.listOrdersNeedingArt)() };
+                break;
+            }
+            case "send_order_to_digitizer": {
+                const oid = String(data?.orderId ?? "").trim();
+                if (!oid) {
+                    return { ok: false, status: 400, error: "orderId is required" };
+                }
+                result = await (0, artRoutingService_1.sendOrderToDigitizer)(oid);
+                break;
+            }
+            case "mark_art_ready": {
+                const oid = String(data?.orderId ?? "").trim();
+                if (!oid) {
+                    return { ok: false, status: 400, error: "orderId is required" };
+                }
+                result = await (0, artRoutingService_1.markArtReady)(oid);
+                break;
+            }
+            case "orders_needing_proof": {
+                result = { orders: await (0, proofRoutingService_1.listOrdersProofQueue)() };
+                break;
+            }
+            case "send_proof": {
+                const oid = String(data?.orderId ?? "").trim();
+                if (!oid) {
+                    return { ok: false, status: 400, error: "orderId is required" };
+                }
+                result = await (0, customerCommsService_1.sendProofRequestComm)(oid);
+                break;
+            }
+            case "send_deposit_reminder": {
+                const oid = String(data?.orderId ?? "").trim();
+                if (!oid) {
+                    return { ok: false, status: 400, error: "orderId is required" };
+                }
+                result = await (0, customerCommsService_1.sendDepositReminder)(oid);
+                break;
+            }
+            case "send_pickup_ready": {
+                const oid = String(data?.orderId ?? "").trim();
+                if (!oid) {
+                    return { ok: false, status: 400, error: "orderId is required" };
+                }
+                result = await (0, customerCommsService_1.sendPickupReady)(oid);
+                break;
+            }
+            case "recent_customer_communications": {
+                result = { entries: await (0, customerCommsService_1.listRecentCommunications)(40) };
+                break;
+            }
+            case "customer_replies": {
+                result = { replies: await (0, customerReplyService_1.listRecentInboundReplies)(50) };
+                break;
+            }
+            case "proofs_approved_by_customer": {
+                const rows = await (0, customerReplyService_1.listRecentInboundReplies)(80);
+                result = {
+                    replies: rows.filter((r) => r.type === customerReplyService_1.INBOUND_TYPES.CUSTOMER_APPROVED ||
+                        r.classification === "PROOF_APPROVED"),
+                };
+                break;
+            }
+            case "revision_requests_from_customers": {
+                const rows = await (0, customerReplyService_1.listRecentInboundReplies)(80);
+                result = {
+                    replies: rows.filter((r) => r.type === customerReplyService_1.INBOUND_TYPES.CUSTOMER_REVISION_REQUEST ||
+                        r.classification === "REVISION_REQUEST"),
+                };
+                break;
+            }
+            case "unmatched_customer_replies": {
+                const rows = await (0, customerReplyService_1.listRecentInboundReplies)(80);
+                result = { replies: rows.filter((r) => r.orderId == null) };
+                break;
+            }
+            case "work_orders_ready": {
+                result = { items: await (0, workOrderService_1.listWorkOrdersReady)(100) };
+                break;
+            }
+            case "generate_work_order": {
+                const oid = String(data?.orderId ?? "").trim();
+                if (!oid) {
+                    return { ok: false, status: 400, error: "orderId is required" };
+                }
+                const out = await (0, workOrderService_1.generateWorkOrder)(oid);
+                if (out.ok === false) {
+                    result = { generated: false, blockers: out.blockers };
+                    break;
+                }
+                result = {
+                    generated: true,
+                    workOrderNumber: out.workOrderNumber,
+                    workOrder: out.packet,
+                };
+                break;
+            }
+            case "work_order_gate_check": {
+                const oid = String(data?.orderId ?? "").trim();
+                if (!oid) {
+                    return { ok: false, status: 400, error: "orderId is required" };
+                }
+                const order = await (0, workOrderService_1.loadOrderForWorkOrder)(oid);
+                if (!order) {
+                    return { ok: false, status: 404, error: "Order not found" };
+                }
+                result = (0, workOrderService_1.isWorkOrderReady)(order);
+                break;
+            }
+            case "mark_work_order_printed": {
+                const oid = String(data?.orderId ?? "").trim();
+                if (!oid) {
+                    return { ok: false, status: 400, error: "orderId is required" };
+                }
+                await (0, workOrderService_1.markWorkOrderPrinted)(oid);
+                result = { printed: true, orderId: oid };
+                break;
+            }
+            case "work_order_open_links": {
+                const oid = String(data?.orderId ?? "").trim();
+                if (!oid) {
+                    return { ok: false, status: 400, error: "orderId is required" };
+                }
+                result = {
+                    printUrl: `/work-orders/${oid}/print`,
+                    apiUrl: `/api/work-orders/${oid}`,
+                };
+                break;
+            }
+            case "quote_calculate": {
+                const d = typeof data === "object" && data !== null
+                    ? data
+                    : {};
+                const input = {
+                    customerName: typeof d.customerName === "string" ? d.customerName : "",
+                    productType: typeof d.productType === "string" ? d.productType : "garment",
+                    quantity: Number(d.quantity),
+                    blankCost: Number(d.blankCost),
+                    productionMethod: String(d.productionMethod || "").trim(),
+                    frontColors: d.frontColors != null ? Number(d.frontColors) : undefined,
+                    backColors: d.backColors != null ? Number(d.backColors) : undefined,
+                    artNeeded: Boolean(d.artNeeded),
+                    rush: Boolean(d.rush),
+                    shippingCost: d.shippingCost != null ? Number(d.shippingCost) : undefined,
+                    notes: typeof d.notes === "string" ? d.notes : "",
+                };
+                const val = (0, quoteEngine_1.validateQuoteInput)(input);
+                if (val.ok === false) {
+                    return { ok: false, status: 400, error: val.error };
+                }
+                const quote = (0, quoteEngine_1.calculateQuote)(input);
+                result = {
+                    quote,
+                    squarePrep: (0, quoteEngine_1.buildSquareDraftFromQuote)(quote, input),
+                };
+                break;
+            }
+            case "quote_rules": {
+                result = { rules: quoteEngine_1.QUOTE_RULES };
+                break;
+            }
+            case "orders_needing_communication": {
+                const [depositCandidates, digest] = await Promise.all([
+                    (0, customerCommsService_1.getOrdersNeedingDepositReminder)(),
+                    (0, customerCommsService_1.getCustomerCommsDigest)(),
+                ]);
+                result = {
+                    depositReminderCandidates: depositCandidates,
+                    digestSummary: digest.summaryLine,
+                    digestCounts: digest.counts,
+                };
+                break;
+            }
+            case "mark_proof_approved": {
+                const oid = String(data?.orderId ?? "").trim();
+                if (!oid) {
+                    return { ok: false, status: 400, error: "orderId is required" };
+                }
+                result = await (0, proofRoutingService_1.approveProof)(oid);
+                break;
+            }
             case "follow_up_estimates": {
                 try {
                     const fuData = typeof data === "object" && data !== null
@@ -311,28 +537,39 @@ async function handleOperatorCommand(input) {
                                 error = "No email";
                             }
                             else {
+                                const liveSend = ["true", "1", "on", "yes"].includes(String(process.env.CHEEKY_OPERATOR_RESEND_LIVE_SEND || "").trim().toLowerCase());
+                                const fromAddr = String(process.env.RESEND_FROM ||
+                                    process.env.CHEEKY_RESEND_FROM_ORDERS ||
+                                    "").trim() || "Cheeky Tees <orders@cheekytees.com>";
                                 try {
-                                    const response = await fetch("https://api.resend.com/emails", {
-                                        method: "POST",
-                                        headers: {
-                                            "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
-                                            "Content-Type": "application/json"
-                                        },
-                                        body: JSON.stringify({
-                                            from: "Cheeky Tees <onboarding@resend.dev>",
-                                            to: ["customer.service@cheekyteesllc.com"],
-                                            subject: "Quick follow-up on your order",
-                                            html: `<p>${message}</p>`
-                                        })
-                                    });
-                                    const text = await response.text();
-                                    if (response.ok) {
-                                        sent = true;
-                                        sentAt = new Date().toISOString();
+                                    if (!liveSend) {
+                                        sent = false;
+                                        error = undefined;
+                                        sentAt = null;
                                     }
                                     else {
-                                        sent = false;
-                                        error = `Resend error: ${text}`;
+                                        const response = await fetch("https://api.resend.com/emails", {
+                                            method: "POST",
+                                            headers: {
+                                                Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+                                                "Content-Type": "application/json",
+                                            },
+                                            body: JSON.stringify({
+                                                from: fromAddr,
+                                                to: [customerEmail],
+                                                subject: "Quick follow-up on your order",
+                                                html: `<p>${message}</p>`,
+                                            }),
+                                        });
+                                        const text = await response.text();
+                                        if (response.ok) {
+                                            sent = true;
+                                            sentAt = new Date().toISOString();
+                                        }
+                                        else {
+                                            sent = false;
+                                            error = `Resend error: ${text}`;
+                                        }
                                     }
                                 }
                                 catch (err) {

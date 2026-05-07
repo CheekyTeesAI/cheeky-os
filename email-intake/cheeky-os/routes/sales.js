@@ -21,9 +21,193 @@ const salesEngine = require(path.join(
   "services",
   "salesEngine.js"
 ));
+const {
+  buildSalesPipelinePayload,
+  getFollowups,
+  buildDailySalesToday,
+} = require("../services/salesEngineV1.service");
+const { generateSalesMessage } = require("../services/salesMessageDraft.service");
+const { buildBigDealsPayload, REVENUE_ACCELERATION_META } = require("../services/revenueAccelerationEngine.service");
+const salesOpportunityEngine = require("../services/salesOpportunityEngine.service");
 
 const router = Router();
 const TOP = 5;
+
+const SALES_ENGINE_V1_META = {
+  pipelineVisible: true,
+  followupsGenerated: true,
+  messagesDrafted: true,
+  salesActionsRanked: true,
+  noAutoSend: true,
+};
+
+const REVENUE_ACCEL_WRAP = { revenueAcceleration: true, noAutoSend: true };
+
+router.get("/opportunities", async (_req, res) => {
+  try {
+    const out = await salesOpportunityEngine.getOpportunitiesList();
+    return res.json({ ...out, timestamp: new Date().toISOString() });
+  } catch (err) {
+    return res.status(200).json({
+      ok: true,
+      opportunities: [],
+      metrics: { open: 0, drafted: 0, highPriority: 0, estimatedPipeline: 0 },
+      error: err instanceof Error ? err.message : String(err),
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+router.get("/brief", async (_req, res) => {
+  try {
+    const out = await salesOpportunityEngine.buildSalesBrief();
+    return res.json(out);
+  } catch (err) {
+    return res.status(200).json({
+      ok: true,
+      headline: "Sales brief error",
+      todayFocus: [],
+      topOpportunities: [],
+      draftsWaiting: [],
+      pipelineEstimate: 0,
+      recommendedActions: [],
+      error: err instanceof Error ? err.message : String(err),
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+router.post("/scan", async (req, res) => {
+  try {
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const autoDraft =
+      body.autoDraft === true ||
+      String(process.env.CHEEKY_SALES_AUTO_DRAFT || "")
+        .trim()
+        .toLowerCase() === "true";
+    const out = await salesOpportunityEngine.runSalesOpportunityScan({
+      autoDraft,
+      enrichSquare: body.enrichSquare !== false,
+      limitBuckets: body.limitBuckets,
+      orderLimit: body.orderLimit,
+    });
+    if (!out.ok) {
+      return res.status(503).json({ ok: false, ...out });
+    }
+    return res.json({ ok: true, ...out });
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+});
+
+router.post("/opportunities/:id/draft", async (req, res) => {
+  try {
+    const out = await salesOpportunityEngine.createSalesFollowupDraft(req.params.id);
+    return res.status(out.ok ? 200 : 400).json({ ...out, ...SALES_ENGINE_V1_META });
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+      ...SALES_ENGINE_V1_META,
+    });
+  }
+});
+
+router.patch("/opportunities/:id/status", async (req, res) => {
+  try {
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const out = await salesOpportunityEngine.patchOpportunityStatus(
+      req.params.id,
+      body.status,
+      body.note
+    );
+    return res.status(out.ok ? 200 : 400).json(out);
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+});
+
+router.get("/big-deals", async (_req, res) => {
+  try {
+    const body = await buildBigDealsPayload();
+    return res.json({ ...body, ...REVENUE_ACCEL_WRAP });
+  } catch (err) {
+    console.error("[sales/big-deals]", err.message || err);
+    return res.status(200).json({
+      totalOpportunities: 0,
+      topDeals: [],
+      potentialRevenue: 0,
+      actionsRequired: [],
+      error: err instanceof Error ? err.message : String(err),
+      ...REVENUE_ACCELERATION_META,
+      ...REVENUE_ACCEL_WRAP,
+    });
+  }
+});
+
+router.get("/pipeline", async (_req, res) => {
+  try {
+    const body = await buildSalesPipelinePayload();
+    return res.json({ ...body, ...SALES_ENGINE_V1_META });
+  } catch (err) {
+    console.error("[sales/pipeline]", err.message || err);
+    return res.status(200).json({
+      quotes: { new: [], awaitingResponse: [], followupNeeded: [], highValue: [] },
+      customers: { repeatCustomers: [], highValueCustomers: [], dormantCustomers: [] },
+      opportunities: { quickWins: [], bulkOpportunities: [], rushOpportunities: [] },
+      error: err instanceof Error ? err.message : String(err),
+      ...SALES_ENGINE_V1_META,
+    });
+  }
+});
+
+router.get("/followups", async (_req, res) => {
+  try {
+    const { followups } = await getFollowups();
+    return res.json({ followups, ...SALES_ENGINE_V1_META });
+  } catch (err) {
+    console.error("[sales/followups]", err.message || err);
+    return res.status(200).json({ followups: [], error: err instanceof Error ? err.message : String(err), ...SALES_ENGINE_V1_META });
+  }
+});
+
+router.get("/today", async (_req, res) => {
+  try {
+    const body = await buildDailySalesToday();
+    return res.json({ ...body, ...SALES_ENGINE_V1_META });
+  } catch (err) {
+    console.error("[sales/today]", err.message || err);
+    return res.status(200).json({
+      revenueTarget: 0,
+      pipelineValue: 0,
+      likelyToClose: 0,
+      followupsRequired: 0,
+      topActions: [],
+      error: err instanceof Error ? err.message : String(err),
+      ...SALES_ENGINE_V1_META,
+    });
+  }
+});
+
+router.post("/message-draft", async (req, res) => {
+  try {
+    const out = await generateSalesMessage(req.body && typeof req.body === "object" ? req.body : {});
+    return res.status(out.ok ? 200 : 400).json({ ...out, ...SALES_ENGINE_V1_META });
+  } catch (err) {
+    return res.status(200).json({
+      ok: false,
+      draftOnly: true,
+      error: err instanceof Error ? err.message : String(err),
+      ...SALES_ENGINE_V1_META,
+    });
+  }
+});
 
 router.get("/daily-call-list", async (req, res) => {
   try {

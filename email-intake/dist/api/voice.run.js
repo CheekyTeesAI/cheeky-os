@@ -4,6 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 require("dotenv/config");
+const path_1 = __importDefault(require("path"));
+const node_cron_1 = __importDefault(require("node-cron"));
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { runFollowUpCycle } = require("../../lib/followUpEngine");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const nodemailer = require("nodemailer");
 const express_1 = __importDefault(require("express"));
@@ -69,8 +73,14 @@ const index_1 = require("../index");
 const operatorRouter_1 = __importDefault(require("../operator/operatorRouter"));
 const operatorLayer_1 = __importDefault(require("../routes/operatorLayer"));
 const commandLayer_routes_1 = __importDefault(require("../modules/command-layer/routes/commandLayer.routes"));
-// TEMP stability: see startScheduler() call below
-// import { startScheduler } from "../modules/command-layer/services/scheduler.service";
+const intake_route_1 = __importDefault(require("./intake.route"));
+const tasks_route_1 = __importDefault(require("./tasks.route"));
+const payment_route_1 = __importDefault(require("./payment.route"));
+const orders_route_1 = __importDefault(require("./orders.route"));
+const followups_run_route_1 = __importDefault(require("./followups.run.route"));
+const followups_route_1 = __importDefault(require("./followups.route"));
+const dashboard_route_1 = __importDefault(require("./dashboard.route"));
+const scheduler_service_1 = require("../modules/command-layer/services/scheduler.service");
 // Prevent runaway memory in dev
 process.setMaxListeners(20);
 // Social OS + /social routes share this Prisma instance (see social/lib/db.js).
@@ -84,15 +94,47 @@ const bodySchema = zod_1.z.object({
     notifyEmail: zod_1.z.string().email().optional()
 });
 const app = (0, express_1.default)();
-// TEMP stability: defer command-layer scheduler (hourly/daily jobs) — re-enable after boot is stable
-// startScheduler();
+app.get("/health", (_req, res) => {
+    res.json({ status: "ok" });
+});
+app.get("/system/check", (_req, res) => {
+    res.json({
+        success: true,
+        server: "running",
+        timestamp: new Date().toISOString()
+    });
+});
+// Command-layer scheduler (hourly event check + daily war room): off unless ENABLE_SCHEDULER=true
+if (process.env.ENABLE_SCHEDULER === "true") {
+    try {
+        (0, scheduler_service_1.startScheduler)();
+        logger_1.logger.info("Command-layer scheduler started (ENABLE_SCHEDULER=true)");
+    }
+    catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        logger_1.logger.error(`Command-layer scheduler failed to start: ${message}`);
+    }
+}
+else {
+    logger_1.logger.info("Command-layer scheduler disabled (set ENABLE_SCHEDULER=true to enable hourly/daily jobs)");
+}
 app.use((req, res, next) => {
     console.log(`📡 INCOMING: ${req.method} ${req.url}`);
     next();
 });
-console.log("🔥 MOUNTING SQUARE WEBHOOK ROUTE");
+// --- Square webhook mounts (canonical + legacy) ---
+// CANONICAL production contract (raw body BEFORE express.json; HMAC-safe):
+//   POST /api/square/webhook → squareApiWebhookRouter (routes/squareWebhook.ts).
+//   Use this URL in Square Developer Dashboard for full invoice/payment pipeline.
+// Legacy / compatibility (do not remove; not interchangeable with canonical):
+//   POST /cheeky/webhooks/square → webhooks.square.ts (legacy pipeline; differs from canonical)
+//   POST /webhooks/square       → square.webhook.ts (JSON; payment.completed → handleSquarePaymentWebhook only)
+// Note: cheeky-os production also exposes POST /webhooks/square/webhook as a mirror of canonical (see src/webhooks/squareWebhook.js); voice.run does not mount that path.
+console.log("[boot] squareWebhook=canonical POST /api/square/webhook | legacy POST /cheeky/webhooks/square | compat POST /webhooks/square (payment JSON)");
 app.use("/cheeky/webhooks/square", express_1.default.raw({ type: "application/json" }), webhooks_square_1.default);
+app.use("/api/square/webhook", express_1.default.raw({ type: "application/json", limit: "2mb" }), squareWebhook_1.default);
 app.use(express_1.default.json());
+app.use(express_1.default.static(path_1.default.join(process.cwd(), "public")));
 app.use((0, helmet_1.default)());
 app.use((0, cors_1.default)());
 app.use(systemHealth_1.default);
@@ -103,12 +145,42 @@ app.use(orderIntake_1.default);
 app.use(emailIntake_1.default);
 app.use(email_intake_ai_1.default);
 app.use(outlookIntakeWebhook_1.default);
-app.use(squareWebhook_1.default);
+// Canonical POST /api/square/webhook is mounted above with express.raw (byte-exact HMAC).
+// Legacy storefront payment hook: POST /webhooks/square (see routes/square.webhook.ts)
 app.use(square_webhook_1.default);
 app.use("/cheeky/system/url", system_url_1.default);
 // Unified command layer (isolated JS module — parse → route → actions → memory)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 app.use("/api/command", require("../../routes/command"));
+// Public webhook-friendly intake → parse + auto intake (estimate + notify email)
+app.use("/intake", intake_route_1.default);
+// Production task queue (in-memory v1)
+app.use("/tasks", tasks_route_1.default);
+// Payment → production (public hook for deposits / Square-style payloads)
+app.use("/payment", payment_route_1.default);
+app.use("/orders", orders_route_1.default);
+app.use("/followups/run", followups_run_route_1.default);
+app.use("/followups", followups_route_1.default);
+app.use("/dashboard", dashboard_route_1.default);
+// Cash Command Center (GET /api/cash/command-center, /api/cash/brief — read-only + draft queue;
+// same router as cheeky-os/server.js)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+app.use(require("../../cheeky-os/src/routes/cash.route"));
+// Sales Engine v1 (GET /api/sales/pipeline, /api/sales/today — draft + priority only)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+app.use("/api/sales", require("../../cheeky-os/routes/sales"));
+// Operator summary + brief (incl. sales snapshot for /api/operator/brief)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+app.use(require("../../cheeky-os/src/routes/operator.route"));
+// Revenue recovery v1 (GET /api/followups/today)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+app.use(require("../../cheeky-os/src/routes/revenueRecovery.route"));
+// Profit engine v1 (POST /api/pricing/evaluate)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+app.use(require("../../cheeky-os/src/routes/pricingEvaluate.route"));
+// Comms routes incl. GET /api/comms/queue + PATCH /api/comms/:id (recovery queue)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+app.use("/api/comms", require("../../cheeky-os/routes/comms"));
 // GLOBAL AUTH
 app.use(auth_1.requireApiKey);
 // Outreach close loop (new modules only — see src/routes/outreach.close.js)
@@ -263,8 +335,20 @@ try {
         if (!process.env.POWER_AUTOMATE_OUTLOOK_WEBHOOK) {
             console.warn("⚠️ Outlook webhook not configured — running in stub mode");
         }
-        console.log("Server running on port", config_1.config.port);
+        console.log(`🚀 Server running on port ${config_1.config.port}`);
+        console.log(`Server running on port ${config_1.config.port}`);
         logger_1.logger.info(`Server running on port ${config_1.config.port}`);
+        node_cron_1.default.schedule("*/30 * * * *", async () => {
+            console.log("--- FOLLOW-UP CYCLE START ---");
+            try {
+                const result = await runFollowUpCycle();
+                console.log("Follow-up result:", result);
+            }
+            catch (err) {
+                console.error("Follow-up error:", err instanceof Error ? err.message : err);
+            }
+            console.log("--- FOLLOW-UP CYCLE END ---");
+        });
         setInterval(() => {
             try {
                 void (0, followUpJob_1.runFollowUpJob)();

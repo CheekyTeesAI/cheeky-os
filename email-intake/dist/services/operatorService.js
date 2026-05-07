@@ -10,7 +10,7 @@ const client_1 = require("../db/client");
 const estimateSendService_1 = require("./estimateSendService");
 const paymentCloseEngine_1 = require("./paymentCloseEngine");
 function inferSource(order) {
-    if (order.squarePaymentId || order.squareOrderId)
+    if (order.squareId || order.squareOrderId)
         return "SQUARE";
     return "EMAIL";
 }
