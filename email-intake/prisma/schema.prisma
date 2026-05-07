@@ -8,138 +8,693 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─── ENUMS ────────────────────────────────────────────────────────────────────
+// AUDIT SUMMARY (KILLSHOT v3.1)
+// - Entrypoint verified: email-intake/cheeky-os/server.js
+// - Core payment/order truth model: Order
+// - Additive schema lock only; operator layer fields 20260428130000
 
-enum OrderStatus {
-  INTAKE
+enum OrderDepositStatus {
+  NONE
+  PARTIAL
   PAID
-  PRODUCTION_READY
-  PRINTING
-  COMPLETED
-  CANCELLED
 }
-
-enum ProductionType {
-  DTG
-  SCREEN
-  DTF
-  HEAT_PRESS
-  OTHER
-}
-
-enum TaskStatus {
-  PENDING
-  IN_PROGRESS
-  DONE
-  BLOCKED
-}
-
-// ─── MODELS ───────────────────────────────────────────────────────────────────
 
 model Customer {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  phone     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String              @id @default(uuid())
+  name               String
+  email              String              @unique
+  phone              String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  orders             Order[]
+  salesOpportunities SalesOpportunity[]
+}
 
-  orders    Order[]
+/// Sales / reactivation queue (draft follow-ups only — no auto-send)
+model SalesOpportunity {
+  id              String   @id @default(uuid())
+  customerId      String?
+  customerName    String
+  customerEmail   String
+  customerPhone   String?
+  source          String   @default("local_scan")
+  type            String
+  priority        String   @default("NORMAL")
+  status          String   @default("OPEN")
+  estimatedValue  Float    @default(0)
+  reason          String   @default("")
+  nextAction      String?
+  lastOrderDate   DateTime?
+  lastContactedAt DateTime?
+  idempotencyKey  String   @unique
+  internalNote    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  customer        Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  draftMessages   CommunicationApproval[]
+
+  @@index([status])
+  @@index([type])
+  @@index([priority])
+  @@index([customerEmail])
 }
 
 model Order {
-  id              String      @id @default(uuid())
-  orderNumber     String      @unique
-  customerId      String
-  customer        Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  status          OrderStatus @default(INTAKE)
-
-  totalAmount     Float
-  depositAmount   Float       @default(0)
-
-  dueDate         DateTime?
-  notes           String?
-
-  squareOrderId   String?     @unique
-  squarePaymentId String?     @unique
-
-  deletedAt       DateTime?
-
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-
-  lineItems       LineItem[]
-  tasks           Task[]
+  id                     String              @id @default(uuid())
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  deletedAt              DateTime?
+  orderNumber            String?
+  /// Intake / CRM (routes/orderIntake) — flat fields when no Customer row is linked yet
+  customerName           String
+  email                  String
+  phone                  String?
+  notes                  String              @default("")
+  status                 String              @default("INTAKE")
+  totalAmount            Float               @default(0)
+  amountTotal            Float?              @default(0)
+  costEstimate           Float?
+  revenue                Float?
+  profit                 Float?
+  source                 String?
+  customerId             String?
+  customer               Customer?           @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  nextAction             String?
+  nextOwner              String?
+  depositPaid            Boolean             @default(false)
+  garmentsOrdered        Boolean             @default(false)
+  garmentsReceived       Boolean             @default(false)
+  productionComplete     Boolean             @default(false)
+  qcComplete             Boolean             @default(false)
+  readyForPickup         Boolean             @default(false)
+  pickupNotified         Boolean             @default(false)
+  completedAt            DateTime?
+  quotedAmount           Float?
+  estimatedCost          Float?
+  /// ─── Legacy / intake (20260406210000_init_order + follow-on) ─────────────
+  margin                 Float?
+  pph                    Float?
+  depositRequired        Float?
+  depositReceived        Boolean             @default(false)
+  quantity               Int?
+  garmentType            String?
+  printMethod            String?
+  blockedReason          String?
+  isApproved             Boolean             @default(false)
+  unitPrice              Float?
+  /// Distinct from totalAmount when both exist in DB (init used "total")
+  total                  Float?              @map("total")
+  /// Square invoice + payment reconciliation (squareWebhookService, squarePaymentHandler)
+  squareInvoiceId        String?
+  paymentLink            String?
+  depositAmount          Float?
+  portalToken            String?             @unique
+  portalEnabled          Boolean             @default(true)
+  closeStatus            String?
+  closeNotes             String?
+  lastCloseTouch         DateTime?
+  allowAutoFollowup      Boolean             @default(false)
+  lastFollowupAt         DateTime?
+  followupCount          Int                 @default(0)
+  followupDone           Boolean             @default(false)
+  followUpSent           Boolean             @default(false)
+  isRush                 Boolean             @default(false)
+  productionStartedAt    DateTime?
+  productionCompletedAt  DateTime?
+  /// ─── Square invoice extras (20260407120000, publish) ─────────────────────
+  squareCustomerId       String?
+  squareOrderId          String?
+  squareId               String?             @unique
+  squareInvoiceNumber    String?
+  depositPercent         Float?
+  invoiceExpiresAt       DateTime?
+  amountPaid             Float               @default(0)
+  depositPaidAt          DateTime?
+  finalPaidAt            DateTime?
+  squareLastEventId      String?
+  squareInvoiceStatus    String?
+  squarePaymentStatus    String?
+  depositStatus          OrderDepositStatus   @default(NONE)
+  /// ─── Job + production (20260407160000_job_and_task, routing) ──────────────
+  jobCreated             Boolean             @default(false)
+  jobCreatedAt           DateTime?
+  productionStatus       String?
+  /// ─── Email / ops (20260407180000) ────────────────────────────────────────
+  outlookMessageId       String?
+  squareInvoiceSentAt    DateTime?
+  /// Customer-facing asset URLs (20260415180000)
+  /// NOTE (boot-compat): some local DBs may lag this column; runtime services now
+  /// use selective Prisma reads during startup reconciliation to avoid hard boot failures.
+  mockupUrl              String?
+  artFileUrl             String?
+  proofFileUrl           String?
+  pickupNotifiedAt       DateTime?
+  quoteExpiresAt         DateTime?
+  squareInvoicePublished Boolean             @default(false)
+  routingStatus          String?
+  productionTypeFinal    String?
+  assignedProductionTo   String?
+  /// Jeremy / operator layer (additive)
+  operatorAssignedRole       String?
+  operatorProductionPriority String?               @default("NORMAL")
+  operatorProductionNote     String?
+  /// Customer art approval gate (additive)
+  artApprovalStatus          String?                @default("NOT_REQUESTED")
+  artApprovedAt              DateTime?
+  artApprovalNote            String?
+  /// Proof workflow (20260415120000)
+  proofRequired              Boolean             @default(true)
+  proofStatus                String              @default("NOT_SENT")
+  proofSentAt                DateTime?
+  proofApprovedAt            DateTime?
+  /// ─── Vendor + digitizing (20260408140000, 20260408160000) ───────────────
+  garmentVendor          String?
+  garmentOrderStatus     String?
+  garmentOrderPlacedAt   DateTime?
+  garmentOrderReceivedAt DateTime?
+  garmentOrderNeeded     Boolean             @default(true)
+  workOrderStatus        String?
+  workOrderNumber        String?
+  workOrderGeneratedAt   DateTime?
+  /// Dashboard / intake art pipeline (sync to DB via migrate or db push)
+  artFileStatus          String?               @default("NEEDS_ART")
+  digitizingRequired     Boolean             @default(false)
+  digitizingStatus       String?
+  digitizingRequestedAt  DateTime?
+  routedAt               DateTime?
+  /// ─── Exception review (20260408200000_exception_review_manual_override) ─
+  manualOverride         Boolean             @default(false)
+  manualOverrideReason   String?
+  manualOverrideBy       String?
+  manualOverrideAt       DateTime?
+  artFiles               ArtFile[]
+  lineItems              LineItem[]
+  tasks                  Task[]
+  estimates              Estimate[]
+  quotes                 Quote[]
+  revenueFollowups       RevenueFollowup[]
+  communicationApprovals CommunicationApproval[]
+  communicationLogs      CommunicationLog[]
+  sendLogs               SendLog[]
+  garmentOrders          GarmentOrder[]
+  productionJobs         ProductionJob[]
+  leadRecords            Lead[]
+  digitizingRequests     DigitizingRequest[]
+  job                    Job?
+  productionRoute        ProductionRoute?
+  vendorOrders           VendorOrder[]
 
   @@index([status])
-  @@index([customerId])
-  @@index([createdAt])
-  @@index([squareOrderId])
-  @@index([dueDate])
-  @@index([deletedAt])
+  @@index([outlookMessageId])
+  @@index([customerName])
 }
 
-model LineItem {
-  id             String         @id @default(uuid())
-  orderId        String
-  order          Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  description    String
-  quantity       Int
-  unitPrice      Float
-  productionType ProductionType
-  designRef      String?
-
-  createdAt      DateTime       @default(now())
-
-  @@index([orderId])
+/// Production job (20260407160000_job_and_task + routingNotes in 20260408180000)
+model Job {
+  id                 String              @id @default(uuid())
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  orderId            String              @unique
+  status             String
+  productionType     String?
+  assignedTo         String?
+  notes              String?
+  routingNotes       String?
+  digitizingRequests DigitizingRequest[]
+  order              Order               @relation(fields: [orderId], references: [id])
+  productionRoutes   ProductionRoute[]
+  tasks              Task[]
 }
 
 model Task {
-  id          String     @id @default(uuid())
-  orderId     String
-  order       Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  title       String
-  status      TaskStatus @default(PENDING)
-  assignedTo  String?
-  dueDate     DateTime?
+  id         String    @id @default(uuid())
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  jobId      String
+  orderId    String?
+  leadId     String?
+  title      String
+  type       String
+  status     String
+  assignedTo String?
+  notes      String?
+  dueDate    DateTime?
+  releaseStatus String  @default("BLOCKED")
+  orderReady    Boolean @default(false)
+  blanksOrdered Boolean @default(false)
+  productionHold Boolean @default(true)
+  order      Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  job        Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  @@index([jobId])
+  @@index([orderId])
+  @@index([leadId])
+}
 
-  @@index([status])
+model LineItem {
+  id             String   @id @default(uuid())
+  orderId         String
+  description     String
+  quantity        Int      @default(1)
+  unitPrice       Float    @default(0)
+  productionType  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
   @@index([orderId])
 }
 
-// ─── SEO ENGINES (audit → actions → execution tasks) ───────────────────────
+model ArtFile {
+  id             String   @id @default(uuid())
+  orderId         String
+  label          String   @default("")
+  url            String?
+  approvalStatus String   @default("PENDING")
+  fileName       String?
+  fileUrl        String?
+  status         String   @default("NEEDS_ART")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-model SeoCompetitor {
-  id        String   @id @default(uuid())
-  name      String?
-  url       String?
-  notes     String?
+  @@index([orderId])
+}
+
+/// Idempotency ledger for Square webhooks (squareWebhookService)
+model ProcessedWebhookEvent {
+  id          String   @id
+  eventType   String
+  processedAt DateTime @default(now())
+}
+
+model Invoice {
+  id           String   @id @default(uuid())
+  customerId   String
+  quantity     Int
+  unitPrice    Float
+  total        Float
+  deposit      Float
+  hash         String
+  status       String   @default("pending")
+  followUpSent Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model ExceptionReview {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  orderId     String?
+  jobId       String?
+  type        String
+  source      String
+  severity    String
+  message     String
+  detailsJson String?
+  resolved    Boolean   @default(false)
+  resolvedAt  DateTime?
+  resolvedBy  String?
+
+  @@index([resolved])
+  @@index([orderId])
+  @@index([createdAt])
+  @@index([severity])
+}
+
+model DigitizingRequest {
+  id             String    @id @default(uuid())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  orderId        String
+  jobId          String?
+  status         String
+  vendorName     String
+  subject        String
+  body           String
+  recipientEmail String
+  sentAt         DateTime?
+  receivedAt     DateTime?
+  simulated      Boolean   @default(true)
+  errorMessage   String?
+  job            Job?      @relation(fields: [jobId], references: [id])
+  order          Order     @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@index([status])
+  @@index([jobId])
+}
+
+model VendorOrder {
+  id              String   @id @default(uuid())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  orderId         String
+  vendorName      String
+  status          String
+  externalOrderId String?
+  payloadJson     String?
+  responseJson    String?
+  simulated       Boolean  @default(true)
+  order           Order    @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@index([status])
+  @@index([vendorName])
+}
+
+model ProductionRoute {
+  id             String   @id @default(uuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  orderId        String   @unique
+  productionType String
+  assignee       String
+  rationale      String
+  jobId          String?
+  routeStatus    String
+  overridden     Boolean  @default(false)
+  overrideReason String?
+  job            Job?     @relation(fields: [jobId], references: [id])
+  order          Order    @relation(fields: [orderId], references: [id])
+
+  @@index([jobId])
+}
+
+model SocialPost {
+  id              String   @id @default(cuid())
+  scheduledDate   DateTime
+  status          String   @default("draft")
+  masterCaption   String
+  igCaption       String?
+  fbCaption       String?
+  xCaption        String?
+  liCaption       String?
+  hashtags        String
+  postType        String
+  engagementScore Float    @default(0)
+  isEvergreen     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  stage     String
+  input     String
+  output    String
+  status    String
+  action    String?
+  entity    String?
+  entityId  String?
+  details   String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+  @@index([entity])
+}
+
+model WebhookEvent {
+  id        String   @id
+  eventType String
+  invoiceId String?
+  status    String?
+  payload   Json
   createdAt DateTime @default(now())
 }
 
-model SeoAction {
+model Estimate {
   id          String   @id @default(uuid())
-  type        String
+  name        String
+  phone       String?
+  email       String?
+  qty         Int      @default(0)
   description String
-  impact      String
+  htmlBody    String
+  status      String   @default("DRAFT")
+  orderId     String?  @unique
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  order       Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
-  generatedTasks SeoGeneratedTask[]
+  @@index([status])
 }
 
-/// Execution unit for SEO pipeline (not Order.tasks — avoids FK to Order).
-model SeoGeneratedTask {
-  id          String     @id @default(uuid())
-  seoActionId String?
-  seoAction   SeoAction? @relation(fields: [seoActionId], references: [id], onDelete: SetNull)
-  orderRef    String     @default("SEO")
-  type        String
-  status      String     @default("PENDING")
-  createdAt   DateTime   @default(now())
+model Quote {
+  id        String   @id @default(cuid())
+  orderId   String
+  total     Float
+  breakdown String?
+  status    String   @default("DRAFT")
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  @@index([seoActionId])
+  @@index([orderId])
   @@index([status])
+}
+
+model RevenueFollowup {
+  id         String   @id @default(uuid())
+  orderId    String
+  kind       String
+  subject    String
+  draftText  String
+  draftHtml  String
+  status     String   @default("DRAFT")
+  fingerprint String  @unique
+  sentAt     DateTime?
+  sentBy     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sendLogs   SendLog[]
+
+  @@index([orderId])
+  @@index([status])
+  @@index([kind])
+}
+
+model SendLog {
+  id          String   @id @default(cuid())
+  followUpId  String
+  orderId     String
+  channel     String
+  idempotency String   @unique
+  status      String
+  error       String?
+  createdAt   DateTime @default(now())
+  followUp    RevenueFollowup @relation(fields: [followUpId], references: [id], onDelete: Cascade)
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([followUpId])
+  @@index([orderId])
+  @@index([status])
+}
+
+model ProductionJob {
+  id         String   @id @default(cuid())
+  orderId    String
+  type       String
+  status     String
+  assignedTo String?
+  vendorName String?
+  vendorEmail String?
+  packetJson Json?
+  packetStatus String?
+  artReady   Boolean  @default(false)
+  garmentsReady Boolean @default(false)
+  artFileUrl String?
+  artFileName String?
+  artSentAt DateTime?
+  garmentsShippedAt DateTime?
+  garmentsDeliveredAt DateTime?
+  shippingMethod String?
+  trackingNumber String?
+  outsourceStage String?
+  scheduledDate  DateTime?
+  priorityLevel  Int      @default(1)
+  estimatedHours Float?
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  garmentOrders GarmentOrder[]
+
+  @@index([orderId])
+  @@index([status])
+  @@index([type])
+}
+
+model Lead {
+  id             String   @id @default(cuid())
+  name           String?
+  company        String?
+  email          String?
+  phone          String?
+  message        String?
+  quantity       Int?
+  score          Int?
+  tier           String?
+  quoteAmount    Float?
+  dealStatus     String   @default("NEW")
+  depositRequired Boolean @default(true)
+  depositAmount   Float?
+  depositPaid     Boolean @default(false)
+  paymentStatus   String  @default("UNPAID")
+  notes          String?
+  status         String   @default("NEW")
+  source         String?
+  lastContactAt  DateTime?
+  nextFollowUp   DateTime?
+  nextFollowUpAt DateTime?
+  orderId        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  order          Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([source])
+  @@index([createdAt])
+}
+
+model Notification {
+  id           String   @id @default(cuid())
+  type         String
+  entityId     String?
+  customerName String?
+  messageText  String
+  status       String   @default("READY")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CustomerMemory {
+  id           String   @id @default(cuid())
+  customerKey  String   @unique
+  customerName String?
+  lastProduct  String?
+  lastQuantity Int?
+  lastOrderId  String?
+  updatedAt    DateTime @updatedAt
+}
+
+model Prediction {
+  id            String   @id @default(cuid())
+  customerKey   String
+  customerName  String?
+  predictedDate DateTime
+  product       String?
+  quantity      Int?
+  confidence    Float
+  createdAt     DateTime @default(now())
+
+  @@index([customerKey])
+  @@index([predictedDate])
+}
+
+model Campaign {
+  id        String   @id @default(cuid())
+  name      String
+  type      String
+  status    String   @default("DRAFT")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  targets   CampaignTarget[]
+}
+
+model CampaignTarget {
+  id           String   @id @default(cuid())
+  campaignId   String
+  customerKey  String
+  customerName String?
+  messageText  String?
+  status       String   @default("READY")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  campaign     Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@index([customerKey])
+}
+
+model CommunicationApproval {
+  id             String   @id @default(uuid())
+  orderId         String?
+  channel         String
+  toAddress       String
+  subject         String?
+  textBody        String
+  htmlBody        String?
+  idempotencyKey  String   @unique
+  status          String   @default("DRAFT")
+  /// Draft type: ART_APPROVAL_REQUEST, DEPOSIT_RECEIVED, etc.
+  messageType     String?
+  approvedAt      DateTime?
+  rejectedAt      DateTime?
+  sendResult      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  order           Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  salesOpportunityId String?
+  salesOpportunity   SalesOpportunity? @relation(fields: [salesOpportunityId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([channel])
+  @@index([orderId])
+  @@index([salesOpportunityId])
+}
+
+model CommunicationLog {
+  id             String   @id @default(uuid())
+  orderId         String?
+  approvalId      String?
+  channel         String
+  toAddress       String
+  subject         String?
+  textBody        String
+  htmlBody        String?
+  providerMessageId String?
+  idempotencyKey  String   @unique
+  status          String
+  errorMessage    String?
+  createdAt       DateTime @default(now())
+  order           Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([channel])
+  @@index([orderId])
+  @@index([approvalId])
+}
+
+model GarmentOrder {
+  id               String   @id @default(cuid())
+  productionJobId  String?  @unique
+  orderId          String
+  vendorName       String?
+  status           String   @default("NOT_ORDERED")
+  notes            String?
+  vendor           String?
+  packet           String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  order            Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productionJob    ProductionJob? @relation(fields: [productionJobId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([vendorName])
+  @@index([vendor])
 }
