@@ -1,0 +1,14 @@
+{
+  "customers": [
+    {
+      "id": "CUS-mo3scm4s-b7fcdb",
+      "name": "Sarah",
+      "email": "sarah@example.com",
+      "phone": null,
+      "company": null,
+      "notes": null,
+      "createdAt": "2026-04-18T03:36:42.508Z",
+      "updatedAt": "2026-04-18T03:36:42.508Z"
+    }
+  ]
+}

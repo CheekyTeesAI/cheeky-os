@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cheeky — Purchasing control</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #141c26;
+      --border: #2a3544;
+      --text: #e8edf4;
+      --muted: #8b9aab;
+      --accent: #f97316;
+      --accent2: #38bdf8;
+      --ok: #34d399;
+      --bad: #f43f5e;
+      --warn: #fbbf24;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.45; padding-bottom: 48px; }
+    header {
+      padding: 14px 16px; background: var(--panel); border-bottom: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    }
+    header h1 { margin: 0; font-size: 1.1rem; }
+    .muted { color: var(--muted); font-size: 0.82rem; }
+    .nav { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+    .nav a { color: var(--accent2); text-decoration: none; font-weight: 600; font-size: 0.85rem; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; }
+    button, .btn {
+      background: var(--accent); color: #111; border: none; padding: 8px 12px; border-radius: 8px;
+      font-weight: 700; cursor: pointer; font-size: 0.85rem;
+    }
+    button.secondary { background: #334155; color: var(--text); }
+    main { padding: 16px; max-width: 1400px; margin: 0 auto; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; margin-bottom: 14px; }
+    .metric { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 0.75rem; }
+    .metric b { display: block; font-size: 1rem; }
+    .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+    .col { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; min-height: 120px; }
+    .col h2 { margin: 0 0 8px; font-size: 0.85rem; color: var(--accent); }
+    .card {
+      border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 0.82rem;
+      background: #0e131a;
+    }
+    .card h4 { margin: 0 0 6px; font-size: 0.9rem; }
+    .tag { display: inline-block; padding: 2px 6px; border-radius: 4px; background: #334155; font-size: 0.7rem; margin-right: 4px; }
+    .tag.blocked { background: rgba(244, 63, 94, 0.25); color: #fda4af; }
+    .tag.appr { background: rgba(251, 191, 36, 0.2); color: #fde68a; }
+    .tools { margin: 14px 0; padding: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; }
+    .tools input { padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: #0e1118; color: var(--text); width: 100%; max-width: 360px; margin: 4px 8px 4px 0; }
+    .row-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    ul.items { margin: 6px 0 0; padding-left: 1rem; font-size: 0.78rem; color: var(--muted); }
+    .foot { font-size: 0.75rem; color: var(--muted); margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Purchasing control</h1>
+    <span class="muted">Staging only — no auto-purchases</span>
+    <button type="button" id="refresh">Refresh</button>
+    <div class="nav">
+      <a href="/owner.html">Owner</a>
+      <a href="/production.html">Production</a>
+      <a href="/cashflow.html">Cashflow</a>
+    </div>
+  </header>
+  <main>
+    <div class="metrics" id="metrics"></div>
+    <div class="tools">
+      <strong>Build plan</strong> — order UUID (PRODUCTION_READY + deposit required in engine):
+      <input type="text" id="orderId" placeholder="order id" />
+      <div class="row-actions">
+        <button type="button" id="btnPlan">Build / fetch plan</button>
+      </div>
+      <div style="margin-top:10px;">
+        <strong>Selected plan id</strong>
+        <input type="text" id="planId" placeholder="click a plan id below or paste" />
+      </div>
+      <div class="row-actions">
+        <button type="button" id="btnApprove">Approve</button>
+        <button type="button" id="btnOrdered">Mark ordered</button>
+        <button type="button" id="btnReceive">Mark received</button>
+        <button type="button" class="secondary" id="btnCancel">Cancel plan</button>
+      </div>
+      <div style="margin-top:8px;">
+        <input type="text" id="vendorPo" placeholder="vendor order # (optional)" />
+        <input type="text" id="note" placeholder="note (optional)" style="max-width:280px;" />
+      </div>
+    </div>
+    <div class="cols">
+      <div class="col" id="c-need"><h2>Needs approval</h2><div class="list"></div></div>
+      <div class="col" id="c-appr"><h2>Approved</h2><div class="list"></div></div>
+      <div class="col" id="c-ord"><h2>Ordered</h2><div class="list"></div></div>
+      <div class="col" id="c-blk"><h2>Blocked</h2><div class="list"></div></div>
+      <div class="col" id="c-rec"><h2>Received</h2><div class="list"></div></div>
+    </div>
+    <p class="foot">API: GET /api/purchasing/plans · POST /api/purchasing/orders/:orderId/plan · PATCH …/approve | ordered | receive | cancel</p>
+  </main>
+  <script>
+    (function () {
+      var REFRESH_MS = 30000;
+      function esc(s) {
+        return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+      }
+      function money(c) {
+        var n = Math.round(Number(c || 0)) / 100;
+        return n.toLocaleString("en-US", { style: "currency", currency: "USD" });
+      }
+      function planCard(p) {
+        var st = String(p.status || "").toUpperCase();
+        var tagClass = st === "BLOCKED" ? "tag blocked" : st === "NEEDS_APPROVAL" || st === "DRAFT" ? "tag appr" : "tag";
+        var items = (p.items || []).slice(0, 6).map(function (it) {
+          return "<li>" + esc(it.product) + " ×" + esc(it.quantity) + " · " + esc(it.vendorName) + " · " + money(it.totalCost) + "</li>";
+        }).join("");
+        return (
+          '<div class="card" data-id="' +
+          esc(p.id) +
+          '"><h4><span class="' +
+          tagClass +
+          '">' +
+          esc(st) +
+          "</span> " +
+          esc(p.customerName || "?") +
+          "</h4>" +
+          "<div>Order: " +
+          esc(p.orderNumber || (p.orderId || "").slice(0, 8)) +
+          " · Vendor: " +
+          esc(p.vendorName || "—") +
+          "</div>" +
+          "<div>Total est.: " +
+          money(p.totalCost) +
+          " · Deposit covers: " +
+          (p.coveredByDeposit ? "<span style='color:var(--ok);'>yes</span>" : "<span style='color:var(--bad);'>no</span>") +
+          "</div>" +
+          (p.blockedReason ? "<div style='color:var(--bad);'>" + esc(p.blockedReason) + "</div>" : "") +
+          "<div class='muted' style='margin-top:4px;'>plan <code style='cursor:pointer'>" +
+          esc(p.id) +
+          "</code></div>" +
+          "<ul class='items'>" +
+          items +
+          "</ul></div>"
+        );
+      }
+      function render(j) {
+        var m = j.metrics || {};
+        document.getElementById("metrics").innerHTML =
+          ["draft", "needsApproval", "approved", "ordered", "blocked", "received"].map(function (k) {
+            return "<div class='metric'><span class='muted'>" + esc(k) + "</span><b>" + esc(m[k] != null ? m[k] : 0) + "</b></div>";
+          }).join("");
+        var by = { NEEDS_APPROVAL: [], DRAFT: [], APPROVED: [], ORDERED: [], PARTIALLY_RECEIVED: [], BLOCKED: [], RECEIVED: [], CANCELED: [] };
+        (j.plans || []).forEach(function (p) {
+          var s = String(p.status || "").toUpperCase();
+          if (by[s]) by[s].push(p);
+          else by.DRAFT.push(p);
+        });
+        var need = by.NEEDS_APPROVAL.concat(by.DRAFT);
+        document.querySelector("#c-need .list").innerHTML = need.map(planCard).join("") || '<p class="muted">—</p>';
+        document.querySelector("#c-appr .list").innerHTML = by.APPROVED.map(planCard).join("") || '<p class="muted">—</p>';
+        document.querySelector("#c-ord .list").innerHTML = by.ORDERED.concat(by.PARTIALLY_RECEIVED).map(planCard).join("") || '<p class="muted">—</p>';
+        document.querySelector("#c-blk .list").innerHTML = by.BLOCKED.map(planCard).join("") || '<p class="muted">—</p>';
+        document.querySelector("#c-rec .list").innerHTML = by.RECEIVED.map(planCard).join("") || '<p class="muted">—</p>';
+
+        document.querySelectorAll(".card code").forEach(function (el) {
+          el.addEventListener("click", function () {
+            document.getElementById("planId").value = el.textContent.trim();
+          });
+        });
+      }
+      function load() {
+        fetch("/api/purchasing/plans", { credentials: "same-origin" })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(render)
+          .catch(function () {});
+      }
+      document.getElementById("refresh").addEventListener("click", load);
+      document.getElementById("btnPlan").addEventListener("click", function () {
+        var oid = document.getElementById("orderId").value.trim();
+        if (!oid) return alert("order id");
+        fetch("/api/purchasing/orders/" + encodeURIComponent(oid) + "/plan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+        })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (x) {
+            alert(x.plan ? "Plan id: " + x.plan.id : (x.error || JSON.stringify(x)));
+            load();
+          });
+      });
+      function pid() {
+        return document.getElementById("planId").value.trim();
+      }
+      function patch(path, body) {
+        var id = pid();
+        if (!id) return alert("Select plan id");
+        fetch("/api/purchasing/plans/" + encodeURIComponent(id) + path, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body || {}),
+        })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (x) {
+            alert(x.ok ? "OK" : (x.error || "fail"));
+            load();
+          });
+      }
+      document.getElementById("btnApprove").addEventListener("click", function () {
+        patch("/approve", {});
+      });
+      document.getElementById("btnOrdered").addEventListener("click", function () {
+        patch("/ordered", {
+          vendorOrderNumber: document.getElementById("vendorPo").value.trim(),
+          note: document.getElementById("note").value.trim(),
+        });
+      });
+      document.getElementById("btnReceive").addEventListener("click", function () {
+        patch("/receive", { receivedItems: [], note: document.getElementById("note").value.trim() });
+      });
+      document.getElementById("btnCancel").addEventListener("click", function () {
+        patch("/cancel", {});
+      });
+      load();
+      setInterval(load, REFRESH_MS);
+    })();
+  </script>
+</body>
+</html>

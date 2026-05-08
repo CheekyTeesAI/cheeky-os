@@ -1,0 +1,132 @@
+{
+  "builds": [
+    {
+      "id": "bld-1776903197885-9057b8",
+      "status": "proposed",
+      "manifest": {
+        "id": "man-1776903197876-905bbad9",
+        "intent": "auto_send_customer_followups",
+        "missingCapabilities": [
+          "Follow-up policy + cooldown matrix",
+          "Scheduler or cron tick (or explicit on-demand run route)",
+          "Message templates and duplicate suppression",
+          "Send pipeline (draft → approval) or draft-only log",
+          "actionAudit + audit id on every follow-up",
+          "Idempotency keys to prevent infinite loops"
+        ],
+        "requiredFlows": [
+          "outbound_followup_pipeline",
+          "scheduler_or_manual_run",
+          "duplicate_guard"
+        ],
+        "requiredRoutes": [
+          "POST /api/operator/… or existing followup run (guarded)"
+        ],
+        "requiredServices": [
+          "followupPolicy",
+          "followupTemplates",
+          "followupAutomation (or equivalent)",
+          "sendEmailAction (guarded)"
+        ],
+        "requiredData": [
+          "RevenueFollowup",
+          "SendLog",
+          "order/lead contact truth"
+        ],
+        "riskLevel": "high",
+        "executionType": "external_action",
+        "buildRequired": true,
+        "description": "Close gap for \"auto_send_customer_followups\": external_outbound_not_wired",
+        "steps": [
+          {
+            "name": "detect",
+            "detail": "Identify orders/leads eligible under policy"
+          },
+          {
+            "name": "prepare",
+            "detail": "Build drafts, dedupe, set cooldown"
+          },
+          {
+            "name": "gate",
+            "detail": "Approval or FOLLOWUP_AUTO_SEND if enabled"
+          },
+          {
+            "name": "audit",
+            "detail": "Log to audit and SendLog"
+          }
+        ],
+        "timestamp": "2026-04-23T00:13:17.877Z",
+        "context": {
+          "rawText": null,
+          "source": "flow/plan"
+        }
+      },
+      "createdAt": "2026-04-23T00:13:17.885Z",
+      "updatedAt": "2026-04-23T00:13:17.885Z"
+    },
+    {
+      "id": "bld-1776903203380-5404ba",
+      "status": "proposed",
+      "manifest": {
+        "id": "man-1776903203379-1a9311f4",
+        "intent": "auto_send_customer_followups",
+        "missingCapabilities": [
+          "Follow-up policy + cooldown matrix",
+          "Scheduler or cron tick (or explicit on-demand run route)",
+          "Message templates and duplicate suppression",
+          "Send pipeline (draft → approval) or draft-only log",
+          "actionAudit + audit id on every follow-up",
+          "Idempotency keys to prevent infinite loops"
+        ],
+        "requiredFlows": [
+          "outbound_followup_pipeline",
+          "scheduler_or_manual_run",
+          "duplicate_guard"
+        ],
+        "requiredRoutes": [
+          "POST /api/operator/… or existing followup run (guarded)"
+        ],
+        "requiredServices": [
+          "followupPolicy",
+          "followupTemplates",
+          "followupAutomation (or equivalent)",
+          "sendEmailAction (guarded)"
+        ],
+        "requiredData": [
+          "RevenueFollowup",
+          "SendLog",
+          "order/lead contact truth"
+        ],
+        "riskLevel": "high",
+        "executionType": "external_action",
+        "buildRequired": true,
+        "description": "Close gap for \"auto_send_customer_followups\": external_outbound_not_wired",
+        "steps": [
+          {
+            "name": "detect",
+            "detail": "Identify orders/leads eligible under policy"
+          },
+          {
+            "name": "prepare",
+            "detail": "Build drafts, dedupe, set cooldown"
+          },
+          {
+            "name": "gate",
+            "detail": "Approval or FOLLOWUP_AUTO_SEND if enabled"
+          },
+          {
+            "name": "audit",
+            "detail": "Log to audit and SendLog"
+          }
+        ],
+        "timestamp": "2026-04-23T00:13:23.379Z",
+        "context": {
+          "rawText": "send customer follow-ups automatically",
+          "source": "flow/plan"
+        }
+      },
+      "createdAt": "2026-04-23T00:13:23.380Z",
+      "updatedAt": "2026-04-23T00:13:23.380Z"
+    }
+  ]
+}

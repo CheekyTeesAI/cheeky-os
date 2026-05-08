@@ -1,0 +1,1604 @@
+{
+  "events": [
+    {
+      "timestamp": "2026-04-14T04:45:21.849Z",
+      "type": "test",
+      "data": {
+        "a": 1
+      }
+    },
+    {
+      "timestamp": "2026-04-14T06:08:53.039Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 0,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-04-15T15:27:32.043Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T15:27:32.185Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T15:27:32.187Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T15:27:32.402Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T15:27:32.799Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T15:27:32.808Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T15:27:32.862Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T15:27:32.863Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 0,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:16:40.516Z",
+      "type": "autopilot_recommendation_created",
+      "data": {
+        "count": 0,
+        "contextOk": false
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:45:28.053Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:45:28.061Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:45:28.155Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:45:28.237Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:10.488Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:10.513Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:10.514Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:10.515Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "report_requested",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:10.627Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:10.651Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:10.653Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:10.835Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:10.838Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "report_requested",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:11.088Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:11.162Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:11.283Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:11.286Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:11.357Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:11.358Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 0,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:11.359Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:20.201Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_outcome",
+        "outcome": "logged"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:32.588Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:32.589Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:32.591Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:32.592Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "report_requested",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:44.952Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:44.954Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:45.023Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:45.024Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 0,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:54:45.026Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:57:12.991Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:57:12.996Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:57:12.997Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:57:13.000Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "report_requested",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:57:18.687Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:57:18.688Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:57:18.722Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:57:18.725Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "report_requested",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:57:18.859Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:57:18.915Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:57:19.031Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:57:19.056Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:57:19.128Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:57:19.129Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 0,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:57:19.131Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:57:19.135Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_outcome",
+        "outcome": "logged"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:57:51.883Z",
+      "type": "square_error",
+      "data": {
+        "step": "getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:04.377Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:16.699Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:16.733Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:16.780Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:16.794Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "report_requested",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:29.144Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:29.163Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:29.164Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:29.350Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:29.353Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "report_requested",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:30.262Z",
+      "type": "square_error",
+      "data": {
+        "step": "getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:41.768Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:41.779Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:41.797Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:41.799Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 0,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:41.804Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:42.177Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:54.122Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:54.128Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:54.189Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:54.190Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 0,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:54.191Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:54.323Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:54.324Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:54.347Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:58:54.363Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "report_requested",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:59:06.412Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:59:06.417Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:59:06.431Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:59:06.588Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:59:06.590Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "report_requested",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:59:18.454Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:59:18.458Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:59:18.516Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:59:18.517Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 0,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:59:18.518Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:59:30.421Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:59:30.429Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:59:30.499Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:59:30.501Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 0,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-04-15T16:59:30.505Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:00:04.952Z",
+      "type": "square_error",
+      "data": {
+        "step": "getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:00:17.401Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:00:29.768Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:00:29.777Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:00:29.819Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:00:29.823Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "report_requested",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:00:42.211Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:00:42.257Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:00:42.259Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:00:42.424Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:00:42.427Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "report_requested",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:00:54.832Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:00:54.847Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:00:54.867Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:00:54.868Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 0,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:00:54.869Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:01:07.368Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:01:07.389Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:01:07.469Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getCustomers",
+        "message": "Response status code was not ok: 401."
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:01:07.495Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 0,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-04-15T17:01:07.516Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-17T13:20:41.234Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 0,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-04-17T13:20:41.252Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-17T13:33:33.762Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 0,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-04-17T13:33:33.779Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-17T21:45:38.396Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 0,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-04-17T21:45:38.414Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-17T21:45:51.098Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 0,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-04-17T21:45:51.113Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-17T21:46:45.835Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 0,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-04-17T21:46:45.854Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-17T21:53:02.050Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 0,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-04-17T21:53:02.066Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-21T01:41:12.416Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "report_requested",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-21T01:48:26.950Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "report_requested",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-21T03:06:52.055Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "report_requested",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-21T03:47:57.925Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "report_requested",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-04-21T03:48:43.715Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "report_requested",
+        "outcome": "success"
+      }
+    }
+  ],
+  "insights": [
+    {
+      "at": "2026-04-15T16:54:20.152Z",
+      "text": "### Analysis of Events\n\n#### Inefficiencies\n1. **Repeated Errors**: Multiple instances of \"square_error\" with a 401 status code indicate authentication or authorization issues. This suggests a lack of proper access management or a failure in the authentication process, leading to wasted time and resources.\n2. **Zero Daily Sales Targets**: The \"daily_sales_targets_generated\" events consistently show a count of 0, indicating that sales targets are not being met or generated effectively.\n\n#### Patterns\n1. **Frequent Authentication Failures**: The 401 errors are clustered around specific timestamps, suggesting a systemic issue that needs immediate attention.\n2. **Lack of Sales Activity**: The consistent generation of zero sales targets indicates a potential pattern of underperformance or lack of proactive sales strategies.\n\n#### Missed Revenue Opportunities\n1. **Unmet Sales Targets**: With zero sales targets, there is a clear opportunity loss in potential revenue generation. This could indicate a lack of follow-up on leads or insufficient sales strategies.\n2. **Failure to Utilize Reports**: The inability to access order, customer, and invoice reports due to authentication errors limits the ability to analyze sales trends and customer behavior, which are critical for optimizing sales strategies.\n\n### Suggestions\n1. **Address Authentication Issues**:\n   - Review and rectify the authentication process to ensure that access to reports is seamless. Consider implementing a more robust user management system or training staff on access protocols.\n   \n2. **Set Up Automated Alerts**:\n   - Implement alerts for repeated errors (e.g., 401 responses) to enable quicker responses to issues as they arise.\n\n3. **Revise Sales Strategy**:\n   - Analyze the reasons behind the zero sales targets. Conduct a review of the sales process, identify bottlenecks, and implement training or resources to enhance sales efforts.\n\n4. **Utilize Data Effectively**:\n   - Once access issues are resolved, leverage reporting tools to analyze customer and order data. This can help identify trends, customer preferences, and areas for upselling or cross-selling.\n\n5. **Regular Performance Reviews**:\n   - Establish a routine for reviewing sales performance and targets to ensure alignment with business goals. This can help in adjusting strategies proactively.\n\nBy addressing these inefficiencies and patterns, the print shop can enhance operational efficiency and capitalize on missed revenue opportunities.",
+      "source": "openai"
+    },
+    {
+      "at": "2026-04-15T16:55:05.178Z",
+      "text": "### Analysis of Events\n\n#### Inefficiencies\n1. **Repeated Errors**: Multiple occurrences of \"square_error\" with a 401 status code indicate authorization issues. This suggests a systemic problem with access rights or token management, leading to wasted time and resources.\n2. **Zero Sales Targets**: The repeated generation of daily sales targets with a count of 0 indicates a lack of actionable sales goals, potentially leading to missed opportunities for revenue generation.\n\n#### Patterns\n1. **Frequent Authorization Failures**: The 401 errors are concentrated on specific reports (orders, customers, invoices), suggesting a common underlying issue that needs addressing.\n2. **Sales Call Logging Success**: Despite the errors, there are successful outcomes logged for sales calls, indicating that some sales activities are occurring, but they may not be effectively supported by data.\n\n#### Missed Revenue Opportunities\n1. **Lack of Sales Targets**: With daily sales targets set to 0, there is no structured approach to drive sales, which can lead to lost revenue.\n2. **Inability to Access Reports**: The inability to retrieve order and customer reports hampers decision-making and may prevent the identification of potential upsell or cross-sell opportunities.\n\n#### Suggestions\n1. **Resolve Authorization Issues**: Investigate and rectify the cause of the 401 errors. This may involve reviewing user permissions, API tokens, or authentication processes to ensure that necessary reports can be accessed.\n2. **Set Actionable Sales Targets**: Establish realistic and motivating sales targets to drive performance. Utilize historical data to inform these targets and ensure they are communicated clearly to the sales team.\n3. **Enhance Reporting Capabilities**: Improve the reporting system to ensure that data is accessible and actionable. Consider implementing alerts for when reports fail to generate successfully.\n4. **Regular Training**: Provide training sessions for staff on how to effectively use the reporting tools and interpret data to drive sales strategies.\n5. **Monitor and Review**: Implement a regular review process for both sales performance and system errors to identify trends and areas for continuous improvement.",
+      "source": "openai"
+    },
+    {
+      "at": "2026-04-15T16:57:27.230Z",
+      "text": "### Analysis of Events\n\n#### Inefficiencies\n1. **Repeated Errors**: Multiple instances of \"Response status code was not ok: 401\" indicate authentication issues, causing delays in accessing reports and potentially halting workflows.\n2. **Zero Sales Targets**: Daily sales targets generated consistently show a count of 0, suggesting a lack of sales activity or ineffective target-setting processes.\n3. **Frequent Logging of Decisions**: Multiple decisions logged for report requests and sales calls may indicate a lack of streamlined processes, leading to redundancy.\n\n#### Patterns\n1. **Authentication Issues**: The 401 errors are frequent and clustered around specific timestamps, indicating a systemic issue with user access or session management.\n2. **Sales Target Generation**: The consistent failure to generate sales targets (count = 0) suggests a pattern of underperformance or lack of actionable sales strategies.\n3. **Success Outcomes Logged**: Despite the errors, there are numerous logged successes in decision-making, indicating that the team is attempting to push forward despite obstacles.\n\n#### Missed Revenue Opportunities\n1. **Unmet Sales Targets**: The inability to generate sales targets may lead to missed sales opportunities, as there is no clear direction or goal for the sales team.\n2. **Ineffective Reporting**: The inability to access reports on orders, customers, and invoices limits the ability to analyze sales data, hindering informed decision-making and strategic planning.\n3. **Potential Client Engagement**: The logged sales call outcomes suggest that there may be opportunities for engagement that are not being fully capitalized on due to lack of data.\n\n### Suggestions\n1. **Resolve Authentication Issues**: Investigate and rectify the cause of the 401 errors. This may involve reviewing user permissions, session management, or API access protocols.\n2. **Revise Sales Strategy**: Implement a review of the sales target generation process to ensure that meaningful targets are set. Consider using historical data to inform realistic and achievable goals.\n3. **Streamline Reporting Processes**: Enhance the reporting system to ensure reliable access to necessary data. This could involve upgrading software or improving user training on how to access reports.\n4. **Leverage Sales Call Insights**: Analyze the logged sales call outcomes to identify trends or opportunities for follow-up. Develop a structured follow-up process based on these insights.\n5. **Continuous Improvement Culture**: Foster a culture of continuous improvement by regularly reviewing processes and outcomes, encouraging feedback from team members to identify further areas for optimization.",
+      "source": "openai"
+    },
+    {
+      "at": "2026-04-15T16:59:13.259Z",
+      "text": "### Analysis of Events\n\n#### Inefficiencies\n1. **Repeated 401 Errors**: Multiple instances of 401 Unauthorized errors indicate issues with authentication or permissions for accessing reports. This is causing delays and inefficiencies in retrieving essential data.\n2. **Zero Sales Targets**: The daily sales targets generated consistently show a count of 0 against a limit of 5, indicating a lack of actionable sales goals or missed opportunities for revenue generation.\n\n#### Patterns\n1. **Frequent Errors**: The 401 errors are clustered, suggesting a systemic issue with the authentication process that needs immediate attention.\n2. **Successful Decisions Despite Errors**: There are successful decision logs related to report requests and sales calls despite the errors, indicating that processes are still being logged but not functioning effectively.\n\n#### Missed Revenue Opportunities\n1. **Inability to Access Customer and Order Data**: The inability to retrieve orders and customer data due to authentication issues could lead to missed sales opportunities and ineffective follow-ups.\n2. **No Sales Targets**: With daily sales targets generating a count of 0, there is a lack of focus on revenue generation, which could lead to underperformance in sales.\n\n#### Suggestions\n1. **Review Authentication Process**: Investigate and resolve the authentication issues causing the 401 errors. This may involve checking API keys, user permissions, or system configurations.\n2. **Set Up Alerts for Errors**: Implement monitoring and alerting systems for 401 errors to ensure timely responses to authentication issues.\n3. **Establish Daily Sales Targets**: Reassess the criteria for setting daily sales targets to ensure that they are realistic and achievable. This could involve analyzing past sales data to set informed targets.\n4. **Training on System Usage**: Provide training for staff on how to effectively use the reporting tools and understand the implications of authentication errors on their workflow.\n5. **Regular System Audits**: Conduct regular audits of the system to identify and rectify any recurring issues, ensuring that the processes are streamlined and efficient.\n\nBy addressing these inefficiencies and missed opportunities, the print shop can enhance its operational efficiency and revenue potential.",
+      "source": "openai"
+    },
+    {
+      "at": "2026-04-15T16:59:48.751Z",
+      "text": "### Analysis of Events\n\n#### Inefficiencies\n1. **Repeated 401 Errors**: Multiple instances of \"Response status code was not ok: 401\" indicate authentication issues, leading to repeated failures in accessing reports. This suggests a lack of proper session management or authentication checks.\n2. **Zero Sales Targets**: The `daily_sales_targets_generated` event consistently shows a count of 0, indicating a failure to set realistic sales targets, which can demotivate the sales team and hinder performance tracking.\n\n#### Patterns\n1. **Frequent Errors**: The 401 errors occur in clusters, suggesting that there may be a specific time or trigger causing these authentication failures.\n2. **Successful Decisions Despite Errors**: Despite the errors, decisions regarding sales calls and reports are logged as successful, indicating a disconnect between operational success and actual data retrieval.\n\n#### Missed Revenue Opportunities\n1. **Failure to Access Customer and Order Data**: The inability to retrieve customer and order data due to authentication issues can lead to missed sales opportunities and hinder follow-up on leads.\n2. **No Sales Targets**: With zero sales targets, there is no clear direction for the sales team, which can lead to reduced motivation and lower sales performance.\n\n#### Suggestions\n1. **Review Authentication Process**: Investigate and resolve the root cause of the 401 errors. Ensure that authentication tokens are valid and session management is functioning correctly.\n2. **Implement Monitoring**: Set up monitoring for error rates to identify patterns and triggers for the 401 errors. This will help in proactive troubleshooting.\n3. **Establish Sales Targets**: Develop a clear process for generating daily sales targets based on historical data and forecasts. This can motivate the sales team and provide measurable goals.\n4. **Training and Communication**: Provide training for the sales team on how to effectively use the reporting tools and ensure they understand the importance of accessing customer data for follow-ups.\n5. **Feedback Loop**: Create a feedback loop where sales staff can report issues with data access, allowing for quicker resolutions and improvements in the system.",
+      "source": "openai"
+    },
+    {
+      "at": "2026-04-15T17:01:34.251Z",
+      "text": "### Analysis of Events\n\n#### Inefficiencies:\n1. **Repeated 401 Errors**: Multiple instances of \"Response status code was not ok: 401\" indicate authentication issues, leading to wasted time and resources.\n2. **Zero Daily Sales Targets**: The repeated generation of daily sales targets with a count of 0 suggests a lack of actionable insights or leads, which could hinder sales performance.\n\n#### Patterns:\n1. **Frequent Errors**: The errors are consistently logged across various reporting functions (invoices, orders, customers), indicating systemic issues with access or permissions.\n2. **Successful Sales Calls**: Despite the errors, there are multiple successful sales call outcomes logged, suggesting that sales efforts are being made but may not be effectively supported by data.\n\n#### Missed Revenue Opportunities:\n1. **Inability to Access Reports**: The inability to retrieve customer, order, and invoice data hampers the sales team's ability to follow up effectively, potentially leading to lost sales.\n2. **Lack of Actionable Sales Targets**: With daily sales targets consistently at zero, there may be missed opportunities to convert leads into sales.\n\n#### Suggestions:\n1. **Address Authentication Issues**: Review and resolve the root cause of the 401 errors. Ensure that all necessary permissions and access rights are correctly configured for the reporting tools.\n2. **Enhance Data Access**: Implement a more robust reporting system that allows the sales team to access necessary data without interruptions.\n3. **Set Up Alerts for Errors**: Create monitoring for repeated errors to proactively address issues before they impact sales activities.\n4. **Review Sales Target Generation**: Analyze why daily sales targets are consistently zero. Consider adjusting the criteria or process for generating these targets to ensure they reflect achievable goals.\n5. **Training and Support**: Provide training for the sales team on how to effectively use the reporting tools and interpret the data to drive sales efforts.",
+      "source": "openai"
+    }
+  ],
+  "decisions": [
+    {
+      "timestamp": "2026-04-15T16:54:10.514Z",
+      "category": "report_requested",
+      "input": {
+        "period": "today"
+      },
+      "output": {
+        "ordersCreatedToday": 0,
+        "ordersCompletedToday": 0,
+        "revenueToday": 0,
+        "tasksInQueue": 0,
+        "overdueOrders": 0
+      },
+      "outcome": "success",
+      "notes": "Daily summary generated"
+    },
+    {
+      "timestamp": "2026-04-15T16:54:10.837Z",
+      "category": "report_requested",
+      "input": {
+        "period": "week"
+      },
+      "output": {
+        "ordersThisWeek": 0,
+        "revenueThisWeek": 0,
+        "topCustomers": [],
+        "printMethodBreakdown": {}
+      },
+      "outcome": "success",
+      "notes": "Weekly summary generated"
+    },
+    {
+      "timestamp": "2026-04-15T16:54:11.359Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 0,
+        "leads": []
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
+    },
+    {
+      "timestamp": "2026-04-15T16:54:20.199Z",
+      "category": "sales_call_outcome",
+      "input": {
+        "customerId": "demo"
+      },
+      "output": {
+        "outcome": "voicemail"
+      },
+      "outcome": "logged",
+      "notes": "Sales call outcome logged"
+    },
+    {
+      "timestamp": "2026-04-15T16:54:32.591Z",
+      "category": "report_requested",
+      "input": {
+        "period": "today"
+      },
+      "output": {
+        "ordersCreatedToday": 0,
+        "ordersCompletedToday": 0,
+        "revenueToday": 0,
+        "tasksInQueue": 0,
+        "overdueOrders": 0
+      },
+      "outcome": "success",
+      "notes": "Daily summary generated"
+    },
+    {
+      "timestamp": "2026-04-15T16:54:45.025Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 0,
+        "leads": []
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
+    },
+    {
+      "timestamp": "2026-04-15T16:57:12.999Z",
+      "category": "report_requested",
+      "input": {
+        "period": "today"
+      },
+      "output": {
+        "ordersCreatedToday": 0,
+        "ordersCompletedToday": 0,
+        "revenueToday": 0,
+        "tasksInQueue": 0,
+        "overdueOrders": 0
+      },
+      "outcome": "success",
+      "notes": "Daily summary generated"
+    },
+    {
+      "timestamp": "2026-04-15T16:57:18.724Z",
+      "category": "report_requested",
+      "input": {
+        "period": "today"
+      },
+      "output": {
+        "ordersCreatedToday": 0,
+        "ordersCompletedToday": 0,
+        "revenueToday": 0,
+        "tasksInQueue": 0,
+        "overdueOrders": 0
+      },
+      "outcome": "success",
+      "notes": "Daily summary generated"
+    },
+    {
+      "timestamp": "2026-04-15T16:57:19.131Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 0,
+        "leads": []
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
+    },
+    {
+      "timestamp": "2026-04-15T16:57:19.134Z",
+      "category": "sales_call_outcome",
+      "input": {
+        "customerId": "demo"
+      },
+      "output": {
+        "outcome": "voicemail"
+      },
+      "outcome": "logged",
+      "notes": "Sales call outcome logged"
+    },
+    {
+      "timestamp": "2026-04-15T16:58:16.781Z",
+      "category": "report_requested",
+      "input": {
+        "period": "today"
+      },
+      "output": {
+        "ordersCreatedToday": 0,
+        "ordersCompletedToday": 0,
+        "revenueToday": 0,
+        "tasksInQueue": 0,
+        "overdueOrders": 0
+      },
+      "outcome": "success",
+      "notes": "Daily summary generated"
+    },
+    {
+      "timestamp": "2026-04-15T16:58:29.352Z",
+      "category": "report_requested",
+      "input": {
+        "period": "week"
+      },
+      "output": {
+        "ordersThisWeek": 0,
+        "revenueThisWeek": 0,
+        "topCustomers": [],
+        "printMethodBreakdown": {}
+      },
+      "outcome": "success",
+      "notes": "Weekly summary generated"
+    },
+    {
+      "timestamp": "2026-04-15T16:58:41.800Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 0,
+        "leads": []
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
+    },
+    {
+      "timestamp": "2026-04-15T16:58:54.190Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 0,
+        "leads": []
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
+    },
+    {
+      "timestamp": "2026-04-15T16:58:54.354Z",
+      "category": "report_requested",
+      "input": {
+        "period": "today"
+      },
+      "output": {
+        "ordersCreatedToday": 0,
+        "ordersCompletedToday": 0,
+        "revenueToday": 0,
+        "tasksInQueue": 0,
+        "overdueOrders": 0
+      },
+      "outcome": "success",
+      "notes": "Daily summary generated"
+    },
+    {
+      "timestamp": "2026-04-15T16:59:06.589Z",
+      "category": "report_requested",
+      "input": {
+        "period": "week"
+      },
+      "output": {
+        "ordersThisWeek": 0,
+        "revenueThisWeek": 0,
+        "topCustomers": [],
+        "printMethodBreakdown": {}
+      },
+      "outcome": "success",
+      "notes": "Weekly summary generated"
+    },
+    {
+      "timestamp": "2026-04-15T16:59:18.517Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 0,
+        "leads": []
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
+    },
+    {
+      "timestamp": "2026-04-15T16:59:30.503Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 0,
+        "leads": []
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
+    },
+    {
+      "timestamp": "2026-04-15T17:00:29.821Z",
+      "category": "report_requested",
+      "input": {
+        "period": "today"
+      },
+      "output": {
+        "ordersCreatedToday": 0,
+        "ordersCompletedToday": 0,
+        "revenueToday": 0,
+        "tasksInQueue": 0,
+        "overdueOrders": 0
+      },
+      "outcome": "success",
+      "notes": "Daily summary generated"
+    },
+    {
+      "timestamp": "2026-04-15T17:00:42.426Z",
+      "category": "report_requested",
+      "input": {
+        "period": "week"
+      },
+      "output": {
+        "ordersThisWeek": 0,
+        "revenueThisWeek": 0,
+        "topCustomers": [],
+        "printMethodBreakdown": {}
+      },
+      "outcome": "success",
+      "notes": "Weekly summary generated"
+    },
+    {
+      "timestamp": "2026-04-15T17:00:54.868Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 0,
+        "leads": []
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
+    },
+    {
+      "timestamp": "2026-04-15T17:01:07.513Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 0,
+        "leads": []
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
+    },
+    {
+      "timestamp": "2026-04-17T13:20:41.235Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 0,
+        "leads": []
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
+    },
+    {
+      "timestamp": "2026-04-17T13:33:33.763Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 0,
+        "leads": []
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
+    },
+    {
+      "timestamp": "2026-04-17T21:45:38.397Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 0,
+        "leads": []
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
+    },
+    {
+      "timestamp": "2026-04-17T21:45:51.098Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 0,
+        "leads": []
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
+    },
+    {
+      "timestamp": "2026-04-17T21:46:45.836Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 0,
+        "leads": []
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
+    },
+    {
+      "timestamp": "2026-04-17T21:53:02.050Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 0,
+        "leads": []
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
+    },
+    {
+      "timestamp": "2026-04-21T01:41:12.406Z",
+      "category": "report_requested",
+      "input": {
+        "period": "today"
+      },
+      "output": {
+        "ordersCreatedToday": 0,
+        "ordersCompletedToday": 0,
+        "revenueToday": 0,
+        "tasksInQueue": 0,
+        "overdueOrders": 0
+      },
+      "outcome": "success",
+      "notes": "Daily summary generated"
+    },
+    {
+      "timestamp": "2026-04-21T01:48:26.939Z",
+      "category": "report_requested",
+      "input": {
+        "period": "today"
+      },
+      "output": {
+        "ordersCreatedToday": 0,
+        "ordersCompletedToday": 0,
+        "revenueToday": 0,
+        "tasksInQueue": 0,
+        "overdueOrders": 0
+      },
+      "outcome": "success",
+      "notes": "Daily summary generated"
+    },
+    {
+      "timestamp": "2026-04-21T03:06:52.044Z",
+      "category": "report_requested",
+      "input": {
+        "period": "today"
+      },
+      "output": {
+        "ordersCreatedToday": 0,
+        "ordersCompletedToday": 0,
+        "revenueToday": 0,
+        "tasksInQueue": 0,
+        "overdueOrders": 0
+      },
+      "outcome": "success",
+      "notes": "Daily summary generated"
+    },
+    {
+      "timestamp": "2026-04-21T03:47:57.913Z",
+      "category": "report_requested",
+      "input": {
+        "period": "today"
+      },
+      "output": {
+        "ordersCreatedToday": 0,
+        "ordersCompletedToday": 0,
+        "revenueToday": 0,
+        "tasksInQueue": 0,
+        "overdueOrders": 0
+      },
+      "outcome": "success",
+      "notes": "Daily summary generated"
+    },
+    {
+      "timestamp": "2026-04-21T03:48:43.698Z",
+      "category": "report_requested",
+      "input": {
+        "period": "today"
+      },
+      "output": {
+        "ordersCreatedToday": 0,
+        "ordersCompletedToday": 0,
+        "revenueToday": 0,
+        "tasksInQueue": 0,
+        "overdueOrders": 0
+      },
+      "outcome": "success",
+      "notes": "Daily summary generated"
+    }
+  ]
+}

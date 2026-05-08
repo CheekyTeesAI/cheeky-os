@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ct_production_task",
+  "description": "Checklist line for shop floor (art, PO, print, QC, ship). Mirror Node Prisma Task or master here when Canvas-first.",
+  "tableName": "ct_production_task",
+  "tableDisplayName": "Production Task",
+  "tableSetName": "ct_production_tasks",
+  "primaryKey": "ct_production_taskid",
+  "primaryNameColumn": "ct_title",
+  "fields": [
+    {
+      "fieldName": "ct_production_taskid",
+      "displayName": "Task ID",
+      "dataverseType": "uniqueidentifier",
+      "required": true,
+      "description": "Primary key."
+    },
+    {
+      "fieldName": "ct_title",
+      "displayName": "Title",
+      "dataverseType": "string",
+      "maxLength": 300,
+      "required": true,
+      "description": "e.g. Order Blanks, Burn Screen, QC + Pack."
+    },
+    {
+      "fieldName": "ct_type_code",
+      "displayName": "Task Type",
+      "dataverseType": "string",
+      "maxLength": 80,
+      "required": true,
+      "description": "ART_PREP | GARMENT_ORDER | PRINT | PROOF_APPROVAL | QC_PACK | SHIP | OPS"
+    },
+    {
+      "fieldName": "ct_status",
+      "displayName": "Task Status",
+      "dataverseType": "choice",
+      "required": true,
+      "description": "PENDING | BLOCKED | IN_PROGRESS | DONE | SKIPPED",
+      "options": ["PENDING", "BLOCKED", "IN_PROGRESS", "DONE", "SKIPPED"]
+    },
+    {
+      "fieldName": "ct_sort_order",
+      "displayName": "Sort Order",
+      "dataverseType": "whole",
+      "required": false,
+      "description": "Checklist order within job."
+    },
+    {
+      "fieldName": "ct_due_date",
+      "displayName": "Due Date",
+      "dataverseType": "datetime",
+      "required": false,
+      "description": "Optional task-level due."
+    },
+    {
+      "fieldName": "ct_prisma_task_id",
+      "displayName": "Prisma Task ID",
+      "dataverseType": "string",
+      "maxLength": 80,
+      "required": false,
+      "description": "Idempotency: upsert when Node generates tasks after deposit."
+    },
+    {
+      "fieldName": "ct_intake_queueid",
+      "displayName": "Intake Queue",
+      "dataverseType": "lookup",
+      "required": true,
+      "lookupTarget": "ct_intake_queue",
+      "description": "Parent job."
+    }
+  ],
+  "relationships": [
+    {
+      "type": "N:1",
+      "relatedTable": "ct_intake_queue",
+      "lookupField": "ct_intake_queueid",
+      "description": "One intake row → many checklist items."
+    }
+  ],
+  "notes": [
+    "On GATE_PASSED: PA calls Node POST /internal/tasks/generate (or duplicate from taskGenerator rules) then PATCH ct_production_task rows.",
+    "BOARD UX: horizontal gallery of tasks with icon per ct_type_code; completing last PRINT-type can suggest PATCH ct_production_stage_code to QC."
+  ]
+}

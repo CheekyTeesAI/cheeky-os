@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cheeky Tees — Social</title>
+  <link rel="stylesheet" href="/command-center.css" />
+  <style>
+    .social-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .social-actions button { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--hair); background: var(--bg); cursor: pointer; font-size: 13px; }
+    .social-actions button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+    .caption-box { white-space: pre-wrap; font-size: 14px; line-height: 1.45; margin-top: 8px; padding: 12px; background: var(--chip); border-radius: 8px; font-family: var(--sans); }
+    .shot-list { margin: 8px 0 0 1.2em; padding: 0; }
+    .queue-list, .hist-list { font-size: 13px; margin-top: 8px; }
+    .queue-list li, .hist-list li { margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="dot"></span>
+      <h1>Cheeky Tees <span class="thin">Social</span></h1>
+    </div>
+  </header>
+  <main class="app">
+    <section class="card">
+      <div class="card-head">
+        <h2>Today</h2>
+        <span class="subtle" id="today-status">—</span>
+      </div>
+      <p id="today-idea" class="caption-box" style="background:transparent;padding:0;">Loading…</p>
+      <ul id="today-shots" class="shot-list"></ul>
+      <div id="today-caption" class="caption-box"></div>
+      <p class="subtle" id="today-reminder"></p>
+      <div class="social-actions">
+        <button type="button" class="primary" id="btn-approve">Approve</button>
+        <button type="button" id="btn-skip">Skip</button>
+        <button type="button" id="btn-posted">Mark posted</button>
+        <button type="button" id="btn-refresh">Refresh</button>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>Queue</h2></div>
+      <ol id="queue-list" class="queue-list"></ol>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>History</h2></div>
+      <ol id="hist-list" class="hist-list"></ol>
+    </section>
+  </main>
+  <script src="/social.js" defer></script>
+</body>
+</html>

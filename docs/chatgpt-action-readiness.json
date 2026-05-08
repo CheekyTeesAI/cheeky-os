@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-04-23T00:40:16.524Z",
+  "baseUrl": "http://127.0.0.1:3000",
+  "openapiPresent": true,
+  "authConfigured": true,
+  "publicBaseUrlReady": true,
+  "envReadiness": {
+    "chatgptActionApiKeyReady": true,
+    "publicBaseUrlReady": true,
+    "publicBaseUrlHttps": true,
+    "publicBaseUrlNonPlaceholder": true,
+    "blockedReasons": []
+  },
+  "healthRoute": "PASS",
+  "readinessRoute": "PASS",
+  "protectedReads": "PASS",
+  "guardedActions": "PASS",
+  "unsafeBlocks": "PASS",
+  "selftestChecksPass": "PASS",
+  "overallVerdict": "READY",
+  "notes": [
+    "Live smoketest verdict=PASS",
+    "Selftest checks: PASS"
+  ]
+}

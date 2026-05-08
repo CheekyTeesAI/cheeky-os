@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "posts": [
+    {
+      "id": "soc-mo3qk7uj-fac6f7",
+      "date": "2026-04-18",
+      "status": "DRAFT",
+      "queued": false,
+      "queuedAt": null,
+      "createdAt": "2026-04-18T02:46:38.012Z",
+      "updatedAt": "2026-04-18T02:46:38.012Z",
+      "postedAt": null,
+      "payload": {
+        "id": "soc-mo3qk7uj-fac6f7",
+        "date": "2026-04-18",
+        "postType": "PHOTO",
+        "strategyKey": "LOCAL_SPOTLIGHT",
+        "strategyLabel": "Local business spotlight",
+        "idea": "Neighbor love — feature a local partner (permission).",
+        "shotList": [
+          "Their world + your tee in frame",
+          "Quote overlay: what they ordered",
+          "Tag + CTA slide"
+        ],
+        "caption": "Cheeky Tees prints merch for the businesses you actually use. Shout-out energy to crews like Test (ask before tagging).\n\nTag someone who needs new shirts this quarter.",
+        "hook": "We win when Fountain Inn wins.",
+        "hashtags": [
+          "#CheekyTees",
+          "#ShopLocal",
+          "#Community",
+          "#SmallBusiness",
+          "#FountainInnSC"
+        ],
+        "CTA": "Local businesses hit us up — link in bio.",
+        "callToAction": "Local businesses hit us up — link in bio.",
+        "platform": [
+          "INSTAGRAM",
+          "FACEBOOK"
+        ],
+        "status": "DRAFT",
+        "difficulty": "MEDIUM",
+        "timeToCreate": "10 min",
+        "shopContext": {
+          "activeJobs": 7,
+          "sampleCustomer": "Test"
+        }
+      }
+    }
+  ],
+  "queue": [],
+  "reminder": {
+    "lastReminderSentOn": null
+  }
+}

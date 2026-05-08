@@ -1,0 +1,124 @@
+{
+  "history": {
+    "inv_deal_v60": {
+      "invoiceId": "inv_deal_v60",
+      "lastFollowUp": "2026-04-29T04:00:56.561Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T04:00:56.561Z"
+    },
+    "41e2e7fb-4bb2-4367-bc91-24c24f2e9746": {
+      "invoiceId": "41e2e7fb-4bb2-4367-bc91-24c24f2e9746",
+      "lastFollowUp": "2026-04-29T04:00:56.569Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T04:00:56.569Z"
+    },
+    "5b4409ae-38db-40a2-9795-e285f6141994": {
+      "invoiceId": "5b4409ae-38db-40a2-9795-e285f6141994",
+      "lastFollowUp": "2026-04-29T04:00:56.574Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T04:00:56.574Z"
+    },
+    "d80e8228-c7da-422d-8994-baa5bcf2664d": {
+      "invoiceId": "d80e8228-c7da-422d-8994-baa5bcf2664d",
+      "lastFollowUp": "2026-04-29T04:00:56.580Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T04:00:56.580Z"
+    },
+    "981754b8-656c-4d30-b534-ed1b6dad2db5": {
+      "invoiceId": "981754b8-656c-4d30-b534-ed1b6dad2db5",
+      "lastFollowUp": "2026-04-29T04:00:56.586Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T04:00:56.586Z"
+    },
+    "c1137ce3-18f2-4b61-bc03-bc2849f59724": {
+      "invoiceId": "c1137ce3-18f2-4b61-bc03-bc2849f59724",
+      "lastFollowUp": "2026-04-29T04:00:56.591Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T04:00:56.591Z"
+    },
+    "e3355031-a80f-4395-988a-9e7591f08ee5": {
+      "invoiceId": "e3355031-a80f-4395-988a-9e7591f08ee5",
+      "lastFollowUp": "2026-04-29T04:00:56.600Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T04:00:56.600Z"
+    },
+    "ce295027-90b8-408b-aa9a-90ff6f52e810": {
+      "invoiceId": "ce295027-90b8-408b-aa9a-90ff6f52e810",
+      "lastFollowUp": "2026-04-29T04:00:56.605Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T04:00:56.605Z"
+    },
+    "8a3025c3-70ed-4ad9-9583-b79d5b653ad2": {
+      "invoiceId": "8a3025c3-70ed-4ad9-9583-b79d5b653ad2",
+      "lastFollowUp": "2026-04-29T04:00:56.611Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T04:00:56.611Z"
+    },
+    "5d71cfe2-326d-41bf-ae8b-4e5359ec8185": {
+      "invoiceId": "5d71cfe2-326d-41bf-ae8b-4e5359ec8185",
+      "lastFollowUp": "2026-04-29T04:00:56.617Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T04:00:56.617Z"
+    },
+    "30a6ab0e-4241-434a-af82-f64fd0c1aa2e": {
+      "invoiceId": "30a6ab0e-4241-434a-af82-f64fd0c1aa2e",
+      "lastFollowUp": "2026-04-29T04:00:56.623Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T04:00:56.623Z"
+    },
+    "inv:0-ChAh5FI9ExvQcYvmJjPhkXZpEL8J": {
+      "invoiceId": "inv:0-ChAh5FI9ExvQcYvmJjPhkXZpEL8J",
+      "lastFollowUp": "2026-04-29T20:03:10.825Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T20:03:10.825Z"
+    },
+    "inv:0-ChC5LG4toqvDecmdFkzB_slSEL8J": {
+      "invoiceId": "inv:0-ChC5LG4toqvDecmdFkzB_slSEL8J",
+      "lastFollowUp": "2026-04-29T20:03:10.832Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T20:03:10.832Z"
+    },
+    "inv:0-ChAExuye-sd1uO-IC1yhN8kGEL8J": {
+      "invoiceId": "inv:0-ChAExuye-sd1uO-IC1yhN8kGEL8J",
+      "lastFollowUp": "2026-04-29T20:03:10.839Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T20:03:10.839Z"
+    },
+    "inv:0-ChAhD2qi6zj6g-UBOutUT9uOEL8J": {
+      "invoiceId": "inv:0-ChAhD2qi6zj6g-UBOutUT9uOEL8J",
+      "lastFollowUp": "2026-04-29T20:03:10.845Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T20:03:10.845Z"
+    },
+    "inv:0-ChCEU6KTDl21jDY-NRy9htJrEL8J": {
+      "invoiceId": "inv:0-ChCEU6KTDl21jDY-NRy9htJrEL8J",
+      "lastFollowUp": "2026-04-29T20:03:10.852Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T20:03:10.852Z"
+    },
+    "inv:0-ChDyCYucOzZjCGrq_u4P5kBrEL8J": {
+      "invoiceId": "inv:0-ChDyCYucOzZjCGrq_u4P5kBrEL8J",
+      "lastFollowUp": "2026-04-29T20:03:10.858Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T20:03:10.858Z"
+    },
+    "inv:0-ChDfmQ-D06qgXwKtgUAYral9EL8J": {
+      "invoiceId": "inv:0-ChDfmQ-D06qgXwKtgUAYral9EL8J",
+      "lastFollowUp": "2026-04-29T20:03:10.864Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T20:03:10.864Z"
+    },
+    "inv:0-ChB51RSH1mBP-H18SmrWRU1nEL8J": {
+      "invoiceId": "inv:0-ChB51RSH1mBP-H18SmrWRU1nEL8J",
+      "lastFollowUp": "2026-04-29T20:03:10.871Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-29T20:03:10.871Z"
+    },
+    "inv:0-ChCMoU8U6GETQziw_HBRycvLEL8J": {
+      "invoiceId": "inv:0-ChCMoU8U6GETQziw_HBRycvLEL8J",
+      "lastFollowUp": "2026-04-30T21:00:18.397Z",
+      "followUpCount": 1,
+      "firstFollowUp": "2026-04-30T21:00:18.397Z"
+    }
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ct_audit_event",
+  "description": "Append-only audit for deposit gate, overrides, and bypass attempts.",
+  "tableName": "ct_audit_event",
+  "tableDisplayName": "Audit Event",
+  "tableSetName": "ct_audit_events",
+  "primaryKey": "ct_audit_eventid",
+  "primaryNameColumn": "ct_name",
+  "fields": [
+    {
+      "fieldName": "ct_audit_eventid",
+      "displayName": "Audit Event ID",
+      "dataverseType": "uniqueidentifier",
+      "required": true,
+      "description": "Primary key."
+    },
+    {
+      "fieldName": "ct_name",
+      "displayName": "Name",
+      "dataverseType": "string",
+      "maxLength": 200,
+      "required": true,
+      "description": "Short title e.g. BYPASS_WEBHOOK_NO_INTAKE"
+    },
+    {
+      "fieldName": "ct_event_type",
+      "displayName": "Event Type",
+      "dataverseType": "choice",
+      "required": true,
+      "description": "WEBHOOK | MANUAL_EDIT | FLOW | NODE_SYNC | OVERRIDE | MARGIN_HOLD | CORRELATION_FAIL",
+      "options": [
+        "WEBHOOK",
+        "MANUAL_EDIT",
+        "FLOW",
+        "NODE_SYNC",
+        "OVERRIDE",
+        "MARGIN_HOLD",
+        "CORRELATION_FAIL"
+      ]
+    },
+    {
+      "fieldName": "ct_severity",
+      "displayName": "Severity",
+      "dataverseType": "choice",
+      "required": true,
+      "options": ["INFO", "WARN", "HIGH", "CRITICAL"]
+    },
+    {
+      "fieldName": "ct_message",
+      "displayName": "Message",
+      "dataverseType": "multilinestring",
+      "required": false,
+      "description": "Human-readable detail."
+    },
+    {
+      "fieldName": "ct_payload_json",
+      "displayName": "Payload JSON",
+      "dataverseType": "multilinestring",
+      "required": false,
+      "description": "Redacted webhook or patch snapshot."
+    },
+    {
+      "fieldName": "ct_square_invoice_id",
+      "displayName": "Square Invoice ID",
+      "dataverseType": "string",
+      "maxLength": 120,
+      "required": false,
+      "description": "Correlation."
+    },
+    {
+      "fieldName": "ct_actor",
+      "displayName": "Actor",
+      "dataverseType": "string",
+      "maxLength": 200,
+      "required": false,
+      "description": "system:node | flow:id | user@domain"
+    },
+    {
+      "fieldName": "ct_intake_queueid",
+      "displayName": "Intake Queue",
+      "dataverseType": "lookup",
+      "required": false,
+      "lookupTarget": "ct_intake_queue",
+      "description": "Related intake row if any."
+    },
+    {
+      "fieldName": "ct_orderid",
+      "displayName": "Order",
+      "dataverseType": "lookup",
+      "required": false,
+      "lookupTarget": "ct_orderses",
+      "description": "Related order if applicable."
+    }
+  ],
+  "relationships": [
+    {
+      "type": "N:1",
+      "relatedTable": "ct_intake_queue",
+      "lookupField": "ct_intake_queueid",
+      "description": "Lookup above."
+    },
+    {
+      "type": "N:1",
+      "relatedTable": "ct_orderses",
+      "lookupField": "ct_orderid",
+      "description": "Lookup above."
+    }
+  ],
+  "notes": [
+    "Never delete rows (use archival view only).",
+    "Power Automate: trigger on high severity → Teams + email founder."
+  ]
+}

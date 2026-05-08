@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ct_purchase_order",
+  "description": "Blank / garment PO: vendor, receive workflow (Printavo-style Purchasing).",
+  "tableName": "ct_purchase_order",
+  "tableDisplayName": "Purchase Order",
+  "tableSetName": "ct_purchase_orders",
+  "primaryKey": "ct_purchase_orderid",
+  "primaryNameColumn": "ct_po_number",
+  "fields": [
+    {
+      "fieldName": "ct_purchase_orderid",
+      "displayName": "PO ID",
+      "dataverseType": "uniqueidentifier",
+      "required": true,
+      "description": "Primary key."
+    },
+    {
+      "fieldName": "ct_po_number",
+      "displayName": "PO Number",
+      "dataverseType": "string",
+      "maxLength": 80,
+      "required": true,
+      "description": "Human or vendor reference."
+    },
+    {
+      "fieldName": "ct_vendor_name",
+      "displayName": "Vendor",
+      "dataverseType": "string",
+      "maxLength": 200,
+      "required": false,
+      "description": "Carolina Made, S&S, etc."
+    },
+    {
+      "fieldName": "ct_status",
+      "displayName": "PO Status",
+      "dataverseType": "choice",
+      "required": true,
+      "description": "DRAFT | SUBMITTED | ORDERED | PARTIAL_RECEIVED | RECEIVED | CANCELLED",
+      "options": [
+        "DRAFT",
+        "SUBMITTED",
+        "ORDERED",
+        "PARTIAL_RECEIVED",
+        "RECEIVED",
+        "CANCELLED"
+      ]
+    },
+    {
+      "fieldName": "ct_ordered_at",
+      "displayName": "Ordered At",
+      "dataverseType": "datetime",
+      "required": false,
+      "description": "When submitted to vendor."
+    },
+    {
+      "fieldName": "ct_expected_at",
+      "displayName": "Expected Receive",
+      "dataverseType": "datetime",
+      "required": false,
+      "description": "ETA for blanks."
+    },
+    {
+      "fieldName": "ct_received_at",
+      "displayName": "Fully Received At",
+      "dataverseType": "datetime",
+      "required": false,
+      "description": "All lines received."
+    },
+    {
+      "fieldName": "ct_line_items_json",
+      "displayName": "Line Items JSON",
+      "dataverseType": "multilinestring",
+      "required": false,
+      "description": "[{ \"style\": \"...\", \"color\": \"...\", \"qty\": 24, \"sizeRun\": \"S-XL\" }]"
+    },
+    {
+      "fieldName": "ct_intake_queueid",
+      "displayName": "Intake Queue",
+      "dataverseType": "lookup",
+      "required": true,
+      "lookupTarget": "ct_intake_queue",
+      "description": "Job this PO feeds."
+    }
+  ],
+  "relationships": [
+    {
+      "type": "N:1",
+      "relatedTable": "ct_intake_queue",
+      "lookupField": "ct_intake_queueid",
+      "description": ""
+    }
+  ],
+  "notes": [
+    "When status → RECEIVED, PA flow PATCHes intake ct_production_stage_code toward PRINTING if proof+art clear.",
+    "Node garmentOperatorService / markGarmentsReceived can HTTP-trigger same PATCH for dual-write."
+  ]
+}

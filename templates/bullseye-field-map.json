@@ -1,0 +1,26 @@
+{
+  "readme": "Map logical keys to AcroForm field names in bullseye-workorder.pdf. After replacing the PDF with Bullseye's file, run: node scripts/list-pdf-form-fields.js templates/bullseye-workorder.pdf",
+  "companyName": "CompanyName",
+  "address": "Address",
+  "contact": "Contact",
+  "phone": "Phone",
+  "email": "Email",
+  "jobName": "JobName",
+  "dueDate": "DueDate",
+  "locations": {
+    "leftChest": "LocLeftChest",
+    "front": "LocFront",
+    "back": "LocBack"
+  },
+  "inkSolid": "InkSolid",
+  "pmsMatch": "PMSMatch",
+  "sizes": {
+    "S": "SizeS",
+    "M": "SizeM",
+    "L": "SizeL",
+    "XL": "SizeXL",
+    "2XL": "Size2XL",
+    "3XL": "Size3XL"
+  },
+  "notes": "Notes"
+}

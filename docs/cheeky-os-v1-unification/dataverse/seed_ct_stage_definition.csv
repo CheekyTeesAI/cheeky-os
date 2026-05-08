@@ -1,0 +1,9 @@
+ct_code,ct_label,ct_sort_order,ct_kanban_column,ct_color_hex,ct_visible_after_gate,ct_is_terminal
+DEPOSIT_PAID,Deposit paid,10,1,#059669,true,false
+ART_PREP,Art prep,20,2,#6366F1,true,false
+BLANKS_PO,Blanks / PO,30,3,#D97706,true,false
+PRINTING,Printing,40,4,#2563EB,true,false
+QC,QC,50,5,#7C3AED,true,false
+SHIPPING,Shipping,60,6,#0D9488,true,false
+COMPLETE,Completed,70,7,#475569,true,true
+QUOTE_SENT,Quote sent,5,0,#94A3B8,false,false

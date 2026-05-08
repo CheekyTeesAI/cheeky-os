@@ -1,0 +1,55 @@
+{
+  "generatedAt": "2026-04-23T00:40:16.161Z",
+  "baseUrl": "http://127.0.0.1:3000",
+  "envReadiness": {
+    "chatgptActionApiKeyReady": true,
+    "publicBaseUrlReady": true,
+    "publicBaseUrlHttps": true,
+    "publicBaseUrlNonPlaceholder": true,
+    "blockedReasons": []
+  },
+  "serverKeyAcceptable": true,
+  "authConfigured": true,
+  "checks": [
+    {
+      "route": "/api/chatgpt/health",
+      "auth": false,
+      "status": 200,
+      "ok": true,
+      "pass": true,
+      "successFlag": null
+    },
+    {
+      "route": "/api/chatgpt/readiness",
+      "auth": false,
+      "status": 200,
+      "ok": true,
+      "pass": true,
+      "successFlag": true
+    },
+    {
+      "route": "/api/chatgpt/system-status",
+      "auth": false,
+      "status": 401,
+      "ok": false,
+      "pass": true,
+      "successFlag": false
+    },
+    {
+      "route": "/api/chatgpt/system-status",
+      "auth": true,
+      "status": 200,
+      "ok": true,
+      "pass": true,
+      "successFlag": true
+    },
+    {
+      "route": "/api/chatgpt/operator-summary",
+      "auth": true,
+      "status": 200,
+      "ok": true,
+      "pass": true,
+      "successFlag": true
+    }
+  ]
+}

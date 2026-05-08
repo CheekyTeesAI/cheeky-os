@@ -1,0 +1,10 @@
+{"phase":"query","note":"natural_language_engine","intent":"operational_summary","at":"2026-05-06T06:25:54.788Z","kind":"timeline_step"}
+{"phase":"enqueue","taskId":"030efc12-fd72-47c0-bb4d-4b8675211229","intent":"build","at":"2026-05-06T06:25:54.812Z","kind":"timeline_step"}
+{"phase":"recommend_enqueue","capability":"build","ok":true,"at":"2026-05-06T06:25:54.819Z","kind":"timeline_step"}
+{"phase":"smoke","note":"v6","at":"2026-05-06T06:25:54.823Z","kind":"timeline_step"}
+{"phase":"incident","severity":"info","type":"smoke","taskId":null,"at":"2026-05-06T06:25:54.825Z","kind":"timeline_step"}
+{"phase":"query","note":"natural_language_engine","intent":"operational_summary","at":"2026-05-06T06:26:06.048Z","kind":"timeline_step"}
+{"phase":"enqueue","taskId":"f95daa40-a471-4606-957d-fb815f20122a","intent":"build","at":"2026-05-06T06:26:06.072Z","kind":"timeline_step"}
+{"phase":"recommend_enqueue","capability":"build","ok":true,"at":"2026-05-06T06:26:06.080Z","kind":"timeline_step"}
+{"phase":"smoke","note":"v6","at":"2026-05-06T06:26:06.083Z","kind":"timeline_step"}
+{"phase":"incident","severity":"info","type":"smoke","taskId":null,"at":"2026-05-06T06:26:06.085Z","kind":"timeline_step"}

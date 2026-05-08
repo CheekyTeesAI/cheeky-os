@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Cheeky Tees — Project intake (no account needed)</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; --bg:#0b0f14; --card:#1a2433; --text:#e9f0fb; --muted:#8fa3bd; --accent:#4da3ff; --ok:#5bd38a; }
+    body { margin:0; background:var(--bg); color:var(--text); font-size:16px; line-height:1.45; padding:1rem; }
+    main { max-width:520px; margin:0 auto; }
+    h1 { font-size:1.15rem; }
+    p.lead { color:var(--muted); font-size:0.9rem; }
+    label { display:block; font-size:0.75rem; color:var(--muted); margin:0.5rem 0 0.15rem; }
+    input, select, textarea { width:100%; padding:0.55rem; border-radius:8px; border:1px solid #2a3a4f; background:#131b26; color:var(--text); font-size:1rem; min-height:44px; }
+    textarea { min-height:5rem; }
+    button { margin-top:0.75rem; width:100%; padding:0.65rem; border:none; border-radius:8px; background:var(--accent); color:#041018; font-weight:650; font-size:1rem; min-height:48px; cursor:pointer; }
+    .card { background:var(--card); border:1px solid #2a3a4f; border-radius:12px; padding:1rem; margin-top:0.75rem; }
+    .msg { margin-top:0.6rem; font-size:0.88rem; color:var(--ok); min-height:1.2em; }
+    .warn { color:#ffd873; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Start a project with Cheeky Tees</h1>
+    <p class="lead">This form creates an <strong>internal draft only</strong>. No payment here. A coordinator reviews and follows up by email when ready — usually within 1–2 business days.</p>
+    <div class="card">
+      <form id="intake-form">
+        <label for="name">Your name *</label>
+        <input id="name" name="name" required autocomplete="name"/>
+        <label for="email">Email *</label>
+        <input id="email" name="email" type="email" required autocomplete="email"/>
+        <label for="phone">Phone</label>
+        <input id="phone" name="phone" type="tel" autocomplete="tel"/>
+        <label for="organization">Organization / team</label>
+        <input id="organization" name="organization"/>
+        <label for="garmentType">Garment type</label>
+        <input id="garmentType" name="garmentType" placeholder="e.g. tees, hoodies, polos"/>
+        <label for="quantityEstimate">Quantity estimate</label>
+        <input id="quantityEstimate" name="quantityEstimate" inputmode="numeric"/>
+        <label for="printMethodPreference">Print preference</label>
+        <select id="printMethodPreference" name="printMethodPreference">
+          <option value="">Not sure — advise me</option>
+          <option value="screen">Screen print</option>
+          <option value="dtg">DTG</option>
+          <option value="embroidery">Embroidery</option>
+          <option value="mixed">Mixed / hybrid</option>
+        </select>
+        <label for="designDescription">Design description *</label>
+        <textarea id="designDescription" name="designDescription" required placeholder="Colors, placement, text, inspiration links (no attachments here)"></textarea>
+        <label for="dueDate">Need-by date (optional)</label>
+        <input id="dueDate" name="dueDate" type="text" placeholder="e.g. May 20 event"/>
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" placeholder="Sizes, budget hints, pickup vs ship…"></textarea>
+        <label for="referenceImageInstructions">Reference images</label>
+        <input id="referenceImageInstructions" name="referenceImageInstructions" placeholder="Describe art you will email separately"/>
+        <button type="submit">Submit intake request</button>
+      </form>
+      <div id="intake-msg" class="msg" role="status"></div>
+    </div>
+  </main>
+  <script>
+    document.getElementById("intake-form").addEventListener("submit", async function (ev) {
+      ev.preventDefault();
+      var msg = document.getElementById("intake-msg");
+      msg.textContent = "Sending…";
+      msg.className = "msg";
+      var fd = new FormData(ev.target);
+      var body = {};
+      fd.forEach(function (v, k) { body[k] = String(v || "").trim(); });
+      try {
+        var r = await fetch("/api/intake/self-service", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(body),
+        });
+        var txt = await r.text();
+        var j = {};
+        try { j = JSON.parse(txt); } catch (e2) {}
+        if (!r.ok || (j.success === false)) {
+          msg.className = "msg warn";
+          msg.textContent = (j.safeMessage || "Could not submit — try again or email the shop directly.");
+          return;
+        }
+        var d = j.data || {};
+        msg.className = "msg";
+        msg.textContent = d.confirmationMessageCustomerFriendly || "Received — thank you.";
+        ev.target.reset();
+      } catch (e) {
+        msg.className = "msg warn";
+        msg.textContent = "Network issue — nothing was sent to payment systems.";
+      }
+    });
+  </script>
+</body>
+</html>

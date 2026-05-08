@@ -1,0 +1,349 @@
+{
+  "jobs": [
+    {
+      "customer": "River Youth Baseball",
+      "lineItems": [
+        {
+          "qty": 24,
+          "garment": "SHIRT",
+          "color": "BLACK"
+        }
+      ],
+      "notes": "DTG full color front",
+      "dueDate": "2026-04-18T12:00:00.000Z",
+      "productionType": "DTG",
+      "amount": 720,
+      "status": "UNPAID",
+      "source": "manual",
+      "hasArt": true,
+      "artReady": false,
+      "artFiles": [],
+      "jobId": "JOB-1776461775815-G6AQ",
+      "createdAt": "2026-04-17T21:36:15.815Z",
+      "updatedAt": "2026-04-18T01:58:18.103Z",
+      "paymentState": "PAYMENT_UNKNOWN",
+      "amountPaid": 0,
+      "amountDue": null,
+      "lastSquareSyncAt": "2026-04-18T01:58:18.103Z"
+    },
+    {
+      "customer": "Southside Academy",
+      "lineItems": [
+        {
+          "qty": 12,
+          "garment": "SHIRT",
+          "color": "BLACK"
+        }
+      ],
+      "notes": "DTG 1-color back",
+      "dueDate": "2026-04-18T14:00:00.000Z",
+      "productionType": "DTG",
+      "amount": 300,
+      "status": "UNPAID",
+      "source": "manual",
+      "hasArt": true,
+      "artReady": false,
+      "artFiles": [],
+      "jobId": "JOB-1776461775837-PMK8",
+      "createdAt": "2026-04-17T21:36:15.837Z",
+      "updatedAt": "2026-04-18T01:58:18.103Z",
+      "paymentState": "PAYMENT_UNKNOWN",
+      "amountPaid": 0,
+      "amountDue": null,
+      "lastSquareSyncAt": "2026-04-18T01:58:18.103Z"
+    },
+    {
+      "customer": "Ready Sports Club",
+      "lineItems": [
+        {
+          "qty": 48,
+          "garment": "SHIRT",
+          "color": "WHITE"
+        }
+      ],
+      "notes": "Screen print 1-color front",
+      "dueDate": "2026-04-19T12:00:00.000Z",
+      "productionType": "SCREEN",
+      "amount": 720,
+      "status": "UNPAID",
+      "source": "manual",
+      "hasArt": true,
+      "artReady": false,
+      "artFiles": [],
+      "jobId": "JOB-1776461775856-4WRJ",
+      "createdAt": "2026-04-17T21:36:15.856Z",
+      "updatedAt": "2026-04-18T01:58:18.103Z",
+      "paymentState": "PAYMENT_UNKNOWN",
+      "amountPaid": 0,
+      "amountDue": null,
+      "lastSquareSyncAt": "2026-04-18T01:58:18.103Z"
+    },
+    {
+      "customer": "Amber HVAC",
+      "lineItems": [
+        {
+          "qty": 8,
+          "garment": "HOODIE",
+          "color": "NAVY"
+        }
+      ],
+      "notes": "DTF transfer logo",
+      "dueDate": "2026-04-17T23:00:00.000Z",
+      "productionType": "DTF",
+      "amount": 280,
+      "status": "UNPAID",
+      "source": "manual",
+      "hasArt": true,
+      "artReady": false,
+      "artFiles": [],
+      "jobId": "JOB-1776461775874-87VC",
+      "createdAt": "2026-04-17T21:36:15.874Z",
+      "updatedAt": "2026-04-18T01:58:18.104Z",
+      "shopStatus": "READY",
+      "shopStatusUpdatedAt": "2026-04-17T22:08:28.423Z",
+      "paymentState": "PAYMENT_UNKNOWN",
+      "amountPaid": 0,
+      "amountDue": null,
+      "lastSquareSyncAt": "2026-04-18T01:58:18.104Z"
+    },
+    {
+      "jobId": "JOB-INV-MOCK-9001",
+      "customer": "Pine Creek Church",
+      "dueDate": "2026-04-02T01:58:17.841Z",
+      "status": "OVERDUE",
+      "productionType": "UNKNOWN",
+      "amount": 980,
+      "sourceInvoiceId": "INV-MOCK-9001",
+      "printMethod": "UNKNOWN",
+      "hasArt": false,
+      "priorityScore": 70,
+      "lineItems": [],
+      "notes": "",
+      "artFiles": [],
+      "createdAt": "2026-04-17T21:36:23.928Z",
+      "updatedAt": "2026-04-18T01:58:18.104Z",
+      "paymentState": "PAYMENT_UNKNOWN",
+      "amountPaid": 0,
+      "amountDue": null,
+      "lastSquareSyncAt": "2026-04-18T01:58:18.104Z"
+    },
+    {
+      "jobId": "JOB-INV-MOCK-9002",
+      "customer": "Metro Realty Group",
+      "dueDate": "2026-04-09T01:58:17.841Z",
+      "status": "OVERDUE",
+      "productionType": "UNKNOWN",
+      "amount": 640,
+      "sourceInvoiceId": "INV-MOCK-9002",
+      "printMethod": "UNKNOWN",
+      "hasArt": false,
+      "priorityScore": 70,
+      "lineItems": [],
+      "notes": "",
+      "artFiles": [],
+      "createdAt": "2026-04-17T21:36:23.928Z",
+      "updatedAt": "2026-04-18T01:58:18.104Z",
+      "paymentState": "PAYMENT_UNKNOWN",
+      "amountPaid": 0,
+      "amountDue": null,
+      "lastSquareSyncAt": "2026-04-18T01:58:18.104Z"
+    },
+    {
+      "jobId": "JOB-INV-MOCK-9003",
+      "customer": "River Youth Baseball",
+      "dueDate": "2026-04-19T01:58:17.841Z",
+      "status": "UNPAID",
+      "productionType": "UNKNOWN",
+      "amount": 455,
+      "sourceInvoiceId": "INV-MOCK-9003",
+      "printMethod": "UNKNOWN",
+      "hasArt": false,
+      "priorityScore": 20,
+      "lineItems": [],
+      "notes": "",
+      "artFiles": [],
+      "createdAt": "2026-04-17T21:36:23.928Z",
+      "updatedAt": "2026-04-18T01:58:18.104Z",
+      "paymentState": "PAYMENT_UNKNOWN",
+      "amountPaid": 0,
+      "amountDue": null,
+      "lastSquareSyncAt": "2026-04-18T01:58:18.104Z"
+    },
+    {
+      "jobId": "JOB-INV-MOCK-9004",
+      "customer": "Amber HVAC Services",
+      "dueDate": "2026-04-18T01:58:17.841Z",
+      "status": "UNPAID",
+      "productionType": "UNKNOWN",
+      "amount": 1850,
+      "sourceInvoiceId": "INV-MOCK-9004",
+      "printMethod": "UNKNOWN",
+      "hasArt": false,
+      "priorityScore": 40,
+      "lineItems": [],
+      "notes": "",
+      "artFiles": [],
+      "createdAt": "2026-04-17T21:36:23.928Z",
+      "updatedAt": "2026-04-18T01:58:18.104Z",
+      "paymentState": "PAYMENT_UNKNOWN",
+      "amountPaid": 0,
+      "amountDue": null,
+      "lastSquareSyncAt": "2026-04-18T01:58:18.104Z"
+    },
+    {
+      "jobId": "JOB-INV-MOCK-9005",
+      "customer": "Sunrise Bakery",
+      "dueDate": "2026-04-08T01:58:17.841Z",
+      "status": "PAID",
+      "productionType": "UNKNOWN",
+      "amount": 325,
+      "sourceInvoiceId": "INV-MOCK-9005",
+      "printMethod": "UNKNOWN",
+      "hasArt": false,
+      "priorityScore": -110,
+      "lineItems": [],
+      "notes": "",
+      "artFiles": [],
+      "createdAt": "2026-04-17T21:36:23.928Z",
+      "updatedAt": "2026-04-18T01:58:18.104Z",
+      "paymentState": "PAYMENT_UNKNOWN",
+      "amountPaid": 0,
+      "amountDue": null,
+      "lastSquareSyncAt": "2026-04-18T01:58:18.104Z"
+    },
+    {
+      "customer": "Unknown Customer",
+      "status": "UNPAID",
+      "productionType": "DTG",
+      "printMethod": "DTG",
+      "lineItems": [
+        {
+          "qty": 24,
+          "garment": "SHIRT",
+          "color": "BLACK"
+        }
+      ],
+      "notes": "Add job for 24 black hoodies for River Youth Baseball dtg",
+      "dueDate": null,
+      "source": "command",
+      "jobId": "JOB-1776463119818-KUB6",
+      "artFiles": [],
+      "hasArt": false,
+      "createdAt": "2026-04-17T21:58:39.818Z",
+      "updatedAt": "2026-04-18T01:58:18.104Z",
+      "paymentState": "PAYMENT_UNKNOWN",
+      "amountPaid": 0,
+      "amountDue": null,
+      "lastSquareSyncAt": "2026-04-18T01:58:18.104Z"
+    },
+    {
+      "customer": "Unknown Customer",
+      "dueDate": "2026-04-24T21:58:39.847Z",
+      "status": "UNPAID",
+      "productionType": "DTF",
+      "printMethod": "DTF",
+      "lineItems": [
+        {
+          "qty": 0,
+          "garment": "HOODIE",
+          "printType": "DTF"
+        }
+      ],
+      "notes": "Hey, we need 12 navy hoodies for our crew, DTF logo on front left chest. Needed by Friday. Thanks, Dave",
+      "source": "email",
+      "fromEmail": "operator@trades.co",
+      "subject": "Need 12 navy hoodies rush",
+      "raw": "Hey, we need 12 navy hoodies for our crew, DTF logo on front left chest. Needed by Friday. Thanks, Dave",
+      "jobId": "JOB-1776463119847-7YY5",
+      "artFiles": [],
+      "hasArt": false,
+      "createdAt": "2026-04-17T21:58:39.847Z",
+      "updatedAt": "2026-04-18T01:58:18.104Z",
+      "paymentState": "PAYMENT_UNKNOWN",
+      "amountPaid": 0,
+      "amountDue": null,
+      "lastSquareSyncAt": "2026-04-18T01:58:18.104Z"
+    },
+    {
+      "customer": "Southside Plumbing",
+      "status": "UNPAID",
+      "productionType": "EMBROIDERY",
+      "printMethod": "EMBROIDERY",
+      "lineItems": [
+        {
+          "qty": 12,
+          "garment": "SHIRT",
+          "color": "NAVY"
+        }
+      ],
+      "notes": "Add job for 12 navy polos for Southside Plumbing embroidery",
+      "dueDate": null,
+      "source": "command",
+      "jobId": "JOB-1776463163562-APJK",
+      "artFiles": [],
+      "hasArt": false,
+      "createdAt": "2026-04-17T21:59:23.562Z",
+      "updatedAt": "2026-04-18T01:58:18.104Z",
+      "paymentState": "PAYMENT_UNKNOWN",
+      "amountPaid": 0,
+      "amountDue": null,
+      "lastSquareSyncAt": "2026-04-18T01:58:18.104Z"
+    },
+    {
+      "customer": "Customer (see notes)",
+      "lineItems": [
+        {
+          "product": "tees",
+          "garment": "tees",
+          "quantity": 10,
+          "color": "As specified",
+          "size": null
+        }
+      ],
+      "notes": "10 tees, 2 color front\n[Route: IN_HOUSE] Quantity under 24 → in-house (DTG/DTF as configured) (conf 0.85)",
+      "dueDate": "2026-04-24T00:00:00.000Z",
+      "productionType": "DTG",
+      "printMethod": "DTG",
+      "status": "UNPAID",
+      "source": "vendor-routing+store",
+      "vendorRoute": "[Route: IN_HOUSE] Quantity under 24 → in-house (DTG/DTF as configured) (conf 0.85)",
+      "jobId": "JOB-1776466354571-INP4",
+      "artFiles": [],
+      "hasArt": false,
+      "createdAt": "2026-04-17T22:52:34.571Z",
+      "updatedAt": "2026-04-18T01:58:18.105Z",
+      "paymentState": "PAYMENT_UNKNOWN",
+      "amountPaid": 0,
+      "amountDue": null,
+      "lastSquareSyncAt": "2026-04-18T01:58:18.105Z"
+    },
+    {
+      "customer": "Customer (see notes)",
+      "lineItems": [
+        {
+          "product": "tees",
+          "garment": "tees",
+          "quantity": 1,
+          "color": "As specified",
+          "size": null
+        }
+      ],
+      "notes": "0 tees, 2 color front\n[Route: DTF] Polyester substrate → DTF (conf 0.92)",
+      "dueDate": "2026-04-24T00:00:00.000Z",
+      "productionType": "DTF",
+      "printMethod": "DTF",
+      "status": "UNPAID",
+      "source": "vendor-routing+store",
+      "vendorRoute": "[Route: DTF] Polyester substrate → DTF (conf 0.92)",
+      "jobId": "JOB-1776466359086-5WC6",
+      "artFiles": [],
+      "hasArt": false,
+      "createdAt": "2026-04-17T22:52:39.086Z",
+      "updatedAt": "2026-04-18T01:58:18.105Z",
+      "paymentState": "PAYMENT_UNKNOWN",
+      "amountPaid": 0,
+      "amountDue": null,
+      "lastSquareSyncAt": "2026-04-18T01:58:18.105Z"
+    }
+  ]
+}

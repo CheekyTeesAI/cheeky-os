@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cheeky OS — Control Tower</title>
+  <link rel="stylesheet" href="/command-center.css" />
+  <style>
+    .tower-grid { display: grid; gap: 12px; grid-template-columns: 1fr; max-width: 960px; margin: 0 auto; }
+    .tower-section h2 { margin: 0 0 8px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); }
+    .tower-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tower-actions a, .tower-actions button {
+      font-size: 12px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--hair);
+      background: var(--chip); color: var(--ink); text-decoration: none; cursor: pointer;
+    }
+    .tower-actions a.primary, .tower-actions button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+    .alert-bar { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; }
+    .alert-bar:empty { display: none; }
+    .mono-small { font-family: var(--mono); font-size: 11px; color: var(--ink-muted); }
+    #cmd-out { white-space: pre-wrap; font-family: var(--mono); font-size: 12px; max-height: 280px; overflow: auto; background: var(--chip); padding: 12px; border-radius: 8px; margin-top: 8px; }
+    .row-line { font-size: 13px; margin: 4px 0; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="dot"></span>
+      <h1>Cheeky OS <span class="thin">Control Tower</span></h1>
+    </div>
+    <div class="status"><span class="status-label">Snapshot</span><span class="status-value" id="tower-time">—</span></div>
+  </header>
+
+  <main class="app tower-grid">
+    <div id="alerts" class="alert-bar" role="status"></div>
+    <div id="ops-inbound-strip" class="mono-small" style="margin-bottom: 10px; display: none;"></div>
+
+    <section class="card tower-section" id="sec-golive">
+      <h2>Go-live</h2>
+      <div id="golive-body" class="mono-small">Loading…</div>
+      <div class="tower-actions">
+        <a href="/go-live/status" target="_blank" rel="noopener">Status</a>
+        <a href="/go-live/readiness" target="_blank" rel="noopener">Readiness</a>
+        <a href="/go-live/providers" target="_blank" rel="noopener">Providers</a>
+        <button type="button" id="btn-golive-preview">Preview LIVE</button>
+        <button type="button" class="primary" id="btn-golive-cutover">Cutover LIVE</button>
+      </div>
+    </section>
+
+    <section class="card tower-section" id="sec-adoption" style="display: none;">
+      <h2>Setup &amp; adoption</h2>
+      <div id="adoption-body" class="mono-small">—</div>
+      <div class="tower-actions">
+        <a href="/setup/status" target="_blank" rel="noopener">Setup status</a>
+        <a href="/setup/checklist" target="_blank" rel="noopener">Checklist</a>
+        <a href="/help/control-tower" target="_blank" rel="noopener">Help</a>
+        <a href="/setup/guides/OWNER" target="_blank" rel="noopener">Owner guide</a>
+        <button type="button" id="btn-setup-safe">Run SAFE setup</button>
+        <button type="button" id="btn-demo-seed">Seed demo</button>
+        <button type="button" id="btn-training-on">Training on</button>
+      </div>
+    </section>
+
+    <section class="card tower-section">
+      <h2>Command</h2>
+      <div class="query-row">
+        <input id="cmd-input" type="text" placeholder="Ask anything — sends to POST /command" autocomplete="off" />
+        <button type="button" class="primary" id="cmd-run">Run</button>
+      </div>
+      <div id="cmd-out"></div>
+    </section>
+
+    <section class="card tower-section" id="sec-system">
+      <h2>System</h2>
+      <div id="system-body" class="mono-small">Loading…</div>
+      <div class="tower-actions">
+        <a href="/system/health" target="_blank" rel="noopener">View health</a>
+        <a href="/automation/status" target="_blank" rel="noopener">Automation</a>
+        <a href="/system/state" target="_blank" rel="noopener">State</a>
+      </div>
+    </section>
+
+    <section class="card tower-section" id="sec-production">
+      <h2>Production</h2>
+      <div id="prod-body">—</div>
+      <div class="tower-actions">
+        <a href="/shop/board" target="_blank" rel="noopener" class="primary">Open floor board</a>
+        <a href="/production/queue" target="_blank" rel="noopener">Queue</a>
+      </div>
+    </section>
+
+    <section class="card tower-section" id="sec-service">
+      <h2>Service desk</h2>
+      <div id="sd-body">—</div>
+      <div class="tower-actions">
+        <a href="/service-desk" target="_blank" rel="noopener" class="primary">Open desk</a>
+      </div>
+    </section>
+
+    <section class="card tower-section" id="sec-approvals">
+      <h2>Approvals</h2>
+      <div id="ap-body">—</div>
+      <div class="tower-actions">
+        <a href="/communications/pending" target="_blank" rel="noopener">Comms</a>
+        <a href="/vendor/outbound/pending" target="_blank" rel="noopener">POs</a>
+      </div>
+    </section>
+
+    <section class="card tower-section" id="sec-money">
+      <h2>Money</h2>
+      <div id="money-body">—</div>
+      <div class="tower-actions">
+        <a href="/finance/summary" target="_blank" rel="noopener" class="primary">Financials</a>
+        <a href="/square/dashboard" target="_blank" rel="noopener">Square</a>
+      </div>
+    </section>
+
+    <section class="card tower-section" id="sec-purchasing">
+      <h2>Purchasing</h2>
+      <div id="pur-body">—</div>
+      <div class="tower-actions">
+        <a href="/purchasing/list" target="_blank" rel="noopener" class="primary">Purchase list</a>
+      </div>
+    </section>
+
+    <section class="card tower-section" id="sec-content">
+      <h2>Content</h2>
+      <div id="content-body">—</div>
+      <div class="tower-actions">
+        <a href="/content/today" target="_blank" rel="noopener">Today JSON</a>
+        <a href="/social" target="_blank" rel="noopener">Social UI</a>
+        <button type="button" id="btn-approve-content">Approve</button>
+        <button type="button" id="btn-skip-content">Skip</button>
+        <button type="button" class="primary" id="btn-posted-content">Mark posted</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="/control-tower.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cheeky OS Dashboard (classic)</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="/assets/logo.png" alt="Cheeky OS logo" class="logo" />
+      <h1>Cheeky OS</h1>
+    </div>
+    <div class="topbar-actions">
+      <span class="status-inline">
+        <span id="status-dot" class="status-dot"></span>
+        <span id="status-text">Idle</span>
+      </span>
+      <a href="/dashboard" style="color:#8ab4ff;font-size:0.9rem;">New ops UI →</a>
+      <button id="manual-refresh" type="button">Refresh</button>
+    </div>
+  </header>
+
+  <main class="dashboard-grid">
+    <section class="panel">
+      <h2>Needs Printing</h2>
+      <div id="printing-status" class="muted"></div>
+      <ul id="printing-list" class="list"></ul>
+    </section>
+
+    <section class="panel">
+      <h2>Garment Orders</h2>
+      <div id="garment-status" class="muted"></div>
+      <ul id="garment-list" class="list"></ul>
+    </section>
+
+    <section class="panel">
+      <h2>Deposit Follow-ups</h2>
+      <div id="deposit-status" class="muted"></div>
+      <ul id="deposit-list" class="list"></ul>
+    </section>
+
+    <section class="panel">
+      <h2>Today Summary</h2>
+      <div id="today-summary-status" class="muted"></div>
+      <ul id="today-summary-list" class="list"></ul>
+    </section>
+
+    <section class="panel panel-wide">
+      <h2>Week plan (auto)</h2>
+      <div id="week-plan-status" class="muted"></div>
+      <div class="week-grid" id="week-plan-grid"></div>
+      <h3 class="subheading">Blocked</h3>
+      <ul id="week-blocked-list" class="list compact"></ul>
+      <h3 class="subheading">Outsource now</h3>
+      <ul id="week-outsource-list" class="list compact"></ul>
+    </section>
+
+    <section class="panel panel-wide">
+      <h2>Purchasing</h2>
+      <div id="purchase-status" class="muted"></div>
+      <div class="purchase-cols">
+        <div>
+          <h3 class="subheading">Purchase needed</h3>
+          <ul id="purchase-shortages" class="list compact"></ul>
+        </div>
+        <div>
+          <h3 class="subheading">Garment blocked</h3>
+          <ul id="purchase-blocked" class="list compact"></ul>
+        </div>
+        <div>
+          <h3 class="subheading">PO ready</h3>
+          <ul id="purchase-po" class="list compact"></ul>
+        </div>
+        <div>
+          <h3 class="subheading">Vendor outbound</h3>
+          <ul id="vendor-ready" class="list compact"></ul>
+          <h4 class="subheading subheading-tight">Pending approval</h4>
+          <ul id="vendor-pending" class="list compact"></ul>
+          <h4 class="subheading subheading-tight">Last sent / failed</h4>
+          <ul id="vendor-status" class="list compact"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel panel-wide">
+      <h2>Square / payments</h2>
+      <div id="square-status" class="muted"></div>
+      <div class="purchase-cols intake-cols">
+        <div>
+          <h3 class="subheading">Unpaid invoices</h3>
+          <ul id="square-unpaid" class="list compact"></ul>
+        </div>
+        <div>
+          <h3 class="subheading">Open estimates</h3>
+          <ul id="square-estimates" class="list compact"></ul>
+        </div>
+        <div>
+          <h3 class="subheading">Payment blocked</h3>
+          <ul id="square-blocked" class="list compact"></ul>
+        </div>
+        <div>
+          <h3 class="subheading">Reconcile flags</h3>
+          <ul id="square-flags" class="list compact"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel panel-wide">
+      <h2>Customer intake</h2>
+      <div id="intake-status" class="muted"></div>
+      <div class="purchase-cols intake-cols">
+        <div>
+          <h3 class="subheading">New (today)</h3>
+          <ul id="intake-new-today" class="list compact"></ul>
+        </div>
+        <div>
+          <h3 class="subheading">Needs info</h3>
+          <ul id="intake-needs-info" class="list compact"></ul>
+        </div>
+        <div>
+          <h3 class="subheading">Ready quote</h3>
+          <ul id="intake-ready-quote" class="list compact"></ul>
+        </div>
+        <div>
+          <h3 class="subheading">Ready job</h3>
+          <ul id="intake-ready-job" class="list compact"></ul>
+        </div>
+        <div>
+          <h3 class="subheading">Review</h3>
+          <ul id="intake-review" class="list compact"></ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    Last updated: <span id="last-updated">Never</span>
+  </footer>
+
+  <script src="/dashboard.js" defer></script>
+</body>
+</html>

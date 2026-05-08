@@ -1,0 +1,517 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Cheeky OS ChatGPT Operator API",
+    "version": "1.1.0",
+    "description": "Production-safe ChatGPT Actions surface for Cheeky OS."
+  },
+  "servers": [
+    {
+      "url": "https://your-production-domain",
+      "description": "Replace with PUBLIC_BASE_URL"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "paths": {
+    "/api/chatgpt/health": {
+      "get": {
+        "operationId": "getChatgptHealth",
+        "summary": "Health check for action surface",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Health response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chatgpt/readiness": {
+      "get": {
+        "operationId": "getChatgptReadiness",
+        "summary": "Readiness status for GPT Actions",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Readiness response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chatgpt/capabilities": {
+      "get": {
+        "operationId": "getChatgptCapabilities",
+        "summary": "Policy capability matrix",
+        "responses": {
+          "200": {
+            "description": "Capabilities response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/system-status": {
+      "get": {
+        "operationId": "getChatgptSystemStatus",
+        "summary": "System status snapshot",
+        "responses": {
+          "200": {
+            "description": "System status response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/operator-summary": {
+      "get": {
+        "operationId": "getChatgptOperatorSummary",
+        "summary": "Operator summary snapshot",
+        "responses": {
+          "200": {
+            "description": "Operator summary response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/payments": {
+      "get": {
+        "operationId": "getChatgptPayments",
+        "summary": "Unpaid deposit/payment queue",
+        "responses": {
+          "200": {
+            "description": "Payments response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/pipeline": {
+      "get": {
+        "operationId": "getChatgptPipeline",
+        "summary": "Pipeline summary",
+        "responses": {
+          "200": {
+            "description": "Pipeline response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/release-queue": {
+      "get": {
+        "operationId": "getChatgptReleaseQueue",
+        "summary": "Release queue visibility",
+        "responses": {
+          "200": {
+            "description": "Release queue response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/vendor-drafts": {
+      "get": {
+        "operationId": "getChatgptVendorDrafts",
+        "summary": "Vendor draft visibility",
+        "responses": {
+          "200": {
+            "description": "Vendor drafts response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/decisions": {
+      "get": {
+        "operationId": "getChatgptDecisions",
+        "summary": "Decision snapshot",
+        "responses": {
+          "200": {
+            "description": "Decision snapshot response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/decisions/top": {
+      "get": {
+        "operationId": "getChatgptTopDecisions",
+        "summary": "Top decision recommendations",
+        "responses": {
+          "200": {
+            "description": "Top decisions response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/cash/snapshot": {
+      "get": {
+        "operationId": "getChatgptCashSnapshot",
+        "summary": "Cash snapshot",
+        "responses": {
+          "200": {
+            "description": "Cash snapshot response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/cash/runway": {
+      "get": {
+        "operationId": "getChatgptCashRunway",
+        "summary": "Runway estimate",
+        "responses": {
+          "200": {
+            "description": "Runway response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/cash/priorities": {
+      "get": {
+        "operationId": "getChatgptCashPriorities",
+        "summary": "Cash priorities",
+        "responses": {
+          "200": {
+            "description": "Cash priorities response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/route-audit": {
+      "get": {
+        "operationId": "getChatgptRouteAudit",
+        "summary": "Route compatibility map",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Route audit response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chatgpt/actions/create-internal-task": {
+      "post": {
+        "operationId": "postChatgptCreateInternalTask",
+        "summary": "Create guarded internal task",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateInternalTaskRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Create internal task response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/actions/evaluate-release": {
+      "post": {
+        "operationId": "postChatgptEvaluateRelease",
+        "summary": "Evaluate release for task",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TaskActionRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evaluate release response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/actions/mark-blanks-ordered": {
+      "post": {
+        "operationId": "postChatgptMarkBlanksOrdered",
+        "summary": "Mark blanks ordered",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TaskActionRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Mark blanks ordered response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/actions/create-vendor-draft": {
+      "post": {
+        "operationId": "postChatgptCreateVendorDraft",
+        "summary": "Create vendor draft",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TaskActionRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Create vendor draft response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/actions/create-draft-estimate-request": {
+      "post": {
+        "operationId": "postChatgptCreateDraftEstimateRequest",
+        "summary": "Create draft estimate request",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/DraftRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Create draft estimate response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/actions/create-draft-invoice-request": {
+      "post": {
+        "operationId": "postChatgptCreateDraftInvoiceRequest",
+        "summary": "Create draft invoice request",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/DraftRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Create draft invoice response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    },
+    "/api/chatgpt/actions/run-decision-engine": {
+      "post": {
+        "operationId": "postChatgptRunDecisionEngine",
+        "summary": "Run decision engine",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RunDecisionEngineRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Run decision engine response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnyObject" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedJson" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "Value must match CHATGPT_ACTION_API_KEY"
+      }
+    },
+    "responses": {
+      "UnauthorizedJson": {
+        "description": "Unauthorized response",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/UnauthorizedResponse" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "AnyObject": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "UnauthorizedResponse": {
+        "type": "object",
+        "required": ["success", "error", "route", "timestamp"],
+        "properties": {
+          "success": { "type": "boolean" },
+          "error": { "type": "string" },
+          "route": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CreateInternalTaskRequest": {
+        "type": "object",
+        "required": ["entityType", "entityId", "taskType"],
+        "properties": {
+          "entityType": { "type": "string" },
+          "entityId": { "type": "string" },
+          "taskType": { "type": "string" },
+          "note": { "type": "string" },
+          "priority": { "type": "string" }
+        }
+      },
+      "TaskActionRequest": {
+        "type": "object",
+        "required": ["taskId"],
+        "properties": {
+          "taskId": { "type": "string" }
+        }
+      },
+      "DraftRequest": {
+        "type": "object",
+        "properties": {
+          "orderId": { "type": "string" },
+          "customerName": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      },
+      "RunDecisionEngineRequest": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  }
+}

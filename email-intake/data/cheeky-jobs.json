@@ -1,0 +1,141 @@
+{
+  "jobs": [
+    {
+      "jobId": "JOB-1776464319612-YH9J",
+      "customer": "Test",
+      "lineItems": [
+        {
+          "qty": 10,
+          "garment": "Tee",
+          "product": "Tee",
+          "color": null,
+          "size": "M"
+        }
+      ],
+      "notes": "",
+      "dueDate": "2026-04-24T22:18:39.592Z",
+      "productionType": "UNKNOWN",
+      "printMethod": "UNKNOWN",
+      "amount": 0,
+      "status": "READY",
+      "source": "manual+foundation",
+      "hasArt": true,
+      "depositPaid": true,
+      "foundationStatus": "PRINTING",
+      "artFiles": [],
+      "createdAt": "2026-04-17T22:18:39.807Z",
+      "updatedAt": "2026-04-17T22:19:59.141Z"
+    },
+    {
+      "jobId": "JOB-1776464344163-T3RF",
+      "customer": "NoDeposit",
+      "lineItems": [
+        {
+          "qty": 5,
+          "garment": "Tee",
+          "product": "Tee",
+          "color": null,
+          "size": "L"
+        }
+      ],
+      "notes": "",
+      "dueDate": "2026-04-24T22:19:04.163Z",
+      "productionType": "UNKNOWN",
+      "printMethod": "UNKNOWN",
+      "amount": 0,
+      "status": "OVERDUE",
+      "source": "manual+foundation",
+      "hasArt": false,
+      "depositPaid": false,
+      "foundationStatus": "BLOCKED",
+      "artFiles": [],
+      "createdAt": "2026-04-17T22:19:04.295Z",
+      "updatedAt": "2026-04-17T22:19:04.295Z"
+    },
+    {
+      "jobId": "JOB-INV-MOCK-9001",
+      "customer": "Pine Creek Church",
+      "dueDate": "2026-04-02T03:36:36.368Z",
+      "status": "OVERDUE",
+      "productionType": "UNKNOWN",
+      "amount": 980,
+      "sourceInvoiceId": "INV-MOCK-9001",
+      "printMethod": "UNKNOWN",
+      "hasArt": false,
+      "priorityScore": 70,
+      "lineItems": [],
+      "notes": "",
+      "artFiles": [],
+      "createdAt": "2026-04-17T22:28:57.035Z",
+      "updatedAt": "2026-04-18T03:36:36.368Z"
+    },
+    {
+      "jobId": "JOB-INV-MOCK-9002",
+      "customer": "Metro Realty Group",
+      "dueDate": "2026-04-09T03:36:36.368Z",
+      "status": "OVERDUE",
+      "productionType": "UNKNOWN",
+      "amount": 640,
+      "sourceInvoiceId": "INV-MOCK-9002",
+      "printMethod": "UNKNOWN",
+      "hasArt": false,
+      "priorityScore": 70,
+      "lineItems": [],
+      "notes": "",
+      "artFiles": [],
+      "createdAt": "2026-04-17T22:28:57.036Z",
+      "updatedAt": "2026-04-18T03:36:36.368Z"
+    },
+    {
+      "jobId": "JOB-INV-MOCK-9003",
+      "customer": "River Youth Baseball",
+      "dueDate": "2026-04-19T03:36:36.368Z",
+      "status": "UNPAID",
+      "productionType": "UNKNOWN",
+      "amount": 455,
+      "sourceInvoiceId": "INV-MOCK-9003",
+      "printMethod": "UNKNOWN",
+      "hasArt": false,
+      "priorityScore": 20,
+      "lineItems": [],
+      "notes": "",
+      "artFiles": [],
+      "createdAt": "2026-04-17T22:28:57.036Z",
+      "updatedAt": "2026-04-18T03:36:36.369Z"
+    },
+    {
+      "jobId": "JOB-INV-MOCK-9004",
+      "customer": "Amber HVAC Services",
+      "dueDate": "2026-04-18T03:36:36.368Z",
+      "status": "UNPAID",
+      "productionType": "UNKNOWN",
+      "amount": 1850,
+      "sourceInvoiceId": "INV-MOCK-9004",
+      "printMethod": "UNKNOWN",
+      "hasArt": false,
+      "priorityScore": 40,
+      "lineItems": [],
+      "notes": "",
+      "artFiles": [],
+      "createdAt": "2026-04-17T22:28:57.036Z",
+      "updatedAt": "2026-04-18T03:36:36.369Z"
+    },
+    {
+      "jobId": "JOB-INV-MOCK-9005",
+      "customer": "Sunrise Bakery",
+      "dueDate": "2026-04-08T03:36:36.368Z",
+      "status": "PAID",
+      "productionType": "UNKNOWN",
+      "amount": 325,
+      "sourceInvoiceId": "INV-MOCK-9005",
+      "printMethod": "UNKNOWN",
+      "hasArt": false,
+      "priorityScore": -110,
+      "lineItems": [],
+      "notes": "",
+      "artFiles": [],
+      "createdAt": "2026-04-17T22:28:57.036Z",
+      "updatedAt": "2026-04-18T03:36:36.369Z"
+    }
+  ]
+}

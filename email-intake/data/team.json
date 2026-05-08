@@ -1,0 +1,16 @@
+{
+  "members": [
+    {
+      "id": "jeremy",
+      "name": "Jeremy",
+      "role": "PRINTER",
+      "active": true
+    },
+    {
+      "id": "patrick",
+      "name": "Patrick",
+      "role": "OWNER",
+      "active": true
+    }
+  ]
+}

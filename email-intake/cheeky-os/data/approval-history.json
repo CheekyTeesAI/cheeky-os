@@ -1,0 +1,40 @@
+[
+  {
+    "id": "d600d270-197c-4a1e-b2ab-0d18fd6058a9",
+    "actionType": "customer_message",
+    "orderId": "demo",
+    "customer": "Test",
+    "description": "Hello",
+    "draftPayload": {
+      "x": 1
+    },
+    "impactLevel": "high",
+    "moneyImpact": "trust",
+    "requestedBy": "svc",
+    "requiresPatrick": true,
+    "status": "approved",
+    "aiExplanation": "test",
+    "createdAt": "2026-05-06T18:50:40.506Z",
+    "resolvedAt": "2026-05-06T18:50:40.517Z",
+    "resolvedBy": "patrick",
+    "resolutionNotes": null
+  },
+  {
+    "id": "91956fb9-3eef-4ea5-840e-4e3d83d92dc7",
+    "actionType": "internal_note",
+    "orderId": null,
+    "customer": "",
+    "description": "low",
+    "draftPayload": {},
+    "impactLevel": "low",
+    "moneyImpact": "unknown",
+    "requestedBy": "svc",
+    "requiresPatrick": false,
+    "status": "approved",
+    "aiExplanation": "",
+    "createdAt": "2026-05-06T18:50:40.525Z",
+    "resolvedAt": "2026-05-06T18:50:40.533Z",
+    "resolvedBy": "jeremy",
+    "resolutionNotes": null
+  }
+]

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cheeky — Cashflow sentinel</title>
+  <style>
+    :root {
+      --bg: #070b10;
+      --panel: #111820;
+      --border: #2a3544;
+      --text: #e8edf4;
+      --muted: #8b9aab;
+      --accent: #34d399;
+      --accent2: #38bdf8;
+      --warn: #fbbf24;
+      --bad: #f43f5e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      padding-bottom: 48px;
+    }
+    header {
+      padding: 14px 16px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    header h1 { margin: 0; font-size: 1.15rem; font-weight: 700; }
+    .muted { color: var(--muted); font-size: 0.82rem; }
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-left: auto;
+    }
+    .nav a {
+      color: var(--accent2);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(56, 189, 248, 0.06);
+    }
+    .nav a:hover { background: rgba(56, 189, 248, 0.14); }
+    button {
+      background: var(--accent);
+      color: #0c1220;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.88rem;
+    }
+    button.secondary { background: #334155; color: var(--text); }
+    main { padding: 16px; max-width: 1200px; margin: 0 auto; }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .metric .lbl {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .metric .val { font-size: 1.2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .metric.warn .val { color: var(--warn); }
+    .metric.bad .val { color: var(--bad); }
+    .metric.ok .val { color: var(--accent); }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+    section h2 {
+      margin: 0 0 10px;
+      font-size: 0.95rem;
+      color: var(--accent2);
+    }
+    ul { margin: 0; padding-left: 1.15rem; }
+    li { margin: 6px 0; font-size: 0.9rem; }
+    .forms {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    label { display: block; font-size: 0.78rem; color: var(--muted); margin: 6px 0 2px; }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #0e1118;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+    textarea { min-height: 52px; resize: vertical; }
+    .banner {
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(251, 191, 36, 0.12);
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      color: #fde68a;
+      font-size: 0.85rem;
+      margin-bottom: 14px;
+    }
+    .foot {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Cashflow sentinel</h1>
+    <span class="muted" id="hdr-status">Advisory only — no auto-payments</span>
+    <button type="button" id="btn-refresh">Refresh</button>
+    <div class="nav">
+      <a href="/owner.html">Owner</a>
+      <a href="/purchasing.html">Purchasing</a>
+      <a href="/digest.html">Digest</a>
+      <a href="/ai.html">AI operator</a>
+    </div>
+  </header>
+  <main>
+    <div id="banner" class="banner" style="display:none;"></div>
+    <div class="metrics" id="metrics"></div>
+
+    <section><h2>Critical / due now</h2><ul id="list-critical"></ul></section>
+    <section><h2>Upcoming — 7 days</h2><ul id="list-7"></ul></section>
+    <section><h2>Upcoming — 14 days</h2><ul id="list-14"></ul></section>
+    <section><h2>Expected income</h2><ul id="list-income"></ul></section>
+    <section><h2>Debt watch</h2><ul id="list-debt"></ul></section>
+    <section><h2>Recommended money moves</h2><ul id="list-moves"></ul></section>
+
+    <section>
+      <h2>Add obligation</h2>
+      <div class="forms">
+        <div>
+          <label>Name</label>
+          <input id="ob-name" placeholder="SC DOR Payment" />
+          <label>Vendor</label>
+          <input id="ob-vendor" />
+          <label>Category</label>
+          <input id="ob-cat" placeholder="TAX" />
+          <label>Amount (cents)</label>
+          <input id="ob-amt" type="number" placeholder="150000" />
+        </div>
+        <div>
+          <label>Due date (YYYY-MM-DD)</label>
+          <input id="ob-due" />
+          <label>Priority</label>
+          <select id="ob-pri">
+            <option>CRITICAL</option>
+            <option>HIGH</option>
+            <option>NORMAL</option>
+            <option>LOW</option>
+          </select>
+          <label>Notes</label>
+          <textarea id="ob-notes"></textarea>
+          <button type="button" id="ob-submit">Save obligation</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Add expected income</h2>
+      <div class="forms">
+        <div>
+          <label>Type</label>
+          <select id="ev-type">
+            <option>EXPECTED_INCOME</option>
+            <option>BILL</option>
+            <option>VENDOR_PAYMENT</option>
+            <option>OTHER</option>
+          </select>
+          <label>Source</label>
+          <input id="ev-src" placeholder="Square deposit" />
+          <label>Amount (cents)</label>
+          <input id="ev-amt" type="number" placeholder="500000" />
+        </div>
+        <div>
+          <label>Expected date</label>
+          <input id="ev-date" />
+          <label>Notes</label>
+          <textarea id="ev-notes"></textarea>
+          <button type="button" id="ev-submit">Save event</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Cash on hand (primary operating)</h2>
+      <p class="muted" style="margin:0 0 8px;">Stored in cents. Does not connect to banks.</p>
+      <label>Balance (cents)</label>
+      <input id="acct-bal" type="number" placeholder="2500000" />
+      <label>Notes</label>
+      <textarea id="acct-notes"></textarea>
+      <button type="button" id="acct-submit" style="margin-top:8px;">Save primary account</button>
+    </section>
+
+    <section>
+      <h2>Mark obligation status</h2>
+      <label>Obligation id</label>
+      <input id="st-id" placeholder="from list above" />
+      <label>Status</label>
+      <select id="st-status">
+        <option>PAID</option>
+        <option>DEFERRED</option>
+        <option>WATCH</option>
+      </select>
+      <label>Note</label>
+      <textarea id="st-note"></textarea>
+      <button type="button" id="st-submit" style="margin-top:8px;">Update status</button>
+    </section>
+
+    <p class="foot">API: GET /api/cashflow/snapshot · POST /api/cashflow/obligations · POST /api/cashflow/events · PATCH /api/cashflow/obligations/:id/status</p>
+  </main>
+
+  <script>
+    (function () {
+      function esc(s) {
+        if (s == null) return "";
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function fillList(id, lines) {
+        var ul = document.getElementById(id);
+        ul.innerHTML = "";
+        if (!lines || !lines.length) {
+          ul.innerHTML = '<li class="muted">—</li>';
+          return;
+        }
+        lines.forEach(function (t) {
+          var li = document.createElement("li");
+          li.innerHTML = t;
+          ul.appendChild(li);
+        });
+      }
+
+      function renderSnap(s) {
+        if (!s || !s.ok) {
+          document.getElementById("hdr-status").textContent = "Snapshot error";
+          return;
+        }
+        document.getElementById("hdr-status").textContent =
+          "NY " + esc(s.dateNY || "") + " · Updated " + new Date(s.timestamp).toLocaleString();
+
+        var b = document.getElementById("banner");
+        if (s.warnings && s.warnings.length) {
+          b.style.display = "block";
+          b.textContent = s.warnings.join(" ");
+        } else {
+          b.style.display = "none";
+        }
+
+        var m = document.getElementById("metrics");
+        m.innerHTML = "";
+        function addMetric(cls, lbl, val) {
+          var d = document.createElement("div");
+          d.className = "metric " + (cls || "");
+          d.innerHTML = '<div class="lbl">' + esc(lbl) + '</div><div class="val">' + esc(val) + "</div>";
+          m.appendChild(d);
+        }
+        addMetric("", "Cash on hand", s.cashOnHandUsd);
+        addMetric("", "Expected income 7d", s.expectedIncome7dUsd);
+        addMetric("warn", "Obligations 7d", s.obligations7dUsd);
+        addMetric("warn", "Obligations 14d", s.obligations14dUsd);
+        addMetric(s.overdueTotal > 0 ? "bad" : "", "Overdue", s.overdueTotalUsd);
+        addMetric(s.safeToSpendRawCents < 0 ? "bad" : "ok", "Safe to spend", s.safeToSpendUsd);
+
+        var crit = [];
+        (s.billsDueToday || []).forEach(function (b) {
+          crit.push("<strong>Today</strong> · " + esc(b.name) + " · " + esc(b.amountUsd) + " · " + esc(b.priority || ""));
+        });
+        (s.overdue || []).slice(0, 15).forEach(function (b) {
+          crit.push(
+            "<strong>Overdue</strong> · " +
+              esc(b.name) +
+              " · " +
+              esc(b.amountUsd) +
+              " · " +
+              esc(String(b.daysPast)) +
+              "d"
+          );
+        });
+        fillList("list-critical", crit);
+
+        fillList(
+          "list-7",
+          (s.billsDue7d || []).map(function (x) {
+            return (
+              esc(x.dueDate) +
+              " · " +
+              esc(x.name) +
+              " · " +
+              esc(x.amountUsd || "") +
+              " · " +
+              esc(x.priority || "")
+            );
+          })
+        );
+        fillList(
+          "list-14",
+          (s.upcoming || []).map(function (x) {
+            return (
+              esc(x.dueDate) +
+              " · " +
+              esc(x.name) +
+              " · " +
+              esc(x.amountUsd || "") +
+              " · " +
+              esc(x.priority || "")
+            );
+          })
+        );
+
+        fillList(
+          "list-income",
+          (s.expectedIncomeEvents || []).map(function (e) {
+            return (
+              esc(e.expectedDate) +
+              " · " +
+              esc(e.source || e.type) +
+              " · " +
+              (Math.round(Number(e.amount || 0)) / 100).toLocaleString("en-US", {
+                style: "currency",
+                currency: "USD",
+              })
+            );
+          })
+        );
+
+        fillList(
+          "list-debt",
+          (s.debtWatch || []).map(function (d) {
+            return (
+              esc(d.name) +
+              " · bal " +
+              esc(d.balanceUsd) +
+              " · min " +
+              esc(d.minimumPaymentUsd) +
+              " · due " +
+              esc(d.dueDate || "—")
+            );
+          })
+        );
+
+        fillList(
+          "list-moves",
+          (s.recommendedMoneyMoves || []).map(function (x) {
+            return esc(x);
+          })
+        );
+      }
+
+      function load() {
+        fetch("/api/cashflow/snapshot", { credentials: "same-origin" })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(renderSnap)
+          .catch(function () {
+            document.getElementById("hdr-status").textContent = "Network error";
+          });
+      }
+
+      document.getElementById("btn-refresh").addEventListener("click", load);
+
+      document.getElementById("ob-submit").addEventListener("click", function () {
+        var body = {
+          name: document.getElementById("ob-name").value.trim(),
+          vendor: document.getElementById("ob-vendor").value.trim(),
+          category: document.getElementById("ob-cat").value.trim(),
+          amount: Number(document.getElementById("ob-amt").value || 0),
+          dueDate: document.getElementById("ob-due").value.trim(),
+          priority: document.getElementById("ob-pri").value,
+          notes: document.getElementById("ob-notes").value.trim(),
+        };
+        fetch("/api/cashflow/obligations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (j) {
+            alert(j.ok ? "Saved" : j.error || "failed");
+            load();
+          });
+      });
+
+      document.getElementById("ev-submit").addEventListener("click", function () {
+        var body = {
+          type: document.getElementById("ev-type").value,
+          source: document.getElementById("ev-src").value.trim(),
+          amount: Number(document.getElementById("ev-amt").value || 0),
+          expectedDate: document.getElementById("ev-date").value.trim(),
+          notes: document.getElementById("ev-notes").value.trim(),
+        };
+        fetch("/api/cashflow/events", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (j) {
+            alert(j.ok ? "Saved" : j.error || "failed");
+            load();
+          });
+      });
+
+      document.getElementById("acct-submit").addEventListener("click", function () {
+        var body = {
+          currentBalance: Number(document.getElementById("acct-bal").value || 0),
+          notes: document.getElementById("acct-notes").value.trim(),
+        };
+        fetch("/api/cashflow/accounts/primary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (j) {
+            alert(j.ok ? "Saved" : j.error || "failed");
+            load();
+          });
+      });
+
+      document.getElementById("st-submit").addEventListener("click", function () {
+        var id = document.getElementById("st-id").value.trim();
+        var body = {
+          status: document.getElementById("st-status").value,
+          note: document.getElementById("st-note").value.trim(),
+        };
+        fetch("/api/cashflow/obligations/" + encodeURIComponent(id) + "/status", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (j) {
+            alert(j.ok ? "Updated" : j.error || "failed");
+            load();
+          });
+      });
+
+      load();
+    })();
+  </script>
+</body>
+</html>

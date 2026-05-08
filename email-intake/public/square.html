@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cheeky — Square control</title>
+  <style>
+    :root {
+      --bg: #0a0e14;
+      --panel: #121922;
+      --border: #2a3544;
+      --text: #e8edf4;
+      --muted: #8b9aab;
+      --accent: #f0ab43;
+      --accent2: #2dd4bf;
+      --bad: #f43f5e;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.45; padding-bottom: 40px; }
+    header {
+      padding: 14px 16px; background: var(--panel); border-bottom: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    }
+    header h1 { margin: 0; font-size: 1.1rem; }
+    .nav { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+    .nav a {
+      color: var(--accent2); text-decoration: none; font-weight: 600; font-size: 0.85rem;
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+      background: rgba(45, 212, 191, 0.06);
+    }
+    section { margin: 16px; padding: 18px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; }
+    h2 { margin: 0 0 14px; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    label { display: block; font-size: 0.82rem; color: var(--muted); margin: 10px 0 4px; }
+    input, select, textarea {
+      width: 100%; max-width: 420px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
+      background: #0c121a; color: var(--text); font-size: 0.95rem;
+    }
+    textarea { min-height: 70px; max-width: 100%; }
+    button {
+      margin-top: 12px; margin-right: 8px;
+      background: var(--accent); color: #0c1220; border: none; padding: 10px 16px; border-radius: 8px;
+      font-weight: 700; cursor: pointer; min-height: 44px; font-size: 0.88rem;
+    }
+    button.secondary { background: var(--border); color: var(--text); }
+    button.danger { background: transparent; border: 1px solid var(--bad); color: #fecaca; }
+    .muted { color: var(--muted); font-size: 0.82rem; }
+    .draft-row {
+      border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: #0c121a;
+    }
+    .draft-row .tag { display: inline-block; font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; background: #334155; margin-right: 8px; }
+    .draft-row .tag.DRAFT { background: rgba(240, 171, 67, 0.2); color: var(--accent); }
+    .draft-row .tag.APPROVED { background: rgba(45, 212, 191, 0.18); color: var(--accent2); }
+    .draft-row .tag.CREATED { background: rgba(56, 189, 248, 0.15); color: #7dd3fc; }
+    .draft-row .tag.ERROR { background: rgba(244, 63, 94, 0.18); color: #fecaca; }
+    pre { background: #0c121a; padding: 12px; border-radius: 8px; overflow: auto; font-size: 0.78rem; max-height: 200px; border: 1px solid var(--border); }
+    .banner { padding: 12px 16px; background: rgba(240, 171, 67, 0.12); border-bottom: 1px solid var(--border); font-size: 0.88rem; color: #fde68a; }
+  </style>
+</head>
+<body>
+  <div class="banner">No auto-send and no auto-charge. Approve locally, then create a Square draft only.</div>
+  <header>
+    <h1>Square command layer</h1>
+    <div class="nav">
+      <a href="/owner.html">Owner</a>
+      <a href="/ai.html">AI operator</a>
+      <a href="/production.html">Production</a>
+    </div>
+  </header>
+
+  <section>
+    <h2>Create local draft</h2>
+    <p class="muted">Stores JSON only. Square APIs run only after approve + “Create Square draft”.</p>
+    <label>Type</label>
+    <select id="f-type">
+      <option value="INVOICE">INVOICE</option>
+      <option value="ESTIMATE">ESTIMATE</option>
+      <option value="DEPOSIT_REQUEST">DEPOSIT_REQUEST</option>
+      <option value="BALANCE_DUE">BALANCE_DUE</option>
+    </select>
+    <label>Order id (optional)</label>
+    <input id="f-order" type="text" placeholder="cuid" />
+    <label>Square customer id (optional — can resolve from order)</label>
+    <input id="f-customer" type="text" />
+    <label>Amount (optional, USD)</label>
+    <input id="f-amount" type="number" step="0.01" placeholder="0" />
+    <label>Notes</label>
+    <textarea id="f-notes"></textarea>
+    <button type="button" id="btn-create">Save draft</button>
+    <span class="muted" id="create-msg"></span>
+  </section>
+
+  <section>
+    <h2>Drafts</h2>
+    <button type="button" class="secondary" id="btn-refresh">Refresh list</button>
+    <div id="draft-list" style="margin-top:14px;"></div>
+  </section>
+
+  <section>
+    <h2>Order financial snapshot</h2>
+    <input id="q-order" type="text" placeholder="Order id" style="max-width:320px;display:inline-block;" />
+    <button type="button" id="btn-status">GET /api/square/order/…/status</button>
+    <pre id="status-out" style="margin-top:12px;display:none;"></pre>
+  </section>
+
+  <script>
+    (function () {
+      function esc(s) {
+        if (s == null) return "";
+        return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+      }
+
+      function loadDrafts() {
+        fetch("/api/square/drafts")
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            var el = document.getElementById("draft-list");
+            el.innerHTML = "";
+            var rows = (d && d.drafts) ? d.drafts : [];
+            if (!rows.length) {
+              el.innerHTML = '<p class="muted">No drafts yet.</p>';
+              return;
+            }
+            rows.forEach(function (x) {
+              var div = document.createElement("div");
+              div.className = "draft-row";
+              var st = esc(x.status || "");
+              var amt = x.amount != null ? x.amount : "";
+              var sq = x.squareDraftId || x.localEstimateId || "—";
+              div.innerHTML =
+                '<div><span class="tag ' + st + '">' + st + "</span>" +
+                '<strong>' + esc(x.type) + "</strong> · " + esc(x.id) + "</div>" +
+                "<div class=\"muted\" style=\"margin-top:6px;\">Order: " + esc(x.orderId || "—") +
+                " · Customer: " + esc(x.customerId || "—") +
+                " · Amount: " + esc(amt) + "</div>" +
+                "<div class=\"muted\" style=\"margin-top:4px;\">Square / local id: " + esc(sq) + "</div>" +
+                "<div style=\"margin-top:10px;\">" +
+                '<button type="button" data-a="approve" data-id="' + esc(x.id) + '">Approve</button>' +
+                '<button type="button" class="secondary" data-a="square" data-id="' + esc(x.id) + '">Create Square draft</button>' +
+                "</div>";
+              el.appendChild(div);
+            });
+            el.querySelectorAll("button[data-a]").forEach(function (btn) {
+              btn.addEventListener("click", function () {
+                var id = btn.getAttribute("data-id");
+                var a = btn.getAttribute("data-a");
+                if (a === "approve") {
+                  fetch("/api/square/drafts/" + encodeURIComponent(id) + "/approve", { method: "PATCH" })
+                    .then(function (r) { return r.json(); })
+                    .then(function () { loadDrafts(); });
+                } else {
+                  fetch("/api/square/drafts/" + encodeURIComponent(id) + "/create-square-draft", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })
+                    .then(function (r) { return r.json(); })
+                    .then(function (j) {
+                      alert(j.ok ? "OK — check draft row for ids or errors." : (j.error || "failed"));
+                      loadDrafts();
+                    });
+                }
+              });
+            });
+          });
+      }
+
+      document.getElementById("btn-create").addEventListener("click", function () {
+        var body = {
+          type: document.getElementById("f-type").value,
+          orderId: document.getElementById("f-order").value.trim() || undefined,
+          customerId: document.getElementById("f-customer").value.trim() || undefined,
+          amount: parseFloat(document.getElementById("f-amount").value) || 0,
+          notes: document.getElementById("f-notes").value.trim() || undefined,
+          lineItems: [],
+        };
+        if (body.amount > 0) {
+          body.lineItems = [{ name: body.type.replace(/_/g, " "), quantity: 1, price: body.amount }];
+        }
+        document.getElementById("create-msg").textContent = "Saving…";
+        fetch("/api/square/drafts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            document.getElementById("create-msg").textContent = d.ok ? ("Saved " + (d.draft && d.draft.id)) : (d.error || "error");
+            loadDrafts();
+          });
+      });
+
+      document.getElementById("btn-refresh").addEventListener("click", loadDrafts);
+      document.getElementById("btn-status").addEventListener("click", function () {
+        var oid = document.getElementById("q-order").value.trim();
+        if (!oid) return;
+        fetch("/api/square/order/" + encodeURIComponent(oid) + "/status")
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            document.getElementById("status-out").style.display = "block";
+            document.getElementById("status-out").textContent = JSON.stringify(d, null, 2);
+          });
+      });
+
+      loadDrafts();
+    })();
+  </script>
+</body>
+</html>

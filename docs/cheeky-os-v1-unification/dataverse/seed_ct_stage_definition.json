@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Seed rows for ct_stage_definition (Phase A)",
+  "description": "Create these rows in Dataverse (Maker → Tables → Production Stage → + New row). Or use Excel import. ct_visible_after_gate=true means the Production Board (funded-only) may show cards in this column.",
+  "rows": [
+    {
+      "ct_code": "DEPOSIT_PAID",
+      "ct_label": "Deposit paid",
+      "ct_sort_order": 10,
+      "ct_kanban_column": 1,
+      "ct_color_hex": "#059669",
+      "ct_visible_after_gate": true,
+      "ct_is_terminal": false
+    },
+    {
+      "ct_code": "ART_PREP",
+      "ct_label": "Art prep",
+      "ct_sort_order": 20,
+      "ct_kanban_column": 2,
+      "ct_color_hex": "#6366F1",
+      "ct_visible_after_gate": true,
+      "ct_is_terminal": false
+    },
+    {
+      "ct_code": "BLANKS_PO",
+      "ct_label": "Blanks / PO",
+      "ct_sort_order": 30,
+      "ct_kanban_column": 3,
+      "ct_color_hex": "#D97706",
+      "ct_visible_after_gate": true,
+      "ct_is_terminal": false
+    },
+    {
+      "ct_code": "PRINTING",
+      "ct_label": "Printing",
+      "ct_sort_order": 40,
+      "ct_kanban_column": 4,
+      "ct_color_hex": "#2563EB",
+      "ct_visible_after_gate": true,
+      "ct_is_terminal": false
+    },
+    {
+      "ct_code": "QC",
+      "ct_label": "QC",
+      "ct_sort_order": 50,
+      "ct_kanban_column": 5,
+      "ct_color_hex": "#7C3AED",
+      "ct_visible_after_gate": true,
+      "ct_is_terminal": false
+    },
+    {
+      "ct_code": "SHIPPING",
+      "ct_label": "Shipping",
+      "ct_sort_order": 60,
+      "ct_kanban_column": 6,
+      "ct_color_hex": "#0D9488",
+      "ct_visible_after_gate": true,
+      "ct_is_terminal": false
+    },
+    {
+      "ct_code": "COMPLETE",
+      "ct_label": "Completed",
+      "ct_sort_order": 70,
+      "ct_kanban_column": 7,
+      "ct_color_hex": "#475569",
+      "ct_visible_after_gate": true,
+      "ct_is_terminal": true
+    },
+    {
+      "ct_code": "QUOTE_SENT",
+      "ct_label": "Quote sent",
+      "ct_sort_order": 5,
+      "ct_kanban_column": 0,
+      "ct_color_hex": "#94A3B8",
+      "ct_visible_after_gate": false,
+      "ct_is_terminal": false
+    }
+  ],
+  "_comment_QUOTE_SENT": "Optional Sales board only — omit from Excel if unused."
+}

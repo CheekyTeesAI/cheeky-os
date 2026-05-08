@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cheeky — Owner command center</title>
+  <style>
+    :root {
+      --bg: #0a0e14;
+      --panel: #121922;
+      --border: #2a3544;
+      --text: #e8edf4;
+      --muted: #8b9aab;
+      --accent: #38bdf8;
+      --warn: #fbbf24;
+      --bad: #f43f5e;
+      --ok: #34d399;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      padding-bottom: 48px;
+    }
+    header {
+      padding: 14px 16px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    header h1 { margin: 0; font-size: 1.2rem; font-weight: 700; }
+    .muted { color: var(--muted); font-size: 0.85rem; }
+    button {
+      background: var(--accent);
+      color: #0c1220;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.9rem;
+      min-height: 44px;
+    }
+    button:active { transform: scale(0.98); }
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-left: auto;
+    }
+    .nav a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.88rem;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(56, 189, 248, 0.08);
+    }
+    .nav a:hover { background: rgba(56, 189, 248, 0.15); }
+    .attention {
+      margin: 16px;
+      padding: 16px 18px;
+      background: linear-gradient(145deg, #1a2430 0%, #121922 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      border-left: 4px solid var(--warn);
+    }
+    .attention h2 { margin: 0 0 8px; font-size: 0.95rem; color: var(--warn); }
+    .headline { font-size: 1.15rem; font-weight: 700; margin-bottom: 12px; }
+    .action-list { margin: 0; padding-left: 1.1rem; }
+    .action-list li { margin-bottom: 8px; }
+    .action-list a { color: var(--accent); font-weight: 600; }
+    .prio-HIGH { color: var(--bad); font-weight: 700; font-size: 0.72rem; margin-right: 6px; }
+    .prio-MEDIUM { color: var(--warn); font-weight: 700; font-size: 0.72rem; margin-right: 6px; }
+    .prio-LOW { color: var(--muted); font-weight: 700; font-size: 0.72rem; margin-right: 6px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+      gap: 12px;
+      padding: 0 16px 16px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      min-height: 120px;
+    }
+    .card h3 {
+      margin: 0 0 12px;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+    }
+    .stat {
+      font-size: 1.75rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat sub {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .rows { font-size: 0.9rem; color: var(--muted); }
+    .rows div { margin: 4px 0; display: flex; justify-content: space-between; gap: 8px; }
+    .rows span:last-child { color: var(--text); font-weight: 600; }
+    .risks {
+      color: #fecaca;
+      font-size: 0.88rem;
+    }
+    .risks ul { margin: 8px 0 0; padding-left: 1.1rem; }
+    .footer-note {
+      padding: 0 16px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Owner command center</h1>
+    <span class="muted" id="updated">—</span>
+    <button type="button" id="refresh">Refresh</button>
+    <div class="nav">
+      <a href="/cashflow.html">Cashflow</a>
+      <a href="/purchasing.html">Purchasing</a>
+      <a href="/digest.html">Daily digest</a>
+      <a href="/fulfillment.html">Fulfillment</a>
+      <a href="/square.html">Square</a>
+      <a href="/ai.html">AI operator</a>
+      <a href="/production.html">Production</a>
+      <a href="/jeremy.html">Jeremy</a>
+      <a href="/comms.html">Comms</a>
+      <a href="/sales.html">Sales</a>
+      <a href="/api/operator/status" target="_blank" rel="noopener">Operator JSON</a>
+    </div>
+  </header>
+
+  <section class="attention">
+    <h2>What needs attention now</h2>
+    <div class="headline" id="headline">Loading…</div>
+    <ol class="action-list" id="next-actions"></ol>
+  </section>
+
+  <div class="grid">
+    <article class="card" id="card-ai" style="border-left:3px solid #a78bfa;">
+      <h3>AI operator brief</h3>
+      <div id="ai-brief-headline" class="headline" style="font-size:1rem;margin-bottom:10px;">—</div>
+      <ol class="action-list" id="ai-brief-actions" style="margin-top:0;"></ol>
+      <p class="rows" style="margin-top:12px;"><a href="/ai.html">Open AI operator →</a></p>
+    </article>
+    <article class="card" id="card-cash">
+      <h3>Cash</h3>
+      <div id="cash-body" class="rows"></div>
+    </article>
+    <article class="card" id="card-production">
+      <h3>Production</h3>
+      <div id="production-body" class="rows"></div>
+    </article>
+    <article class="card" id="card-jeremy">
+      <h3>Jeremy</h3>
+      <div id="jeremy-body" class="rows"></div>
+    </article>
+    <article class="card" id="card-comms">
+      <h3>Customer comms</h3>
+      <div id="comms-body" class="rows"></div>
+    </article>
+    <article class="card" id="card-sales">
+      <h3>Sales</h3>
+      <div id="sales-body" class="rows"></div>
+    </article>
+    <article class="card risks" id="card-risks">
+      <h3 style="color:#fecaca;">Risks</h3>
+      <ul id="risks-list"></ul>
+    </article>
+  </div>
+
+  <p class="footer-note">Auto-refresh every 30s. All outbound messages stay draft until you approve in Comms.</p>
+
+  <script>
+    (function () {
+      var REFRESH_MS = 30000;
+      function esc(s) {
+        if (s == null) return "";
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+      function row(label, val) {
+        return "<div><span>" + esc(label) + "</span><span>" + esc(val) + "</span></div>";
+      }
+      function render(data) {
+        if (!data || data.ok !== true) {
+          document.getElementById("headline").textContent = "Could not load summary";
+          return;
+        }
+        document.getElementById("headline").textContent = data.headline || "—";
+        document.getElementById("updated").textContent =
+          "Updated " + (data.timestamp ? new Date(data.timestamp).toLocaleString() : "");
+
+        var na = document.getElementById("next-actions");
+        na.innerHTML = "";
+        (data.nextActions || []).forEach(function (a) {
+          var li = document.createElement("li");
+          var p = esc(a.priority || "");
+          li.innerHTML =
+            '<span class="prio-' + esc(a.priority) + '">' +
+            esc(p) +
+            "</span>" +
+            '<a href="' +
+            esc(a.link || "#") +
+            '">' +
+            esc(a.label || "") +
+            "</a> — " +
+            esc(a.reason || "");
+          na.appendChild(li);
+        });
+        if (!data.nextActions || !data.nextActions.length) {
+          var li0 = document.createElement("li");
+          li0.textContent = "No prioritized actions — scan tiles below.";
+          na.appendChild(li0);
+        }
+
+        var c = data.cash || {};
+        var cf = data.cashflow || {};
+        function cfUsd(n) {
+          var v = Math.round(Number(n || 0)) / 100;
+          return v.toLocaleString("en-US", { style: "currency", currency: "USD" });
+        }
+        document.getElementById("cash-body").innerHTML =
+          row("Deposits paid today", c.depositPaidToday) +
+          row("Orders awaiting deposit", c.ordersAwaitingDeposit) +
+          row("Balance due (est.)", "$" + Number(c.balanceDue || 0).toFixed(0)) +
+          '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><span><strong>Cashflow sentinel</strong></span><span><a href="/cashflow.html">Open →</a></span></div>' +
+          row("Cash on hand (ledger)", cfUsd(cf.cashOnHand)) +
+          row("Expected income 7d", cfUsd(cf.expectedIncome7d)) +
+          row("Obligations 7d", cfUsd(cf.obligations7d)) +
+          row("Overdue", cfUsd(cf.overdueTotal)) +
+          row("Safe to spend (capped)", cfUsd(cf.safeToSpend)) +
+          row("Risk signals", cf.riskCount);
+
+        var pu = data.purchasing || {};
+        document.getElementById("purchasing-body").innerHTML =
+          row("Needs approval", pu.needsApproval) +
+          row("Blocked plans", pu.blocked) +
+          row("Ordered, not received", pu.orderedNotReceived) +
+          row("Est. spend pending (cents)", pu.estimatedSpendPending);
+
+        var p = data.production || {};
+        document.getElementById("production-body").innerHTML =
+          row("Ready", p.ready) +
+          row("Printing", p.printing) +
+          row("QC", p.qc) +
+          row("Completed", p.completed) +
+          row("Stuck flags", p.stuck);
+
+        var j = data.jeremy || {};
+        document.getElementById("jeremy-body").innerHTML =
+          row("Assigned jobs", j.assigned) +
+          row("Clocked in", j.activeClock ? "Yes" : "No") +
+          row("Hours today", j.hoursToday);
+
+        var co = data.comms || {};
+        document.getElementById("comms-body").innerHTML =
+          row("Needs approval", co.needsApproval) +
+          row("Approved (ready to send)", co.approved) +
+          row("Errors", co.errors);
+
+        var s = data.sales || {};
+        document.getElementById("sales-body").innerHTML =
+          row("Open opportunities", s.openOpportunities) +
+          row("High priority", s.highPriority) +
+          row("Pipeline (est.)", "$" + Number(s.estimatedPipeline || 0).toFixed(0)) +
+          row("Sales drafts waiting", s.draftsWaiting);
+
+        var ul = document.getElementById("risks-list");
+        ul.innerHTML = "";
+        var risks = data.risks || [];
+        if (!risks.length) {
+          var li = document.createElement("li");
+          li.textContent = "No flagged risks from current signals.";
+          ul.appendChild(li);
+        } else {
+          risks.forEach(function (r) {
+            var li = document.createElement("li");
+            li.textContent = r;
+            ul.appendChild(li);
+          });
+        }
+      }
+      function loadAIBriefPreview() {
+        fetch("/api/ai/brief", { credentials: "same-origin" })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (d) {
+            var h = document.getElementById("ai-brief-headline");
+            var list = document.getElementById("ai-brief-actions");
+            if (!h || !list) return;
+            if (!d || d.ok !== true || !d.brief) {
+              h.textContent = "AI brief unavailable";
+              list.innerHTML = "";
+              return;
+            }
+            h.textContent = d.brief.headline || "—";
+            list.innerHTML = "";
+            var acts = (d.brief.recommendedActions || []).slice(0, 3);
+            if (!acts.length) {
+              var li0 = document.createElement("li");
+              li0.textContent = "See full brief on AI operator page.";
+              list.appendChild(li0);
+              return;
+            }
+            acts.forEach(function (t) {
+              var li = document.createElement("li");
+              li.textContent = t;
+              list.appendChild(li);
+            });
+          })
+          .catch(function () {
+            var h = document.getElementById("ai-brief-headline");
+            if (h) h.textContent = "—";
+          });
+      }
+      function load() {
+        fetch("/api/owner/summary", { credentials: "same-origin" })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(render)
+          .catch(function () {
+            document.getElementById("headline").textContent = "Network error loading summary";
+          });
+        loadAIBriefPreview();
+      }
+      document.getElementById("refresh").addEventListener("click", load);
+      load();
+      setInterval(load, REFRESH_MS);
+    })();
+  </script>
+</body>
+</html>

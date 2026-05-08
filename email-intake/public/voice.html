@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cheeky Voice Control</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    .voice-panel { max-width: 720px; }
+    .voice-status {
+      font-size: 0.9rem;
+      color: #8cf;
+      min-height: 1.5em;
+      margin-bottom: 12px;
+    }
+    #transcript, #result {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.95rem;
+      line-height: 1.45;
+    }
+    #result { margin-top: 8px; }
+    .voice-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
+    .voice-actions button {
+      padding: 10px 18px;
+      font-size: 1rem;
+      cursor: pointer;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+    }
+    .voice-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .voice-key { flex: 1; min-width: 200px; }
+    .voice-key label { display: block; font-size: 0.75rem; color: #888; margin-bottom: 4px; }
+    .voice-key input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #0d0d0d;
+      color: #eee;
+    }
+    .muted-small { font-size: 0.8rem; color: #777; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Cheeky Voice Control</h1>
+  </header>
+  <main class="voice-panel">
+    <section>
+      <h2>Speak</h2>
+      <p class="muted-small">Uses Chrome Web Speech API (microphone). Same origin as Cheeky OS.</p>
+      <div class="voice-key">
+        <label for="voice-api-key">x-api-key (session only — matches <code>AI_API_KEY</code>)</label>
+        <input type="password" id="voice-api-key" autocomplete="off" placeholder="Required to call /api/ai/execute" />
+      </div>
+      <div class="voice-actions" style="margin-top: 12px;">
+        <button type="button" id="start-listen">Start Listening</button>
+        <button type="button" id="stop-speak" style="background:#444;">Stop speaking</button>
+      </div>
+      <div id="voice-status" class="voice-status" aria-live="polite"></div>
+      <div class="card">
+        <strong>Transcript</strong>
+        <div id="transcript"></div>
+      </div>
+      <div class="card" style="margin-top: 12px;">
+        <strong>Result</strong>
+        <div id="result"></div>
+      </div>
+    </section>
+  </main>
+  <script src="/voice.js" defer></script>
+</body>
+</html>

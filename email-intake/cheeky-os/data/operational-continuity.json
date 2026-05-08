@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "updatedAt": "2026-05-06T06:26:06.058Z",
+  "recentOperationalFocus": [
+    {
+      "kind": "nl_query",
+      "query": "What jobs are late and what needs approval?",
+      "intent": "operational_summary",
+      "confidence": 0.62,
+      "at": "2026-05-06T06:25:54.786Z"
+    },
+    {
+      "kind": "smoke",
+      "note": "v6",
+      "at": "2026-05-06T06:25:54.796Z"
+    },
+    {
+      "kind": "nl_query",
+      "query": "What jobs are late and what needs approval?",
+      "intent": "operational_summary",
+      "confidence": 0.62,
+      "at": "2026-05-06T06:26:06.046Z"
+    },
+    {
+      "kind": "smoke",
+      "note": "v6",
+      "at": "2026-05-06T06:26:06.057Z"
+    }
+  ],
+  "unresolvedRisks": [],
+  "activeApprovalsSnapshot": [],
+  "recurringFailures": [],
+  "recentRecommendations": [],
+  "strategicGoals": [],
+  "lastExecutionCorrelationId": null
+}

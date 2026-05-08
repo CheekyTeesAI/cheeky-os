@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ct_intake_queue",
+  "description": "MANDATORY queue — all intake channels land here before any deposit-paid or production state.",
+  "tableName": "ct_intake_queue",
+  "tableDisplayName": "Intake Queue",
+  "tableSetName": "ct_intake_queues",
+  "primaryKey": "ct_intake_queueid",
+  "primaryNameColumn": "ct_name",
+  "fields": [
+    {
+      "fieldName": "ct_intake_queueid",
+      "displayName": "Intake Queue ID",
+      "dataverseType": "uniqueidentifier",
+      "required": true,
+      "description": "Primary key."
+    },
+    {
+      "fieldName": "ct_name",
+      "displayName": "Name",
+      "dataverseType": "string",
+      "maxLength": 300,
+      "required": true,
+      "description": "Short label e.g. channel + date + customer."
+    },
+    {
+      "fieldName": "ct_channel",
+      "displayName": "Channel",
+      "dataverseType": "choice",
+      "required": true,
+      "description": "POWER_APPS | EMAIL | WEB | PHONE | OTHER",
+      "options": ["POWER_APPS", "EMAIL", "WEB", "PHONE", "OTHER"]
+    },
+    {
+      "fieldName": "ct_status",
+      "displayName": "Queue Status",
+      "dataverseType": "choice",
+      "required": true,
+      "description": "INTAKE_NEW | PARSED | QUOTE_PENDING | INVOICE_SENT | DEPOSIT_PENDING | GATE_PASSED | CANCELED | BLOCKED",
+      "options": [
+        "INTAKE_NEW",
+        "PARSED",
+        "QUOTE_PENDING",
+        "INVOICE_SENT",
+        "DEPOSIT_PENDING",
+        "GATE_PASSED",
+        "CANCELED",
+        "BLOCKED"
+      ]
+    },
+    {
+      "fieldName": "ct_raw_payload",
+      "displayName": "Raw Payload Ref",
+      "dataverseType": "string",
+      "maxLength": 4000,
+      "required": false,
+      "description": "Pointer or JSON snippet id — avoid PII dump; link to blob/note."
+    },
+    {
+      "fieldName": "ct_parsed_json",
+      "displayName": "Parsed Quote JSON",
+      "dataverseType": "multilinestring",
+      "required": false,
+      "description": "AI output (line items, qty, garment) — validate before Square."
+    },
+    {
+      "fieldName": "ct_square_invoice_id",
+      "displayName": "Square Invoice ID",
+      "dataverseType": "string",
+      "maxLength": 120,
+      "required": false,
+      "description": "Set when invoice created — REQUIRED for webhook correlation."
+    },
+    {
+      "fieldName": "ct_prisma_order_id",
+      "displayName": "Prisma Order ID",
+      "dataverseType": "string",
+      "maxLength": 80,
+      "required": false,
+      "description": "Mirror of Node/Postgres Order.id for dual-write."
+    },
+    {
+      "fieldName": "ct_deposit_paid",
+      "displayName": "Deposit Paid",
+      "dataverseType": "boolean",
+      "required": true,
+      "description": "Default false. Set true ONLY by automation after Node gate."
+    },
+    {
+      "fieldName": "ct_gate_token",
+      "displayName": "Gate Token",
+      "dataverseType": "string",
+      "maxLength": 64,
+      "required": false,
+      "description": "Opaque token issued when invoice sent; webhook must match (optional extra hardening)."
+    },
+    {
+      "fieldName": "ct_margin_hold",
+      "displayName": "Margin Hold",
+      "dataverseType": "boolean",
+      "required": false,
+      "description": "True if paid but margin below policy — no production unlock."
+    },
+    {
+      "fieldName": "ct_customer_email",
+      "displayName": "Customer Email",
+      "dataverseType": "string",
+      "maxLength": 200,
+      "required": false,
+      "description": "For matching."
+    },
+    {
+      "fieldName": "ct_customer_name",
+      "displayName": "Customer Name",
+      "dataverseType": "string",
+      "maxLength": 200,
+      "required": false,
+      "description": "For matching."
+    },
+    {
+      "fieldName": "ct_customerid",
+      "displayName": "Customer",
+      "dataverseType": "lookup",
+      "required": false,
+      "lookupTarget": "ct_customers",
+      "description": "Optional link to ct_customers."
+    },
+    {
+      "fieldName": "ct_production_stage_code",
+      "displayName": "Production Stage Code",
+      "dataverseType": "string",
+      "maxLength": 80,
+      "required": false,
+      "description": "Shop pipeline position for board (mirrors Node + Power Apps). Edit via Shop Settings / admin only. Examples: ART_PREP, BLANKS_PO, AWAITING_BLANKS, PRINTING, QC, PACK_SHIP, COMPLETE."
+    },
+    {
+      "fieldName": "ct_production_due_date",
+      "displayName": "Production Due Date",
+      "dataverseType": "datetime",
+      "required": false,
+      "description": "Ops due date for calendar / Kanban warning tint."
+    },
+    {
+      "fieldName": "ct_target_ship_date",
+      "displayName": "Target Ship Date",
+      "dataverseType": "datetime",
+      "required": false,
+      "description": "Customer-facing ship-by; drives calendar view."
+    },
+    {
+      "fieldName": "ct_proof_status",
+      "displayName": "Proof Status",
+      "dataverseType": "choice",
+      "required": false,
+      "description": "Mirror of Node proof gate for tiles and customer comms.",
+      "options": ["NOT_REQUIRED", "NOT_SENT", "SENT", "APPROVED", "REJECTED", "REVISION"]
+    },
+    {
+      "fieldName": "ct_proof_sent_at",
+      "displayName": "Proof Sent At",
+      "dataverseType": "datetime",
+      "required": false,
+      "description": "Mirror from Node."
+    },
+    {
+      "fieldName": "ct_proof_customer_notified_at",
+      "displayName": "Proof Customer Notified At",
+      "dataverseType": "datetime",
+      "required": false,
+      "description": "Last comm / portal ping for proof."
+    },
+    {
+      "fieldName": "ct_quoted_subtotal",
+      "displayName": "Quoted Subtotal",
+      "dataverseType": "decimal",
+      "required": false,
+      "description": "From cheeky_quote_v1 subtotal — for margin tiles."
+    },
+    {
+      "fieldName": "ct_estimated_job_cost",
+      "displayName": "Estimated Job Cost",
+      "dataverseType": "decimal",
+      "required": false,
+      "description": "Internal COGS estimate for profitability tile (manual or flow)."
+    },
+    {
+      "fieldName": "ct_bottleneck_reason",
+      "displayName": "Bottleneck Reason",
+      "dataverseType": "string",
+      "maxLength": 400,
+      "required": false,
+      "description": "Short code or text for reporting: AWAITING_BLANKS, PROOF_PENDING, CAPACITY, etc."
+    }
+  ],
+  "relationships": [
+    {
+      "type": "N:1",
+      "relatedTable": "ct_customers",
+      "lookupField": "ct_customerid",
+      "description": "Optional link to customer."
+    },
+    {
+      "type": "1:N",
+      "relatedTable": "ct_audit_event",
+      "description": "Audit rows reference intake queue."
+    },
+    {
+      "type": "1:N",
+      "relatedTable": "ct_production_task",
+      "description": "Checklist tasks for shop floor (mirror or master for canvas)."
+    },
+    {
+      "type": "1:N",
+      "relatedTable": "ct_proof_asset",
+      "description": "Proof files and versions."
+    },
+    {
+      "type": "1:N",
+      "relatedTable": "ct_purchase_order",
+      "description": "Blank/garment purchase orders tied to job."
+    }
+  ],
+  "notes": [
+    "Block Power Apps 'Save' transition to GATE_PASSED or ct_deposit_paid true via business process or plugin.",
+    "Power Apps New Order should Patch this table only with status INTAKE_NEW."
+  ]
+}

@@ -1,0 +1,45 @@
+[
+  {
+    "id": "4e24c413-d46b-47c0-975f-55a781b19974",
+    "actionType": "growth_outreach",
+    "orderId": null,
+    "customer": "Demo Cafe",
+    "description": "Outreach draft (warm_reactivation) — Patrick approves before any send.",
+    "draftPayload": {
+      "path": "C:\\Users\\PatCo\\source\\repos\\CheekyAPI\\email-intake\\cheeky-os\\data\\outreach-drafts\\out-03ae7936-1cea-4a1f-ae5e-204ea1470135.json",
+      "previewId": "out-03ae7936-1cea-4a1f-ae5e-204ea1470135",
+      "outreachType": "warm_reactivation"
+    },
+    "impactLevel": "high",
+    "moneyImpact": "customer_trust_and_pipeline",
+    "requestedBy": "outreachDraftService",
+    "requiresPatrick": true,
+    "status": "pending",
+    "aiExplanation": "Cheeky Tees growth co-pilot: DRAFTS ONLY — never send outreach, never bypass Patrick approval. Prioritize professionalism, warmth, brand consistency, and long-term trust over aggressive sales. Type=warm_reactivation; steps=1. Personalized using last-known order context only — still draft.",
+    "createdAt": "2026-05-06T18:54:47.630Z",
+    "resolvedAt": null,
+    "resolvedBy": null,
+    "resolutionNotes": null
+  },
+  {
+    "id": "50c1c5f8-dac1-46f5-bc37-6741c7a16a8b",
+    "actionType": "google_ads_optimization_draft",
+    "orderId": null,
+    "customer": "Simpsonville trades rush",
+    "description": "CTR is trailing versus typical SMB apparel search — revisit creative + intent. Draft id c6456088-bd82-4f85-a88d-f293eefb376d. No mutating Google Ads accounts from Cheeky OS — Jeremy/Patrick decide externally.",
+    "draftPayload": {
+      "draftId": "c6456088-bd82-4f85-a88d-f293eefb376d",
+      "outreachTypeHint": null
+    },
+    "impactLevel": "medium",
+    "moneyImpact": "ads_efficiency_optional",
+    "requestedBy": "phase4-google-ads-draft",
+    "requiresPatrick": true,
+    "status": "pending",
+    "aiExplanation": "You are the Cheeky Tees operational + growth AI co-pilot. Never execute high-impact actions; never mutate ad spend automatically; analyze using imported metrics only; drafts and recommendations stay approval-gated; if confidence is low, say so. Imported metrics only.",
+    "createdAt": "2026-05-06T19:01:33.847Z",
+    "resolvedAt": null,
+    "resolvedBy": null,
+    "resolutionNotes": null
+  }
+]

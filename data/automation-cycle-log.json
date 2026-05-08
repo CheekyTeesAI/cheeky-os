@@ -1,0 +1,29 @@
+{
+  "entries": [
+    {
+      "timestamp": "2026-04-18T01:58:18.151Z",
+      "actionsRun": [
+        "intake",
+        "customerMatch",
+        "jobs",
+        "production",
+        "scheduling",
+        "purchasing",
+        "vendorPreview",
+        "customerService",
+        "communications",
+        "square"
+      ],
+      "successes": 10,
+      "failures": 0,
+      "warnings": [],
+      "mock": false,
+      "detail": {
+        "label": "t",
+        "intakeProcessed": 0,
+        "jobsAdvanced": 14,
+        "communicationsQueued": 0
+      }
+    }
+  ]
+}

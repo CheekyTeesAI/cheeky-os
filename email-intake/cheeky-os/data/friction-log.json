@@ -1,0 +1,20 @@
+[
+  {
+    "id": "bbe4f2d9-b1d7-4c38-b897-c6ccdfd55e1c",
+    "area": "cockpit-validation",
+    "description": "validation suite friction",
+    "severity": "low",
+    "whoNoticed": "pat",
+    "suggestedFix": "none",
+    "createdAt": "2026-05-06T18:39:47.000Z"
+  },
+  {
+    "id": "6dfbb628-af59-47d5-acb7-31a3841a9564",
+    "area": "Playbook Insight",
+    "description": "Auto summary: cockpit-validation · low — validation suite friction",
+    "severity": "insight",
+    "whoNoticed": "system",
+    "suggestedFix": "none",
+    "createdAt": "2026-05-06T18:39:47.000Z"
+  }
+]

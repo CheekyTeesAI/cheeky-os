@@ -1,0 +1,134 @@
+{
+  "generatedAt": "2026-04-23T00:40:16.451Z",
+  "baseUrl": "http://127.0.0.1:3000",
+  "envReadiness": {
+    "chatgptActionApiKeyReady": true,
+    "publicBaseUrlReady": true,
+    "publicBaseUrlHttps": true,
+    "publicBaseUrlNonPlaceholder": true,
+    "blockedReasons": []
+  },
+  "serverKeyAcceptable": true,
+  "verdict": "PASS",
+  "passed": 13,
+  "failed": 0,
+  "tests": [
+    {
+      "method": "GET",
+      "route": "/api/chatgpt/health",
+      "status": 200,
+      "pass": true,
+      "jsonLike": true,
+      "hasBody": true,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "route": "/api/chatgpt/readiness",
+      "status": 200,
+      "pass": true,
+      "jsonLike": true,
+      "hasBody": true,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "route": "/api/chatgpt/system-status",
+      "status": 401,
+      "pass": true,
+      "jsonLike": true,
+      "hasBody": true,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "route": "/api/chatgpt/system-status",
+      "status": 200,
+      "pass": true,
+      "jsonLike": true,
+      "hasBody": true,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "route": "/api/chatgpt/system-status",
+      "status": 200,
+      "pass": true,
+      "jsonLike": true,
+      "hasBody": true,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "route": "/api/chatgpt/operator-summary",
+      "status": 200,
+      "pass": true,
+      "jsonLike": true,
+      "hasBody": true,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "route": "/api/chatgpt/payments",
+      "status": 200,
+      "pass": true,
+      "jsonLike": true,
+      "hasBody": true,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "route": "/api/chatgpt/decisions/top",
+      "status": 200,
+      "pass": true,
+      "jsonLike": true,
+      "hasBody": true,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "route": "/api/chatgpt/cash/runway",
+      "status": 200,
+      "pass": true,
+      "jsonLike": true,
+      "hasBody": true,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "route": "/api/chatgpt/actions/create-internal-task",
+      "status": 200,
+      "pass": true,
+      "jsonLike": true,
+      "hasBody": true,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "route": "/api/chatgpt/actions/run-decision-engine",
+      "status": 200,
+      "pass": true,
+      "jsonLike": true,
+      "hasBody": true,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "route": "/api/chatgpt/actions/create-vendor-draft",
+      "status": 200,
+      "pass": true,
+      "jsonLike": true,
+      "hasBody": true,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "route": "/api/chatgpt/actions/send-customer-message",
+      "status": 404,
+      "pass": true,
+      "jsonLike": true,
+      "hasBody": true,
+      "error": null
+    }
+  ]
+}

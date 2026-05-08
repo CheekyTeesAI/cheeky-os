@@ -2159,6 +2159,16 @@ app.post("/api/chad/trigger", express.json(), async (req, res) => {
   }
 });
 
+try {
+  require("./src/mcp/httpMount").mountCheekyOsMcpSse(app);
+  console.log("[mcp-sse] Claude MCP: GET /sse · POST /message");
+} catch (mcpSseErr) {
+  console.warn(
+    "[mcp-sse] mount failed:",
+    mcpSseErr && mcpSseErr.message ? mcpSseErr.message : mcpSseErr
+  );
+}
+
 // ===== FINAL GUARANTEED ROOT FALLBACK (MUST BE LAST) =====
 app.use((req, res) => {
   if (req.method === "GET" && req.path === "/") {

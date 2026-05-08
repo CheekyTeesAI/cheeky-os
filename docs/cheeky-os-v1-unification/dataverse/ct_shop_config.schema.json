@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ct_shop_config",
+  "description": "Singleton-style shop configuration: customizable production pipeline (Printavo-style board columns).",
+  "tableName": "ct_shop_config",
+  "tableDisplayName": "Shop Configuration",
+  "tableSetName": "ct_shop_configs",
+  "primaryKey": "ct_shop_configid",
+  "primaryNameColumn": "ct_name",
+  "fields": [
+    {
+      "fieldName": "ct_shop_configid",
+      "displayName": "Shop Config ID",
+      "dataverseType": "uniqueidentifier",
+      "required": true,
+      "description": "Primary key."
+    },
+    {
+      "fieldName": "ct_name",
+      "displayName": "Name",
+      "dataverseType": "string",
+      "maxLength": 200,
+      "required": true,
+      "description": "Single row e.g. 'Default' or tenant name."
+    },
+    {
+      "fieldName": "ct_pipeline_json",
+      "displayName": "Pipeline Definition JSON",
+      "dataverseType": "multilinestring",
+      "required": false,
+      "description": "Ordered array: [{ \"code\": \"ART_PREP\", \"label\": \"Art\", \"color\": \"#6366F1\", \"sortOrder\": 10, \"kanbanColumn\": 1 }, ...]. Power Apps loads via ParseJSON or use child table ct_stage_definition instead."
+    },
+    {
+      "fieldName": "ct_calendar_default_days",
+      "displayName": "Calendar Default Horizon Days",
+      "dataverseType": "whole",
+      "required": false,
+      "description": "Default 14 or 30 for ops calendar."
+    },
+    {
+      "fieldName": "ct_auto_task_templates_json",
+      "displayName": "Auto Task Templates JSON",
+      "dataverseType": "multilinestring",
+      "required": false,
+      "description": "Templates emitted when GATE_PASSED: [{ \"type\": \"ART_PREP\", \"title\": \"Prepare artwork\", \"defaultStageCode\": \"ART_PREP\" }, ...]. Node/PA merge with print-method expansion."
+    }
+  ],
+  "notes": [
+    "Prefer one row per environment; secure write to admin / maker only.",
+    "If JSON in Dataverse is awkward, use ct_stage_definition table instead and drop ct_pipeline_json."
+  ]
+}

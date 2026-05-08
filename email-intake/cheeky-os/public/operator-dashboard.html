@@ -1,0 +1,1933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Cheeky OS — Cockpit (blocker-first)</title>
+  <style>
+    :root {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      --bg: #0b0f14;
+      --surface: #131b26;
+      --card: #1a2433;
+      --border: #2a3a4f;
+      --text: #e9f0fb;
+      --muted: #8fa3bd;
+      --accent: #4da3ff;
+      --warn: #ffd873;
+      --ok: #5bd38a;
+      --risk: #f07178;
+      --banner: #2e2408;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.5; }
+    header.site {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(11,15,20,0.95);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+    header.site h1 { margin: 0; font-size: 1.15rem; font-weight: 650; }
+    header.site .lead { margin: 0.35rem 0 0; font-size: 0.82rem; color: var(--muted); max-width: 40rem; }
+    .toolbar { margin-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }
+    button.btn {
+      border: none;
+      border-radius: 8px;
+      padding: 0.45rem 0.95rem;
+      font-weight: 650;
+      cursor: pointer;
+      font-size: 0.85rem;
+      background: var(--accent);
+      color: #041018;
+    }
+    button.btn:hover { filter: brightness(1.07); }
+    button.btn.secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .pill {
+      display: inline-block;
+      padding: 0.22rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 650;
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .pill.warn { border-color: #6a4f00; color: var(--warn); background: var(--banner); }
+    .pill.ok { border-color: #1c4d2e; color: #bff7d7; background: #14261c; }
+    .pill.risk { border-color: #5c2828; color: #ffb3b8; background: #2a1214; }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 0.75rem 1rem 2.5rem; }
+
+    .alert-banner {
+      margin: 0.65rem 0 0.85rem;
+      padding: 0.65rem 0.85rem;
+      border-radius: 10px;
+      border: 1px solid #6a4f00;
+      background: var(--banner);
+      color: var(--warn);
+      font-size: 0.88rem;
+    }
+    .friction-form {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+    }
+    .friction-form h2 { margin: 0 0 0.55rem; font-size: 0.95rem; color: var(--accent); }
+    .friction-form label { display: block; font-size: 0.72rem; color: var(--muted); margin: 0.35rem 0 0.12rem; }
+    .friction-form input, .friction-form select, .friction-form textarea {
+      width: 100%; max-width: 100%; padding: 0.4rem 0.5rem; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.88rem;
+    }
+    .friction-form textarea { min-height: 3.5rem; resize: vertical; }
+    .friction-row { display: grid; grid-template-columns: 1fr; gap: 0.35rem; }
+    @media (min-width: 640px) {
+      .friction-row.two { grid-template-columns: 1fr 1fr; }
+    }
+    .msg { margin-top: 0.45rem; font-size: 0.82rem; color: var(--ok); min-height: 1.25em; }
+
+    .what-now {
+      background: linear-gradient(180deg, #1c2a44 0%, var(--card) 100%);
+      border: 1px solid rgba(77,163,255,0.35);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 1rem;
+    }
+    .what-now h2 { margin: 0 0 0.45rem; font-size: 1rem; color: var(--accent); }
+    .what-now .answer { font-size: 1.05rem; font-weight: 600; line-height: 1.42; margin: 0 0 0.65rem; }
+    .what-now .jeremy-box {
+      padding: 0.55rem 0.65rem;
+      border-radius: 8px;
+      background: rgba(91,211,138,0.09);
+      border: 1px solid rgba(91,211,138,0.25);
+      margin: 0.5rem 0;
+      font-size: 0.92rem;
+    }
+    .what-now ul { margin: 0.35rem 0 0; padding-left: 1.15rem; color: var(--muted); font-size: 0.85rem; }
+    .what-now ul li + li { margin-top: 0.25rem; }
+
+    section.block {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 0.9rem;
+    }
+    section.block > header.sec {
+      padding: 0.55rem 0.85rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.025);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.45rem;
+    }
+    section.block > header.sec h2 {
+      flex: 1;
+      margin: 0;
+      font-size: 0.92rem;
+      font-weight: 650;
+      color: var(--accent);
+      letter-spacing: 0.02em;
+    }
+    section.block .sec-note {
+      flex-basis: 100%;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin: -0.1rem 0 0;
+    }
+
+    section.block header.sec .sec-meta {
+      flex-basis: 100%;
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    .card-list { padding: 0.5rem 0.65rem 0.8rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    article.bcard {
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 0.55rem 0.68rem;
+      background: var(--surface);
+    }
+    article.bcard h3 {
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 650;
+      line-height: 1.38;
+      color: var(--text);
+    }
+    .row { margin-top: 0.38rem; font-size: 0.8rem; color: var(--muted); }
+    .row strong { color: #b8cbe0; font-weight: 600; }
+    .next-line {
+      margin-top: 0.45rem;
+      padding: 0.42rem 0.5rem;
+      border-radius: 6px;
+      background: rgba(77,163,255,0.08);
+      border: 1px solid rgba(77,163,255,0.18);
+      font-size: 0.82rem;
+      color: #c5def9;
+    }
+    .empty { color: var(--muted); font-size: 0.84rem; padding: 1rem 0.85rem; text-align: center; }
+
+    .btn-row { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.45rem; }
+    button.mini {
+      padding: 0.28rem 0.52rem;
+      font-size: 0.74rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+    }
+    button.mini.primary { border-color: #1c4d2e; color: #bff7d7; background: #14261c; }
+    button.mini.danger { border-color: #5c2828; color: #ffb3b8; background: #2a1214; }
+
+    section.block.growth-patrick { border-color: #4f3d73; box-shadow: 0 0 0 1px rgba(120,92,178,0.18); }
+
+    body.patrick-remote #phase2-consolidation-section,
+    body.patrick-remote #draft-detail-box,
+    body.patrick-remote #friction-anchor {
+      display: none !important;
+    }
+
+    body.jeremy-training #patrick-phase4-shell,
+    body.jeremy-training #patrick-growth-panel,
+    body.jeremy-training #phase7-patrick-wrap {
+      display: none !important;
+    }
+    body.jeremy-training .what-now .jeremy-box { font-size: 1rem; }
+
+    body.dashboard-view-jeremy #phase7-patrick-wrap,
+    body.dashboard-view-jeremy #phase7-daily-advisor {
+      display: none !important;
+    }
+    body.dashboard-view-patrick #phase7-daily-advisor {
+      display: none !important;
+    }
+
+    .phase7-ai-shell {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(560px, calc(100vw - 1rem));
+      z-index: 25;
+      background: rgba(19,27,38,0.98);
+      border: 1px solid var(--border);
+      border-radius: 12px 12px 0 0;
+      box-shadow: 0 -10px 38px rgba(0,0,0,0.45);
+      padding: 0.45rem 0.55rem 0.55rem;
+    }
+    .phase7-ai-shell h3 { margin: 0 0 0.35rem; font-size: 0.85rem; color: var(--accent); }
+    .phase7-ai-shell textarea {
+      width: 100%; min-height: 2.6rem; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font-size: 0.88rem; resize: vertical; padding: 0.35rem;
+    }
+    .phase7-ai-shell .ai-out {
+      margin-top: 0.35rem; font-size: 0.8rem; color: #c5def9; max-height: 140px; overflow-y: auto;
+      padding: 0.35rem; border-radius: 8px; border: 1px solid rgba(77,163,255,0.28); background: rgba(77,163,255,0.06);
+    }
+    .phase7-ai-shell .phase7-suggest { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.35rem 0; }
+    details.phase7-patrick-wrap summary {
+      cursor: pointer; font-weight: 650; padding: 0.45rem 0.55rem; color: var(--accent);
+    }
+    details.phase7-patrick-wrap section.block { margin-top: 0.65rem; }
+
+    #phase7-view-buttons button.mini.active { border-color: #1c4d6a; color: #c5def9; }
+
+    main.phase7-main-pad { padding-bottom: 14rem; }
+
+    .sticky-ops-strip {
+      position: sticky;
+      top: 52px;
+      z-index: 8;
+      background: rgba(11,15,20,0.94);
+      border-bottom: 1px solid var(--border);
+      padding: 0.42rem 0.65rem;
+      margin: -0.2rem -1rem 0.65rem -1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+    .phase7-meta-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      align-items: center;
+      margin: 0 0 0.75rem;
+      padding: 0.45rem 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(19,27,38,0.88);
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+    .phase7-mobile-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 30;
+      border-top: 1px solid var(--border);
+      background: rgba(8,12,18,0.98);
+      display: none;
+      gap: 0.35rem;
+      padding: 0.35rem;
+    }
+    .phase7-mobile-nav button {
+      flex: 1;
+      min-height: 42px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.74rem;
+      font-weight: 600;
+    }
+    details.collapsible-phase5 { margin-bottom: 0.75rem; }
+    details.collapsible-phase5 > summary {
+      cursor: pointer;
+      font-weight: 650;
+      color: var(--accent);
+      list-style: none;
+    }
+    @media (max-width:720px) {
+      body { font-size: 16px; touch-action: manipulation; }
+      button.btn, button.mini { min-height: 44px; padding-top: 0.5rem; padding-bottom: 0.5rem; }
+      article.bcard { padding: 0.62rem 0.72rem; }
+      .phase7-mobile-nav { display: flex; }
+      main.phase7-main-pad { padding-bottom: 18rem; }
+    }
+
+    footer.note {
+      margin-top: 1.25rem;
+      padding: 0.75rem;
+      font-size: 0.74rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      text-align: center;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <header class="site">
+    <h1>Cheeky OS · Cockpit</h1>
+    <p class="lead">Blockers and cash risks load first — read-only connectors, no hidden sends. Reload anytime.</p>
+    <div class="toolbar">
+      <button type="button" class="btn" onclick="refreshAll()">Reload cockpit</button>
+      <button type="button" class="btn secondary" onclick="document.getElementById('friction-anchor').scrollIntoView({behavior:'smooth'})">Log friction</button>
+      <button type="button" class="btn secondary" onclick="window.open('/cheeky-os-ui/customer-intake.html','_blank')">Customer intake</button>
+      <label style="display:flex;align-items:center;gap:0.3rem;font-size:0.74rem;color:var(--muted);">
+        <input type="checkbox" id="jeremy-training-toggle" onchange="toggleJeremyTraining(this.checked)"/>
+        Jeremy training layout
+      </label>
+      <span id="pill-health" class="pill warn">/health …</span>
+      <span id="pill-square" class="pill warn">Square …</span>
+      <span id="pill-blockers" class="pill warn">Blockers …</span>
+      <span id="pill-whatnow" class="pill warn">What now …</span>
+      <span id="pill-approvals" class="pill warn">Approvals …</span>
+      <span id="pill-growth" class="pill warn">Growth …</span>
+    </div>
+  </header>
+
+  <main class="phase7-main-pad">
+    <div id="degraded-slot"></div>
+    <section class="friction-form" id="phase7-dashboard-view-strip" style="margin-bottom:0.85rem;padding-top:0.55rem;padding-bottom:0.55rem;">
+      <h2 style="margin:0 0 0.45rem;font-size:0.95rem;color:var(--accent);">Dashboard view (Phase 7)</h2>
+      <p style="margin:0 0 0.45rem;font-size:0.78rem;color:var(--muted);">Default: Cheeky Advisor. Jeremy hides growth chrome. Patrick expands CEO layers. Cheeky-AI stays read-only.</p>
+      <div id="phase7-view-buttons" class="btn-row" role="group" aria-label="Cockpit views">
+        <button type="button" class="mini primary" data-view="advisor" onclick="setDashboardView('advisor')">Cheeky Advisor</button>
+        <button type="button" class="mini" data-view="jeremy" onclick="setDashboardView('jeremy')">Jeremy operator</button>
+        <button type="button" class="mini" data-view="patrick" onclick="setDashboardView('patrick')">Patrick sales/CEO</button>
+      </div>
+    </section>
+    <div class="phase7-meta-strip" id="phase7-meta-strip">
+      <span id="phase7-meta-health">Health: unknown</span>
+      <span id="phase7-meta-blockers">Blockers: unknown</span>
+      <span id="phase7-meta-approvals">Approvals: unknown</span>
+      <span id="phase7-meta-sync">Last sync: pending</span>
+    </div>
+    <div id="sticky-ops-strip" class="sticky-ops-strip" aria-label="Mobile quick priority strip">
+      <span id="sticky-blocker-hint" class="pill warn">priorities …</span>
+      <span id="sticky-health-hint" class="pill warn">health …</span>
+      <button type="button" class="mini" onclick="refreshAll()">Refresh</button>
+    </div>
+
+    <section class="block" id="phase7-daily-advisor" aria-label="Cheeky Advisor cockpit snapshot">
+      <header class="sec">
+        <h2>Cheeky Advisor cockpit · live synthesis</h2>
+        <span class="sec-meta">Plain English rollup — refreshed with Reload cockpit. No autosend, no mutations.</span>
+      </header>
+      <div class="card-list" style="padding-top:0.4rem;">
+        <div id="phase7-advisor-body" class="next-line">Loading Advisor snapshot…</div>
+      </div>
+    </section>
+
+    <section class="what-now" id="what-now-panel" aria-label="What to do right now">
+      <h2>What should we do right now?</h2>
+      <p id="wn-answer" class="answer"></p>
+      <p id="wn-pending-meta" style="margin:0 0 0.35rem; font-size:0.82rem; color:var(--muted);"></p>
+      <p id="wn-proactive" style="margin:0 0 0.55rem; font-size:0.87rem; color:#c5def9;"></p>
+      <p style="margin:0; font-size:0.74rem; color:var(--muted);">Consolidation watch (same blank across jobs)</p>
+      <ul id="wn-consolidation" style="margin:0.25rem 0 0; padding-left:1.05rem; color:var(--muted); font-size:0.8rem;"></ul>
+      <div class="jeremy-box" id="wn-jeremy"></div>
+      <p style="margin:0.4rem 0 0; font-size:0.78rem; color:var(--muted);">Patrick — approvals</p>
+      <ul id="wn-patrick"></ul>
+      <p style="margin:0.6rem 0 0; font-size:0.78rem; color:var(--muted);">Recommended next steps</p>
+      <ul id="wn-actions"></ul>
+    </section>
+
+    <details class="collapsible-phase5" id="phase5-jeremy-intake-panel" open>
+      <summary>New intake queue · customer lookup</summary>
+      <div class="card-list" style="padding-top:0.35rem;">
+        <p style="margin:0;font-size:0.78rem;color:var(--muted);">Self-service submissions are internal drafts — no auto-quote. Blocker dashboard also mirrors pending rows.</p>
+        <div id="phase5-intake-preview" style="margin-top:0.45rem;"></div>
+        <div class="friction-row two" style="margin-top:0.5rem;align-items:flex-end;">
+          <div>
+            <label for="cust-lookup-main" style="font-size:0.72rem;color:var(--muted);">Customer lookup (safe)</label>
+            <input id="cust-lookup-main" type="search" placeholder="Email, name fragment, phone digits, or order #"/>
+          </div>
+          <button type="button" class="btn secondary" onclick="operatorCustomerLookup()">Search</button>
+        </div>
+        <div id="cust-lookup-results" style="margin-top:0.45rem;"></div>
+      </div>
+    </details>
+
+    <section class="block" id="phase2-approvals-section">
+      <header class="sec">
+        <h2>Pending approvals <span id="pill-approval-count" class="pill warn" style="vertical-align:middle;">0</span></h2>
+        <span class="sec-meta">Patrick signs customer-facing + cash moves · Jeremy clears low-impact only via gate policy</span>
+      </header>
+      <div id="phase2-approvals-list" class="card-list"><div class="empty">Loading…</div></div>
+    </section>
+
+    <section class="block" id="phase2-drafts-section">
+      <header class="sec"><h2>Drafts ready for review</h2></header>
+      <div id="phase2-drafts-list" class="card-list"><div class="empty">Loading…</div></div>
+    </section>
+
+    <section class="block" id="phase2-consolidation-section" style="display:none;">
+      <header class="sec"><h2>Garment consolidation alert</h2></header>
+      <div id="phase2-consolidation-list" class="card-list"></div>
+    </section>
+
+    <div id="draft-detail-box" style="margin-bottom:1rem; display:none;"></div>
+
+    <details class="phase7-patrick-wrap" id="phase7-patrick-wrap">
+      <summary id="phase7-patrick-summary">Patrick — KPIs, Ads, Growth (expand / collapse)</summary>
+
+    <section class="block growth-patrick" id="patrick-phase4-shell">
+      <header class="sec">
+        <h2>Executive cockpit (Patrick) · Phase 4</h2>
+        <span class="sec-meta">KPI intelligence and Google Ads review layer — drafts + approvals only; Jeremy can ignore.</span>
+        <label class="sec-note" style="display:flex;align-items:center;gap:0.4rem;margin-top:0.35rem;font-size:0.8rem;">
+          <input type="checkbox" id="patrick-remote-toggle" onchange="togglePatrickRemote(this.checked)"/>
+          Executive remote layout (focus KPI + growth; hides drafting friction shortcuts)
+        </label>
+      </header>
+      <div class="card-list" style="padding-top:0.35rem;">
+        <div class="btn-row" style="margin-bottom:0.55rem;">
+          <button type="button" class="btn secondary" onclick="loadPatrickPhase4Executive()">Reload executive KPI layer</button>
+          <button type="button" class="btn secondary" onclick="loadNightlyReviewPatrick()">Nightly growth review</button>
+          <span id="phase4-sys-health" class="pill warn">system …</span>
+        </div>
+        <div id="phase4-kpi-cards" style="margin-bottom:0.6rem;"></div>
+        <h3 style="margin:0.55rem 0 0.3rem;font-size:0.86rem;color:var(--accent);font-weight:600;">KPI trends (7d snapshot)</h3>
+        <div id="phase4-trends"></div>
+        <h3 style="margin:0.65rem 0 0.3rem;font-size:0.86rem;color:var(--accent);font-weight:600;">Momentum + scores</h3>
+        <div id="phase4-momentum"></div>
+        <h3 style="margin:0.65rem 0 0.35rem;font-size:0.86rem;color:var(--accent);font-weight:600;">Notifications (in-app only)</h3>
+        <div id="phase4-notifications"></div>
+        <h3 style="margin:0.65rem 0 0.35rem;font-size:0.86rem;color:var(--accent);font-weight:600;">Google Ads intelligence (import-backed)</h3>
+        <div id="phase4-google-ads"></div>
+        <h3 style="margin:0.65rem 0 0.35rem;font-size:0.86rem;color:var(--accent);font-weight:600;">Quick customer lookup (Phase 5 hook)</h3>
+        <div class="friction-row" style="margin-bottom:0.45rem;">
+          <input id="cust-q" type="search" placeholder="Name or email fragment (read-only search)" style="flex:1;min-height:38px;">
+          <button type="button" class="btn secondary" onclick="patrickCustomerQuickSearch()" style="align-self:flex-end;">Search</button>
+        </div>
+        <div id="phase4-quick-customers"></div>
+        <h3 style="margin:0.65rem 0 0.35rem;font-size:0.86rem;color:var(--accent);font-weight:600;">Intake prep (Phase 5 placeholder)</h3>
+        <div id="phase4-intake-placeholder" class="next-line">
+          Coming soon — this slot will summarize intake prerequisites without exposing raw portal JSON. Ops copy only.
+        </div>
+      </div>
+    </section>
+
+    <section class="block growth-patrick" id="patrick-growth-panel">
+      <header class="sec">
+        <h2>Growth opportunities (Patrick)</h2>
+        <span class="sec-meta">Sales + pipeline lens — drafts only, approvals required · Jeremy can skip this strip</span>
+      </header>
+      <div class="card-list" style="padding-top:0.35rem;">
+        <div class="btn-row" style="margin-bottom:0.6rem;">
+          <button type="button" class="btn" onclick="loadMorningBriefPatrick()">Load morning AI brief</button>
+          <button type="button" class="btn secondary" onclick="loadPatrickGrowthPanel()">Refresh growth data</button>
+        </div>
+        <div id="growth-kpi-strip" style="margin-bottom:0.55rem;"></div>
+        <div id="growth-morning-brief" style="margin-bottom:0.75rem;"></div>
+        <h3 style="margin:0.5rem 0 0.3rem;font-size:0.86rem;color:var(--accent);font-weight:600;">Top leads</h3>
+        <div id="growth-top-leads"></div>
+        <h3 style="margin:0.65rem 0 0.3rem;font-size:0.86rem;color:var(--accent);font-weight:600;">Recommended outreach drafts</h3>
+        <div id="growth-outreach-drafts"></div>
+        <h3 style="margin:0.65rem 0 0.3rem;font-size:0.86rem;color:var(--accent);font-weight:600;">Overdue estimates (scoring flags)</h3>
+        <div id="growth-overdue-estimates"></div>
+        <h3 style="margin:0.65rem 0 0.3rem;font-size:0.86rem;color:var(--accent);font-weight:600;">Reactivation opportunities</h3>
+        <div id="growth-reactivation"></div>
+      </div>
+    </section>
+
+    </details>
+
+    <section class="block" id="phase7-team-activity">
+      <header class="sec">
+        <h2>Team pulse · approvals &amp; drafts</h2>
+        <span class="sec-meta">Read-only trace — expand checklists below; no login wall yet.</span>
+      </header>
+      <div id="phase7-team-activity-body" class="card-list"><div class="empty">Loading team pulse…</div></div>
+    </section>
+
+    <div id="friction-anchor" class="friction-form">
+      <h2>Log friction (playbook)</h2>
+      <p style="margin:0 0 0.5rem; font-size:0.8rem; color:var(--muted);">Capture what slowed you down — no emails, no Square changes.</p>
+      <form id="friction-form" onsubmit="submitFriction(event)">
+        <div class="friction-row two">
+          <div>
+            <label for="f-area">Area</label>
+            <input id="f-area" name="area" required placeholder="e.g. dashboard, Square view, approvals"/>
+          </div>
+          <div>
+            <label for="f-severity">Severity</label>
+            <select id="f-severity" name="severity">
+              <option value="low">low</option>
+              <option value="medium" selected>medium</option>
+              <option value="high">high</option>
+            </select>
+          </div>
+        </div>
+        <label for="f-desc">What went wrong?</label>
+        <textarea id="f-desc" name="description" required placeholder="Plain English — what blocked money or production?"></textarea>
+        <div class="friction-row two">
+          <div>
+            <label for="f-who">Who noticed</label>
+            <input id="f-who" name="whoNoticed" placeholder="Patrick / Jeremy / …"/>
+          </div>
+          <div>
+            <label for="f-fix">Suggested fix</label>
+            <input id="f-fix" name="suggestedFix" placeholder="What would make tomorrow easier?"/>
+          </div>
+        </div>
+        <button type="submit" class="btn" style="margin-top:0.55rem;">Submit friction entry</button>
+        <div class="msg" id="friction-msg" role="status"></div>
+      </form>
+    </div>
+
+    <div id="sections-root"></div>
+
+    <footer class="note">
+      Phase 7 adds: <code>/api/cheeky-ai/ask</code> · <code>/api/cheeky-ai/search</code> · <code>/api/dashboard/view-descriptor</code> · <code>/api/accounting/summary</code> · <code>/api/reporting/advanced/*</code> · <code>/api/backup/status</code> · <code>/api/team/activity</code> · <code>/api/system/full-status</code>. Earlier: <code>/api/dashboard/blockers</code> · KPI · growth · approvals.
+      <br/>Static: <code>/cheeky-os-ui/operator-dashboard.html</code>
+    </footer>
+
+    <div id="phase7-cheeky-ai-helpbot" class="phase7-ai-shell" aria-label="Cheeky AI helpbot read-only">
+      <h3>Cheeky-AI Helpbot · read-only</h3>
+      <div id="phase7-helpbot-mode-hint" style="font-size:0.72rem;color:var(--muted);margin-bottom:0.25rem;"></div>
+      <div id="phase7-suggest-host" class="phase7-suggest"></div>
+      <textarea id="phase7-ai-input" rows="2" placeholder="Ask safely — drafts + guidance only"></textarea>
+      <div class="btn-row">
+        <button type="button" class="mini primary" onclick="helpbotSendAsk()">Ask Cheeky-AI</button>
+        <button type="button" class="mini secondary" onclick="helpbotSuggestionsReload()">Refresh prompts</button>
+      </div>
+      <div id="phase7-ai-output" class="ai-out">Awaiting prompt…</div>
+    </div>
+    <nav class="phase7-mobile-nav" aria-label="Mobile cockpit navigation">
+      <button type="button" onclick="document.getElementById('sections-root').scrollIntoView({behavior:'smooth'})">Blockers</button>
+      <button type="button" onclick="document.getElementById('phase2-approvals-section').scrollIntoView({behavior:'smooth'})">Approvals</button>
+      <button type="button" onclick="document.getElementById('phase7-daily-advisor').scrollIntoView({behavior:'smooth'})">Advisor</button>
+      <button type="button" onclick="document.getElementById('phase7-cheeky-ai-helpbot').scrollIntoView({behavior:'smooth'})">AI</button>
+    </nav>
+  </main>
+
+  <script>
+    async function jget(path) {
+      const r = await fetch(path, { headers: { Accept: "application/json" } });
+      const txt = await r.text();
+      var body;
+      try { body = JSON.parse(txt); }
+      catch (e) { body = { parseError: true, raw: txt }; }
+      return { ok: r.ok, status: r.status, body: body };
+    }
+
+    var lastWhatNowData = null;
+    var panelCache = {};
+
+    async function jgetCached(path, ttlMs) {
+      var key = String(path || "");
+      var ttl = Math.max(0, Number(ttlMs) || 0);
+      if (ttl > 0 && panelCache[key] && Date.now() - panelCache[key].ts < ttl) return panelCache[key].value;
+      var fresh = await jget(key);
+      if (ttl > 0) panelCache[key] = { ts: Date.now(), value: fresh };
+      return fresh;
+    }
+
+    function escapeHtml(s) {
+      return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function setPill(id, cls, txt) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.className = "pill " + cls;
+      el.textContent = txt;
+    }
+
+    function renderBlockerCard(c) {
+      var el = document.createElement("article");
+      el.className = "bcard";
+      var title = [c.customer, c.orderName].filter(Boolean).join(" · ") || (c.orderName || c.id || "Order");
+      var appr = c.approvalRequired ? ' <span class="pill warn" style="font-size:.62rem;vertical-align:middle;">approval</span>' : "";
+      el.innerHTML =
+        "<h3>" + escapeHtml(title) + appr + "</h3>" +
+        "<div class=\"row\"><strong>What is wrong</strong> " + escapeHtml(c.blockerReason || "—") + "</div>" +
+        "<div class=\"row\"><strong>Money</strong> " + escapeHtml(c.moneyImpact || "—") +
+        " · <strong>Production</strong> " + escapeHtml(c.productionImpact || "—") + "</div>" +
+        "<div class=\"next-line\"><strong>What to do next</strong> " + escapeHtml(c.whatToDoNext || "—") + "</div>" +
+        "<div class=\"row\"><strong>Due</strong> " + escapeHtml(c.dueDate || "—") +
+        " · <strong>Updated</strong> " + escapeHtml(c.lastUpdated || "—") + "</div>" +
+        "<div class=\"row\"><strong>Source</strong> " + escapeHtml(c.source || "—") + "</div>";
+      return el;
+    }
+
+    function renderSections(sections) {
+      var root = document.getElementById("sections-root");
+      if (!root) return;
+      root.innerHTML = "";
+      if (!Array.isArray(sections) || !sections.length) {
+        var d = document.createElement("div");
+        d.className = "empty";
+        d.textContent = "No dashboard sections returned — safe empty state.";
+        root.appendChild(d);
+        return;
+      }
+      sections.forEach(function (sec) {
+        var block = document.createElement("section");
+        block.className = "block";
+        var hdr = document.createElement("header");
+        hdr.className = "sec";
+        var h2 = document.createElement("h2");
+        h2.textContent = sec.title || "Section";
+        hdr.appendChild(h2);
+        if (sec.note) {
+          var n = document.createElement("p");
+          n.className = "sec-note";
+          n.textContent = sec.note;
+          hdr.appendChild(n);
+        }
+        block.appendChild(hdr);
+        var list = document.createElement("div");
+        list.className = "card-list";
+        var cards = Array.isArray(sec.cards) ? sec.cards : [];
+        if (!cards.length) {
+          var em = document.createElement("div");
+          em.className = "empty";
+          em.textContent = "Nothing in this lane right now — if that feels wrong, log friction above.";
+          list.appendChild(em);
+        } else {
+          cards.slice(0, 50).forEach(function (c) {
+            list.appendChild(renderBlockerCard(c));
+          });
+        }
+        block.appendChild(list);
+        root.appendChild(block);
+      });
+    }
+
+    function renderWhatNow(payload) {
+      var ans = document.getElementById("wn-answer");
+      var jm = document.getElementById("wn-jeremy");
+      var pat = document.getElementById("wn-patrick");
+      var act = document.getElementById("wn-actions");
+      var pm = document.getElementById("wn-pending-meta");
+      var pr = document.getElementById("wn-proactive");
+      var uc = document.getElementById("wn-consolidation");
+      if (!ans || !jm || !pat || !act) return;
+      if (!payload) {
+        ans.textContent = "Briefing unavailable — reload in a moment.";
+        jm.textContent = "";
+        pat.innerHTML = "";
+        act.innerHTML = "";
+        if (pm) pm.textContent = "";
+        if (pr) pr.textContent = "";
+        if (uc) uc.innerHTML = "";
+        return;
+      }
+      ans.textContent = payload.answer || "No primary answer assembled.";
+      if (pm) {
+        var pc = typeof payload.pendingApprovalCount === "number" ? payload.pendingApprovalCount : 0;
+        pm.textContent = "Pending cockpit approvals: " + pc + ". Nothing sends until Patrick clears customer-touch items.";
+      }
+      if (pr) pr.textContent = payload.proactiveSuggestion || "";
+      if (payload.recurringFrictionPatterns && payload.recurringFrictionPatterns.length) {
+        var hot = payload.recurringFrictionPatterns.filter(function (x) { return x.severity === "high"; });
+        if (hot.length && pr) {
+          pr.textContent =
+            (pr.textContent || "") +
+            " Recurring friction hotspot: " +
+            hot[0].area +
+            " (" +
+            hot[0].count +
+            " notes) — see jeremy-playbook.md.";
+        }
+      }
+      if (uc) {
+        uc.innerHTML = "";
+        var cops = payload.consolidationOpportunities || [];
+        if (!cops.length) {
+          var lx = document.createElement("li");
+          lx.textContent = "No multi-order garment bundle flagged right now.";
+          uc.appendChild(lx);
+        } else {
+          cops.slice(0, 5).forEach(function (c) {
+            var li = document.createElement("li");
+            li.textContent =
+              (c.orderCount || 0) +
+              " jobs share bundle " +
+              (c.fingerprint || "") +
+              (" — estimated save ~ $" + (c.estimateSavingsUsd != null ? c.estimateSavingsUsd : "?"));
+            uc.appendChild(li);
+          });
+        }
+      }
+
+      jm.innerHTML = "<strong>Jeremy</strong> — " + escapeHtml(payload.jeremyInstructions || "Check READY FOR JEREMY on the sections below.");
+      pat.innerHTML = "";
+      var appr = Array.isArray(payload.patrickApprovals) ? payload.patrickApprovals : [];
+      if (!appr.length) {
+        var li0 = document.createElement("li");
+        li0.textContent = "No approval rows in this briefing — still check cockpit gate list.";
+        pat.appendChild(li0);
+      } else {
+        appr.slice(0, 12).forEach(function (a) {
+          var li = document.createElement("li");
+          li.textContent = (a.headline || "Approval") + " — " + (a.why || "") + " → " + (a.suggestedAction || "");
+          pat.appendChild(li);
+        });
+      }
+      act.innerHTML = "";
+      var rec = Array.isArray(payload.recommendedActions) ? payload.recommendedActions : [];
+      rec.forEach(function (r, i) {
+        var li = document.createElement("li");
+        li.textContent = (i + 1) + ". " + (r.who || "Team") + ": " + (r.instruction || "");
+        act.appendChild(li);
+      });
+    }
+
+    async function jpost(path, payload) {
+      var r = await fetch(path, {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: payload ? JSON.stringify(payload) : "{}",
+      });
+      var txt = await r.text();
+      var body;
+      try {
+        body = JSON.parse(txt);
+      } catch (e2) {
+        body = {};
+      }
+      return { ok: r.ok, status: r.status, body: body };
+    }
+
+    function renderPhase2Approvals(phaseRows) {
+      var host = document.getElementById("phase2-approvals-list");
+      var badge = document.getElementById("pill-approval-count");
+      if (badge) {
+        badge.textContent = phaseRows.length;
+        badge.className = phaseRows.length ? "pill warn" : "pill ok";
+      }
+      if (!host) return;
+      host.innerHTML = "";
+      if (!phaseRows.length) {
+        var empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "Gate is clear — new drafts will land here.";
+        host.appendChild(empty);
+        return;
+      }
+      phaseRows.slice(0, 30).forEach(function (row) {
+        var el = document.createElement("article");
+        el.className = "bcard";
+        el.innerHTML =
+          "<h3>" +
+          escapeHtml(row.actionType || "approval") +
+          " · <span style='font-weight:550'>" +
+          escapeHtml(row.customer || "customer tbd") +
+          "</span></h3>" +
+          "<div class=\"row\"><strong>Impact</strong> " +
+          escapeHtml(row.impactLevel || "medium") +
+          " · <strong>Money</strong> " +
+          escapeHtml(row.moneyImpact || "") +
+          "</div>" +
+          "<div class=\"next-line\"><strong>Notes</strong> " +
+          escapeHtml(String(row.description || "").slice(0, 360)) +
+          "</div>";
+        var rowBtns = document.createElement("div");
+        rowBtns.className = "btn-row";
+        var bApprove = document.createElement("button");
+        bApprove.className = "mini primary";
+        bApprove.textContent = "Approve (Patrick)";
+        bApprove.setAttribute("data-aid", row.id || "");
+        bApprove.onclick = function () {
+          cockpitGateApproveReject(String(row.id), "approve");
+        };
+        var bReject = document.createElement("button");
+        bReject.className = "mini danger";
+        bReject.textContent = "Reject (Patrick)";
+        bReject.onclick = function () {
+          cockpitGateApproveReject(String(row.id), "reject");
+        };
+        rowBtns.appendChild(bApprove);
+        rowBtns.appendChild(bReject);
+        el.appendChild(rowBtns);
+        host.appendChild(el);
+      });
+    }
+
+    function renderDraftsPending(dataObj) {
+      var host = document.getElementById("phase2-drafts-list");
+      if (!host) return;
+      host.innerHTML = "";
+      /** @type {object[]} */
+      var rows = [];
+      (dataObj.workOrders || []).forEach(function (x) {
+        rows.push({
+          kind: "work order",
+          id: x.summary && x.summary.orderId ? x.summary.orderId : x.orderId || x.file || "",
+        label:
+          ((x.summary || {}).customer || "") +
+          " · WO " +
+          ((x.summary || {}).orderName || ((x.summary || {}).orderId) || ""),
+          href:
+            "/api/drafts/work-order/" + encodeURIComponent((x.summary && x.summary.orderId) || ""),
+        });
+      });
+      (dataObj.garmentOrders || []).forEach(function (x) {
+        rows.push({
+          kind: "garment order",
+          id: x.orderId,
+          label: (x.customer || "") + " · garment draft",
+          href: "/api/drafts/garment-order/" + encodeURIComponent(x.orderId || ""),
+        });
+      });
+      (dataObj.followUps || []).forEach(function (x) {
+        rows.push({
+          kind: "follow-up",
+          id: x.orderId,
+          label:
+            (x.customer || "") +
+            " · " +
+            (x.followUpType || "message") +
+            (" · tone:" + (x.tone || "")),
+          href:
+            "/api/drafts/follow-up/" + encodeURIComponent(x.orderId || "") + "?type=" + encodeURIComponent(x.followUpType || "order_update"),
+        });
+      });
+      if (!rows.length) {
+        var em = document.createElement("div");
+        em.className = "empty";
+        em.textContent = "Disk has no drafts yet — generate from API or tooling.";
+        host.appendChild(em);
+        return;
+      }
+      rows.slice(0, 40).forEach(function (row) {
+        var el = document.createElement("article");
+        el.className = "bcard";
+        el.innerHTML =
+          "<h3>" +
+          escapeHtml(row.kind) +
+          "</h3><div class=\"row\">" +
+          escapeHtml(row.label || row.id) +
+          "</div>";
+        var b = document.createElement("button");
+        b.className = "mini";
+        b.textContent = "View draft (readable)";
+        b.onclick = function () {
+          cockpitViewDraft(row.href, row.kind);
+        };
+        var wrap = document.createElement("div");
+        wrap.className = "btn-row";
+        wrap.appendChild(b);
+        el.appendChild(wrap);
+        host.appendChild(el);
+      });
+    }
+
+    function cockpitViewDraft(apiPath, label) {
+      var box = document.getElementById("draft-detail-box");
+      if (!box) return;
+      box.style.display = "block";
+      box.innerHTML =
+        "<p style='margin:0 0 .4rem;color:var(--muted);font-size:.8rem;'>Loading " + escapeHtml(label) + "…</p>";
+      fetch(apiPath, { headers: { Accept: "application/json" } })
+        .then(function (r) {
+          return r.text();
+        })
+        .then(function (txt) {
+          try {
+            var j = JSON.parse(txt);
+            if (!j.success) {
+              box.innerHTML = "<p class=\"empty\">" + escapeHtml(j.safeMessage || "Draft unavailable.") + "</p>";
+              return;
+            }
+            var d = j.data;
+            var lines = describeDraftFriendly(d, label);
+            box.innerHTML = "<article class=\"bcard\"><h3>Draft viewer</h3>" + lines + "</article>";
+          } catch (_e20) {
+            box.innerHTML = "<p class=\"empty\">Draft could not be read safely.</p>";
+          }
+        })
+        .catch(function () {
+          box.innerHTML = "<p class=\"empty\">Offline / blocked — retry.</p>";
+        });
+    }
+
+    function describeDraftFriendly(d, label) {
+      if (!d || typeof d !== "object") return "<p>No content.</p>";
+      var chunks = [];
+      if (label.indexOf("work") >= 0) {
+        chunks.push("<div class=\"row\"><strong>Customer</strong> " + escapeHtml(d.customer || "") + "</div>");
+        chunks.push(
+          "<div class=\"row\"><strong>Contact</strong> " +
+            escapeHtml(((d.contact && d.contact.email) || "") + " · " + ((d.contact && d.contact.phone) || "")) +
+            "</div>"
+        );
+        chunks.push("<div class=\"row\"><strong>Jeremy cues</strong> " + escapeHtml(d.jeremyInstructions || "") + "</div>");
+        var fin = d.financials || {};
+        chunks.push(
+          "<div class=\"next-line\"><strong>Money snapshot</strong> quoted $" +
+            escapeHtml(String(fin.quotedTotal != null ? fin.quotedTotal : "—")) +
+            " · paid $" +
+            escapeHtml(String(fin.amountPaid != null ? fin.amountPaid : "—")) +
+            " · balance hint $" +
+            escapeHtml(String(fin.balanceDueHint != null ? fin.balanceDueHint : "—")) +
+            "</div>"
+        );
+      } else if (label.indexOf("garment") >= 0) {
+        chunks.push("<div class=\"row\"><strong>Vendor default</strong> " + escapeHtml(d.defaultVendor || "") + "</div>");
+        chunks.push("<div class=\"next-line\"><strong>Instructions</strong> " + escapeHtml(d.jeremyInstructions || "") + "</div>");
+        if (d.consolidationOpportunity && d.consolidationOpportunity.orderCount) {
+          chunks.push(
+            "<div class=\"next-line\"><strong>Consolidation</strong> " +
+              escapeHtml(String(d.consolidationOpportunity.orderCount || "")) +
+              " jobs share this apparel fingerprint — still needs Patrick okay before merging PO.</div>"
+          );
+        }
+        if ((d.blockers || []).length) {
+          chunks.push("<div class=\"next-line\"><strong>Blockers</strong> " + escapeHtml(d.blockers.join("; ")) + "</div>");
+        }
+      } else {
+        chunks.push("<div class=\"row\"><strong>Subject</strong> " + escapeHtml(d.subject || "") + "</div>");
+        chunks.push("<div class=\"row\"><strong>Tone</strong> " + escapeHtml(d.tone || "") + "</div>");
+        chunks.push("<div class=\"next-line\"><strong>Body draft</strong> " + escapeHtml(d.bodyDraft || "") + "</div>");
+      }
+      return chunks.join("");
+    }
+
+    function renderConsolidationPanel(list) {
+      var sec = document.getElementById("phase2-consolidation-section");
+      var inner = document.getElementById("phase2-consolidation-list");
+      if (!sec || !inner) return;
+      inner.innerHTML = "";
+      var good = Array.isArray(list) && list.length;
+      sec.style.display = good ? "" : "none";
+      if (!good) return;
+      list.slice(0, 6).forEach(function (c) {
+        var card = document.createElement("article");
+        card.className = "bcard";
+        card.innerHTML =
+          "<h3>Bundled blanks opportunity</h3>" +
+          "<div class=\"row\"><strong>Orders sharing bundle</strong> " +
+          escapeHtml(String(c.orderCount || "")) +
+          "</div>" +
+          "<div class=\"next-line\"><strong>Recommendation</strong> " +
+          escapeHtml(c.recommendation || "") +
+          "</div>";
+        inner.appendChild(card);
+      });
+    }
+
+    function showDegradedBanner(alertObj) {
+      var slot = document.getElementById("degraded-slot");
+      if (!slot || !alertObj || !alertObj.safeMessage) {
+        if (slot) slot.innerHTML = "";
+        return;
+      }
+      slot.innerHTML =
+        "<div class=\"alert-banner\" role=\"alert\"><strong>Heads up.</strong> " +
+        escapeHtml(alertObj.safeMessage) +
+        (alertObj.cachedAt ? " · " + escapeHtml(alertObj.cachedAt) : "") +
+        "</div>";
+    }
+
+    async function loadPhase2Panels() {
+      try {
+        setPill("pill-approvals", "warn", "approvals …");
+        var ap = await jget("/api/approvals/pending");
+        var phase = [];
+        if (ap.ok && ap.body && ap.body.data && ap.body.data.phase2Approvals)
+          phase = ap.body.data.phase2Approvals;
+        renderPhase2Approvals(Array.isArray(phase) ? phase : []);
+        setPill(
+          "pill-approvals",
+          phase.length ? "warn" : "ok",
+          "gate approvals " + (phase.length || 0)
+        );
+
+        var dr = await jget("/api/drafts/pending");
+        var dObj = {};
+        if (dr.ok && dr.body && dr.body.data) dObj = dr.body.data;
+        renderDraftsPending(dObj || {});
+
+        var cg = await jpost("/api/drafts/consolidate-garments", {});
+        var list =
+          cg.body &&
+          cg.body.data &&
+          cg.body.data.consolidationOpportunities
+            ? cg.body.data.consolidationOpportunities
+            : [];
+        renderConsolidationPanel(Array.isArray(list) ? list : []);
+      } catch (_eP2) {
+        setPill("pill-approvals", "risk", "phase2 ?");
+      }
+    }
+
+    function fillListEl(elId, html) {
+      var el = document.getElementById(elId);
+      if (el) el.innerHTML = html;
+    }
+
+    async function loadPatrickGrowthPanel() {
+      try {
+        setPill("pill-growth", "warn", "growth …");
+        var gs = await jget("/api/growth/leads/scores?limit=12");
+        var leads = [];
+        var note = "";
+        if (gs.ok && gs.body && gs.body.data) {
+          leads = gs.body.data.leads || [];
+          note = gs.body.data.note || "";
+        }
+        if (note) {
+          fillListEl("growth-top-leads", "<p class=\"empty\">" + escapeHtml(note) + "</p>");
+        } else if (!leads.length) {
+          fillListEl(
+            "growth-top-leads",
+            "<p class=\"empty\">No major growth opportunities currently detected.</p>"
+          );
+        } else {
+          fillListEl(
+            "growth-top-leads",
+            leads
+              .slice(0, 8)
+              .map(function (L) {
+                return (
+                  "<article class=\"bcard\"><h3>" +
+                  escapeHtml(L.customer || "Lead") +
+                  ' <span class="pill warn" style="font-size:.62rem;">' +
+                  escapeHtml(String(L.score || "")) +
+                  "</span></h3><div class=\"row\">" +
+                  escapeHtml(L.category || "") +
+                  '</div><div class="next-line">' +
+                  escapeHtml((L.recommendedAction || "").slice(0, 220)) +
+                  "</div></article>"
+                );
+              })
+              .join("")
+          );
+        }
+
+        var od = await jget("/api/outreach/drafts");
+        var items = [];
+        if (od.ok && od.body && od.body.data && od.body.data.items) items = od.body.data.items;
+        if (!items.length) {
+          fillListEl(
+            "growth-outreach-drafts",
+            "<p class=\"empty\">No outreach drafts on disk yet — generate via API; every file stays approval-gated.</p>"
+          );
+        } else {
+          fillListEl(
+            "growth-outreach-drafts",
+            items
+              .slice(0, 8)
+              .map(function (x) {
+                return (
+                  "<article class=\"bcard\"><h3>" +
+                  escapeHtml(x.outreachType || "outreach") +
+                  "</h3><div class=\"row\">" +
+                  escapeHtml(x.customer || "") +
+                  '</div><div class="next-line">' +
+                  escapeHtml(x.subject || "") +
+                  "</div></article>"
+                );
+              })
+              .join("")
+          );
+        }
+
+        var over = (leads || []).filter(function (L) {
+          return L.flags && L.flags.overdueEstimate;
+        });
+        fillListEl(
+          "growth-overdue-estimates",
+          !over.length
+            ? "<p class=\"empty\">No overdue-estimate flags on scored leads in this snapshot.</p>"
+            : over
+                .slice(0, 8)
+                .map(function (L) {
+                  return (
+                    "<article class=\"bcard\"><h3>" +
+                    escapeHtml(L.customer || "") +
+                    "</h3><div class=\"next-line\">Score " +
+                    escapeHtml(String(L.score)) +
+                    " — draft a gentle estimate follow-up.</div></article>"
+                  );
+                })
+                .join("")
+        );
+
+        var react = (leads || []).filter(function (L) {
+          return (L.categories || []).indexOf("Reactivation") >= 0;
+        });
+        fillListEl(
+          "growth-reactivation",
+          !react.length
+            ? "<p class=\"empty\">No reactivation cohort flagged in this scorer pass.</p>"
+            : react
+                .slice(0, 8)
+                .map(function (L) {
+                  return (
+                    "<article class=\"bcard\"><h3>" +
+                    escapeHtml(L.customer || "") +
+                    "</h3><div class=\"row\">Last order " +
+                    escapeHtml(L.lastOrderDate || "—") +
+                    '</div><div class="next-line">' +
+                    escapeHtml((L.recommendedAction || "").slice(0, 200)) +
+                    "</div></article>"
+                  );
+                })
+                .join("")
+        );
+
+        var khtml =
+          "<div class=\"next-line\" style=\"margin:0;\"><strong>KPI snapshot (quick)</strong> Scored leads " +
+          escapeHtml(String(leads.length)) +
+          " · Outreach draft files " +
+          escapeHtml(String(items.length)) +
+          (leads[0] ? " · Top score " + escapeHtml(String(leads[0].score)) : "") +
+          "</div>";
+        fillListEl("growth-kpi-strip", khtml);
+
+        setPill("pill-growth", "ok", "growth " + leads.length);
+      } catch (_gx) {
+        setPill("pill-growth", "risk", "growth ?");
+        fillListEl("growth-top-leads", "<p class=\"empty\">Growth data temporarily unavailable — safe empty state.</p>");
+      }
+    }
+
+    async function loadMorningBriefPatrick() {
+      var host = document.getElementById("growth-morning-brief");
+      if (!host) return;
+      host.innerHTML = "<p class=\"empty\">Loading morning brief…</p>";
+      var r = await jget("/api/operator/morning-brief");
+      var d = r.body && r.body.data ? r.body.data : null;
+      if (!d) {
+        host.innerHTML = "<p class=\"empty\">Morning brief unavailable — retry after dashboard warms up.</p>";
+        return;
+      }
+      var chunks = [];
+      chunks.push('<article class="bcard"><h3>Top priorities today</h3>');
+      (d.topPriorities || []).slice(0, 6).forEach(function (line, i) {
+        chunks.push('<div class="next-line">' + (i + 1) + ". " + escapeHtml(line) + "</div>");
+      });
+      chunks.push("</article>");
+      chunks.push('<article class="bcard"><h3>Jeremy focus (execution)</h3>');
+      (d.jeremyFocus || []).forEach(function (line) {
+        chunks.push('<div class="row">' + escapeHtml(line) + "</div>");
+      });
+      chunks.push("</article>");
+      chunks.push('<article class="bcard"><h3>Patrick approvals (gate)</h3>');
+      if (!(d.patrickApprovals || []).length)
+        chunks.push('<div class="row">Gate queue quiet in this snapshot.</div>');
+      else
+        d.patrickApprovals.slice(0, 12).forEach(function (a) {
+          chunks.push(
+            '<div class="next-line"><strong>' +
+              escapeHtml(a.headline || "") +
+              "</strong> — " +
+              escapeHtml(a.why || "") +
+              "</div>"
+          );
+        });
+      chunks.push("</article>");
+      chunks.push('<article class="bcard"><h3>Growth opportunities</h3>');
+      (d.growthOpportunities || []).slice(0, 10).forEach(function (g) {
+        chunks.push(
+          '<div class="next-line">' +
+            escapeHtml(g.label || "") +
+            " — " +
+            escapeHtml(g.suggestion || "") +
+            "</div>"
+        );
+      });
+      chunks.push("</article>");
+      chunks.push('<article class="bcard"><h3>Cashflow warnings</h3>');
+      (d.cashWarnings || []).slice(0, 8).forEach(function (cw) {
+        chunks.push('<div class="next-line">' + escapeHtml(cw.line || "") + "</div>");
+      });
+      chunks.push("</article>");
+      chunks.push('<article class="bcard"><h3>Recommended outreach (draft only)</h3>');
+      (d.outreachRecommendations || []).slice(0, 12).forEach(function (o) {
+        chunks.push('<div class="row">' + escapeHtml(String(o)) + "</div>");
+      });
+      chunks.push("</article>");
+      var kpi = d.kpiSnapshot || {};
+      chunks.push(
+        '<article class="bcard"><h3>KPI snapshot</h3><div class="next-line">Pending approvals ' +
+          escapeHtml(String(kpi.pendingApprovals != null ? kpi.pendingApprovals : "—")) +
+          " · Production ready " +
+          escapeHtml(String(kpi.productionReadyCount != null ? kpi.productionReadyCount : "—")) +
+          " · QC " +
+          escapeHtml(String(kpi.qcCount != null ? kpi.qcCount : "—")) +
+          " · Top lead score " +
+          escapeHtml(String(kpi.topLeadScore != null ? kpi.topLeadScore : "—")) +
+          " · Square " +
+          escapeHtml(String(kpi.squareConnector || "—")) +
+          '</div><div class="row">' +
+          escapeHtml(d.operationalSummary || "") +
+          "</div></article>"
+      );
+      host.innerHTML = chunks.join("");
+    }
+
+    async function cockpitGateApproveReject(id, mode) {
+      var headers = {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "x-actor": "patrick",
+      };
+      if (mode === "approve") {
+        var r = await fetch("/api/approvals/approve", {
+          method: "POST",
+          headers: headers,
+          body: JSON.stringify({ actionId: id, notes: "approved-from-cockpit" }),
+        });
+        var txt = await r.text();
+        try {
+          var j = JSON.parse(txt);
+          if (j.blocked) alert(j.message || "Patrick only");
+          if (j.success === false && j.safeMessage) alert(j.safeMessage);
+        } catch (_e21) {}
+      } else {
+        var rr = prompt("Reject reason?");
+        await fetch("/api/approvals/reject", {
+          method: "POST",
+          headers: headers,
+          body: JSON.stringify({ actionId: id, reason: rr || "reject_from_cockpit" }),
+        });
+      }
+      await loadPhase2Panels();
+      await refreshAll();
+    }
+
+    async function submitFriction(ev) {
+      ev.preventDefault();
+      var msg = document.getElementById("friction-msg");
+      if (msg) msg.textContent = "";
+      try {
+        var fd = new FormData(document.getElementById("friction-form"));
+        var body = {
+          area: fd.get("area"),
+          description: fd.get("description"),
+          severity: fd.get("severity"),
+          whoNoticed: fd.get("whoNoticed") || "",
+          suggestedFix: fd.get("suggestedFix") || ""
+        };
+        var r = await fetch("/api/ops/friction-log", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(body)
+        });
+        var txt = await r.text();
+        var j;
+        try { j = JSON.parse(txt); }
+        catch (e) { j = {}; }
+        if (!r.ok || (j.success === false)) {
+          var sm = j.safeMessage || "Could not save friction entry safely.";
+          if (msg) msg.style.color = "#ffb3b8";
+          if (msg) msg.textContent = sm;
+          return;
+        }
+        if (msg) msg.style.color = "";
+        if (msg) msg.textContent = "Logged — thank you. Playbook insight row appended automatically.";
+        document.getElementById("friction-form").reset();
+      } catch (e) {
+        if (msg) {
+          msg.style.color = "#ffb3b8";
+          msg.textContent = "Network or browser blocked the save — nothing was sent externally.";
+        }
+      }
+    }
+
+    function togglePatrickRemote(on) {
+      try {
+        localStorage.setItem("patrick_remote_layout", on ? "1" : "");
+      } catch (_ls) {}
+      document.body.classList.toggle("patrick-remote", !!on);
+    }
+
+    function hydratePatrickRemoteToggle() {
+      try {
+        var chk = document.getElementById("patrick-remote-toggle");
+        if (!chk) return;
+        var on = false;
+        try {
+          on = localStorage.getItem("patrick_remote_layout") === "1";
+        } catch (_e) {}
+        chk.checked = on;
+        document.body.classList.toggle("patrick-remote", on);
+      } catch (_e2) {}
+    }
+
+    async function loadPatrickPhase4Executive() {
+      var sys = document.getElementById("phase4-sys-health");
+      try {
+        if (sys) {
+          sys.className = "pill warn";
+          sys.textContent = "system …";
+        }
+        var ex = await jget("/api/reporting/exceptions");
+        var hi = 0;
+        if (ex.body && ex.body.data && Array.isArray(ex.body.data.exceptions)) {
+          ex.body.data.exceptions.forEach(function (row) {
+            if (row && String(row.severity).toLowerCase() === "high") hi += 1;
+          });
+        }
+        if (sys) {
+          sys.className = hi ? "pill risk" : "pill ok";
+          sys.textContent = hi ? "exceptions " + hi + " high" : "exceptions calm";
+        }
+
+        var ks = await jget("/api/kpi/summary");
+        var snap = ks.body && ks.body.data && ks.body.data.snapshot ? ks.body.data.snapshot : null;
+        var metrics = ks.body && ks.body.data && ks.body.data.metrics ? ks.body.data.metrics : [];
+        if (!snap) {
+          fillListEl("phase4-kpi-cards", "<p class=\"empty\">KPI summary deferred — reload after database warms.</p>");
+        } else {
+          var cardBits = [
+            ["Revenue 30d (paid)", snap.revenue30dUsd != null ? "$" + snap.revenue30dUsd : "insufficient_data"],
+            ["Deposits today (owner signal)", snap.depositsTodayCount != null ? snap.depositsTodayCount : "unknown"],
+            ["Outstanding (sampled)", snap.outstandingBalanceUsdApprox != null ? "$" + snap.outstandingBalanceUsdApprox : "unknown"],
+            ["Production done (7d)", snap.productionThroughput7d != null ? snap.productionThroughput7d : "unknown"],
+            ["Approvals pending", snap.approvalsPending != null ? snap.approvalsPending : "unknown"],
+            ["Outreach drafts on disk", snap.outreachDraftCount != null ? snap.outreachDraftCount : "unknown"],
+            ["Google Ads flags", snap.googleAdsOpportunityCount != null ? snap.googleAdsOpportunityCount : "unknown"]
+          ];
+          fillListEl(
+            "phase4-kpi-cards",
+            "<div style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.45rem;\">" +
+              cardBits
+                .map(function (pair) {
+                  return (
+                    "<article class=\"bcard\"><h3 style=\"font-size:0.78rem;color:var(--muted);\">" +
+                    escapeHtml(pair[0]) +
+                    "</h3><div class=\"next-line\" style=\"margin:0;\">" +
+                    escapeHtml(String(pair[1])) +
+                    "</div></article>"
+                  );
+                })
+                .join("") +
+              "</div>"
+          );
+        }
+
+        if (!metrics.length) {
+          fillListEl("phase4-trends", "<p class=\"empty\">Trends will populate after more KPI history entries.</p>");
+        } else {
+          fillListEl(
+            "phase4-trends",
+            metrics
+              .slice(0, 9)
+              .map(function (m) {
+                return (
+                  "<article class=\"bcard\"><h3>" +
+                  escapeHtml(m.metric || "Metric") +
+                  "</h3><div class=\"row\">Now: <strong>" +
+                  escapeHtml(String(m.currentValue)) +
+                  "</strong> · Dir " +
+                  escapeHtml(String(m.direction || "unknown")) +
+                  "</div>" +
+                  (m.warning
+                    ? "<div class=\"next-line\">" + escapeHtml(m.warning) + "</div>"
+                    : "") +
+                  "</article>"
+                );
+              })
+              .join("")
+          );
+        }
+
+        var mbMom = await jget("/api/operator/morning-brief");
+        var bdMom = mbMom.body && mbMom.body.data ? mbMom.body.data : null;
+        if (!bdMom) {
+          fillListEl("phase4-momentum", "<p class=\"empty\">Morning brief unavailable for momentum embedding.</p>");
+        } else {
+          var sc = bdMom.phase4MomentumScores || {};
+          fillListEl(
+            "phase4-momentum",
+            '<article class="bcard"><h3>Embedded momentum scores</h3><div class="next-line">Growth momentum ' +
+              escapeHtml(String(bdMom.growthMomentumScore != null ? bdMom.growthMomentumScore : sc.growthMomentumScore || "—")) +
+              " · Ops confidence " +
+              escapeHtml(
+                String(
+                  bdMom.operationalConfidenceScore != null ? bdMom.operationalConfidenceScore : sc.operationalConfidenceScore || "—"
+                )
+              ) +
+              " · System health " +
+              escapeHtml(String(bdMom.systemHealthScore != null ? bdMom.systemHealthScore : sc.systemHealthScore || "—")) +
+              '</div><div class="row">Heuristic read-only gauges — reconcile cash in Square separately.</div></article>'
+          );
+        }
+
+        var nf = await jget("/api/notifications");
+        var pack = nf.body && nf.body.data ? nf.body.data : { items: [] };
+        var items = pack.items || [];
+        if (!items.length) {
+          fillListEl("phase4-notifications", "<p class=\"empty\">No notification rows — dashboards are quiet.</p>");
+        } else {
+          fillListEl(
+            "phase4-notifications",
+            items
+              .slice(0, 10)
+              .map(function (n) {
+                return (
+                  "<article class=\"bcard\"><h3>" +
+                  escapeHtml(n.title || "Note") +
+                  ' <span class="pill warn" style="font-size:.62rem;">' +
+                  escapeHtml(String(n.severity || "")) +
+                  "</span></h3><div class=\"row\">" +
+                  escapeHtml(n.detail || "") +
+                  "</div></article>"
+                );
+              })
+              .join("")
+          );
+        }
+
+        var ad = await jget("/api/growth/google-ads/insights");
+        var d = ad.body && ad.body.data ? ad.body.data : null;
+        if (!d || !d.campaigns || !d.campaigns.length) {
+          fillListEl(
+            "phase4-google-ads",
+            "<p class=\"empty\">No Ads rows imported yet — POST /api/growth/google-ads/import-report with campaigns JSON.</p>"
+          );
+        } else {
+          fillListEl(
+            "phase4-google-ads",
+            d.campaigns
+              .slice(0, 5)
+              .map(function (c) {
+                return (
+                  "<article class=\"bcard\"><h3>" +
+                  escapeHtml(c.name || "Campaign") +
+                  "</h3><div class=\"row\">CTR " +
+                  escapeHtml(String(c.ctr)) +
+                  " · Spend $" +
+                  escapeHtml(String(c.costUsdApprox)) +
+                  "</div><div class=\"next-line\">" +
+                  escapeHtml((c.localMarketInsight || "").slice(0, 240)) +
+                  "</div></article>"
+                );
+              })
+              .join("") +
+              "<p class=\"row\" style=\"margin-top:0.45rem;color:var(--muted);\">Gemini-assisted review: summarize issues here, execute changes only inside Google Ads with Patrick.</p>"
+          );
+        }
+      } catch (_e4) {
+        if (sys) {
+          sys.className = "pill risk";
+          sys.textContent = "phase4 ?";
+        }
+        fillListEl("phase4-kpi-cards", "<p class=\"empty\">Executive layer temporarily unavailable.</p>");
+      }
+    }
+
+    async function loadNightlyReviewPatrick() {
+      /** surface inside growth strip for readability */
+      var host = document.getElementById("growth-morning-brief");
+      if (!host) return;
+      host.innerHTML = "<p class=\"empty\">Loading nightly review…</p>";
+      var r = await jget("/api/operator/nightly-growth-review");
+      var d = r.body && r.body.data ? r.body.data : null;
+      if (!d) {
+        host.innerHTML = "<p class=\"empty\">Nightly review unavailable safely.</p>";
+        return;
+      }
+      var parts = [];
+      parts.push('<article class="bcard"><h3>Tomorrow focus</h3>');
+      (d.tomorrowFocus || []).forEach(function (line) {
+        parts.push('<div class="next-line">' + escapeHtml(line) + "</div>");
+      });
+      parts.push("</article>");
+      parts.push('<article class="bcard"><h3>Growth momentum score</h3><div class="next-line">' + escapeHtml(String(d.growthMomentumScore)) + '</div></article>');
+      parts.push('<article class="bcard"><h3>Ad warnings</h3>');
+      if (!(d.adCampaignWarnings || []).length) parts.push("<div class=\"row\">Quiet import window.</div>");
+      else (d.adCampaignWarnings || []).slice(0, 8).forEach(function (line) {
+        parts.push('<div class="next-line">' + escapeHtml(line) + "</div>");
+      });
+      parts.push("</article>");
+      host.innerHTML = parts.join("");
+    }
+
+    async function patrickCustomerQuickSearch() {
+      var qEl = document.getElementById("cust-q");
+      var q = qEl ? String(qEl.value || "").trim() : "";
+      if (!q || q.length < 2) {
+        fillListEl("phase4-quick-customers", "<p class=\"empty\">Enter at least two characters.</p>");
+        return;
+      }
+      fillListEl("phase4-quick-customers", "<p class=\"empty\">Searching…</p>");
+      var r = await jget("/api/customers/quick-search?q=" + encodeURIComponent(q));
+      var matches =
+        r.body && r.body.data && r.body.data.matches ? r.body.data.matches : [];
+      if (!matches.length) {
+        fillListEl("phase4-quick-customers", "<p class=\"empty\">No local matches yet — widen query or hydrate orders.</p>");
+        return;
+      }
+      fillListEl(
+        "phase4-quick-customers",
+        matches
+          .map(function (m) {
+            return (
+              "<article class=\"bcard\"><h3>" +
+              escapeHtml(m.customerName || "") +
+              "</h3><div class=\"row\">" +
+              escapeHtml(m.email || "") +
+              '</div><div class="next-line">' +
+              escapeHtml(m.hint || "") +
+              "</div></article>"
+            );
+          })
+          .join("")
+      );
+    }
+
+    function hydrateJeremyTrainingToggle() {
+      try {
+        var chk = document.getElementById("jeremy-training-toggle");
+        if (!chk) return;
+        var on = false;
+        try {
+          on = localStorage.getItem("jeremy_training_layout") === "1";
+        } catch (_eJT) {}
+        chk.checked = on;
+        document.body.classList.toggle("jeremy-training", on);
+      } catch (_eJT2) {}
+    }
+
+    function toggleJeremyTraining(on) {
+      try {
+        localStorage.setItem("jeremy_training_layout", on ? "1" : "");
+      } catch (_s) {}
+      document.body.classList.toggle("jeremy-training", !!on);
+    }
+
+    function updateStickyStrip(envelope) {
+      var el = document.getElementById("sticky-blocker-hint");
+      if (!el) return;
+      var sections = envelope && envelope.sections ? envelope.sections : [];
+      var crit = sections[0] && sections[0].cards ? sections[0].cards : [];
+      var serious = crit.filter(function (c) {
+        return c && c.blockerType && c.blockerType !== "none";
+      }).length;
+      el.className = serious ? "pill risk" : "pill ok";
+      el.textContent = serious ? serious + " critical item(s)" : "critical lane clear in snapshot";
+    }
+
+    async function loadStickyHealthMini() {
+      var el = document.getElementById("sticky-health-hint");
+      if (!el) return;
+      var r = await jgetCached("/api/monitoring/system-health", 12000);
+      var bb = r.body || {};
+      var d = bb.data && typeof bb.data === "object" ? bb.data : null;
+      if (!d || d.healthScore == null) {
+        el.className = "pill warn";
+        el.textContent = "health …";
+        return;
+      }
+      var pct = Math.round(Number(d.healthScore) * 100);
+      el.className = pct >= 62 ? "pill ok" : "pill warn";
+      el.textContent = "confidence " + pct + "% · ops";
+    }
+
+    async function loadJeremyIntakeQueuePreview() {
+      var host = document.getElementById("phase5-intake-preview");
+      if (!host) return;
+      var r = await jgetCached("/api/intake/queue", 7000);
+      var d = r.body && r.body.data ? r.body.data : {};
+      var pend = d.pendingCount != null ? Number(d.pendingCount) : (d.items || []).length;
+      var items = d.items || [];
+      if (!pend) {
+        host.innerHTML = '<p class="empty">No pending web intakes.</p>';
+        return;
+      }
+      host.innerHTML =
+        '<p class="next-line" style="margin:0;">Queue depth ' +
+        pend +
+        "</p>" +
+        items
+          .slice(0, 5)
+          .map(function (x) {
+            return (
+              '<article class="bcard"><h3>' +
+              escapeHtml(x.name || "Intake") +
+              '</h3><div class="row">' +
+              escapeHtml(String(x.garmentType || "") + " · qty " + String(x.quantityEstimate || "")) +
+              '</div></article>'
+            );
+          })
+          .join("");
+    }
+
+    async function operatorCustomerLookup() {
+      var qEl = document.getElementById("cust-lookup-main");
+      var q = qEl ? String(qEl.value || "").trim() : "";
+      fillListEl("cust-lookup-results", "");
+      if (!q || q.length < 2) {
+        fillListEl("cust-lookup-results", "<p class=\"empty\">Need 2+ characters.</p>");
+        return;
+      }
+      fillListEl("cust-lookup-results", "<p class=\"empty\">Searching…</p>");
+      var r = await jget("/api/customer/search?q=" + encodeURIComponent(q));
+      var bb = r.body || {};
+      var d = bb.data && typeof bb.data === "object" ? bb.data : null;
+      if (!d) {
+        fillListEl("cust-lookup-results", "<p class=\"empty\">Lookup unavailable safely.</p>");
+        return;
+      }
+      if (!d.orders || !d.orders.length) {
+        fillListEl(
+          "cust-lookup-results",
+          '<p class="empty">' + escapeHtml(d.customerFriendlyMessage || "No matches.") + "</p>"
+        );
+        return;
+      }
+      fillListEl(
+        "cust-lookup-results",
+        '<p class="next-line">' + escapeHtml(d.customerFriendlyMessage || "") + "</p>" +
+          (d.orders || [])
+            .slice(0, 5)
+            .map(function (o) {
+              return (
+                '<article class="bcard"><h3>' +
+                escapeHtml(o.reference || "Order") +
+                '</h3><div class="row">' +
+                escapeHtml(o.productionStageCustomer || "") +
+                '</div><div class="next-line">' +
+                escapeHtml((o.timelineHintCustomer || "").slice(0, 240)) +
+                '</div><div class="row">' +
+                escapeHtml((o.paymentSummaryCustomerSafe || "").slice(0, 220)) +
+                '</div>' +
+                (o.blockerHintCustomerSafe ? '<div class="next-line">' + escapeHtml(o.blockerHintCustomerSafe) + "</div>" : "") +
+                "</article>"
+              );
+            })
+            .join("") +
+          '<p class="row" style="font-size:.75rem;color:var(--muted);">' +
+          escapeHtml(
+            [String(d.safeLinkExpiresNote || "").trim(), String(d.safeLink || d.safeLinkPlaceholder || "").trim()]
+              .filter(Boolean)
+              .join(" — ")
+              .slice(0, 520)
+          ) +
+          "</p>"
+      );
+    }
+
+    function getDashboardViewMode() {
+      try {
+        return localStorage.getItem("cheeky_dashboard_view") || "advisor";
+      } catch (_eMv) {
+        return "advisor";
+      }
+    }
+
+    function setDashboardView(mode) {
+      var m = mode === "jeremy" ? "jeremy" : mode === "patrick" ? "patrick" : "advisor";
+      try {
+        localStorage.setItem("cheeky_dashboard_view", m);
+      } catch (_ls) {}
+      document.body.classList.remove("dashboard-view-advisor", "dashboard-view-jeremy", "dashboard-view-patrick");
+      document.body.classList.add("dashboard-view-" + m);
+      var wrap = document.getElementById("phase7-patrick-wrap");
+      if (wrap) {
+        wrap.open = m === "patrick";
+      }
+      document.querySelectorAll("#phase7-view-buttons button.mini").forEach(function (btn) {
+        var v = btn.getAttribute("data-view");
+        var on = v === m;
+        btn.classList.toggle("primary", on);
+        btn.classList.toggle("active", on);
+      });
+      var hint = document.getElementById("phase7-helpbot-mode-hint");
+      if (hint) hint.textContent = "Cheeky-AI tailors copy for " + m + " view — recommendations only.";
+      try {
+        helpbotSuggestionsReload();
+      } catch (_hs) {}
+    }
+
+    function hydrateDashboardView() {
+      var raw = getDashboardViewMode();
+      setDashboardView(raw);
+    }
+
+    async function refreshDailyAdvisorPanel(blockerEnvelope, wnData) {
+      var host = document.getElementById("phase7-advisor-body");
+      if (!host) return;
+      if (
+        document.body.classList.contains("dashboard-view-jeremy") ||
+        document.body.classList.contains("dashboard-view-patrick")
+      ) {
+        host.textContent = "Advisor summary hides in Jeremy/Patrick focus modes — flip to Cheeky Advisor for the synthesized snapshot.";
+        return;
+      }
+      var sections = blockerEnvelope && blockerEnvelope.sections ? blockerEnvelope.sections : [];
+      var crit = sections[0] && sections[0].cards ? sections[0].cards : [];
+      var serious = crit.filter(function (c) {
+        return c && c.blockerType && c.blockerType !== "none";
+      });
+      var ap = await jget("/api/approvals/pending");
+      var apRoot = ap.body || {};
+      var apd = apRoot.data || {};
+      var pend = 0;
+      if (apd.count != null) pend = Number(apd.count) || 0;
+      else {
+        pend = (apd.phase2Approvals || []).length + (apd.approvals || []).length;
+      }
+
+      var health = await jgetCached("/api/monitoring/system-health", 12000);
+      var hd = health.body && health.body.data ? health.body.data : null;
+      var hpct = hd && hd.healthScore != null ? Math.round(Number(hd.healthScore) * 100) : "unknown";
+
+      var wnLine = wnData && wnData.answer ? String(wnData.answer) : "What-now answer missing — safer to reload cockpit.";
+
+      var lines =
+        "Priority voice: " +
+        wnLine +
+        " · Critical blocker cards surfaced: " +
+        serious.length +
+        ". · Approvals backlog read: " +
+        pend +
+        " · Health heuristic: " +
+        hpct +
+        "%. · Growth cues stay inside Patrick strip until deposits feel honest.";
+      host.innerHTML = '<div class="next-line">' + escapeHtml(lines) + "</div>";
+    }
+
+    async function refreshTeamPulse() {
+      var host = document.getElementById("phase7-team-activity-body");
+      if (!host) return;
+      var r = await jgetCached("/api/team/activity?limit=40", 8000);
+      var d = r.body && r.body.data ? r.body.data : null;
+      if (!d || !d.items) {
+        host.innerHTML = '<p class="empty">Team pulse unavailable safely.</p>';
+        return;
+      }
+      var sliceN = document.body.classList.contains("dashboard-view-jeremy") ? 8 : 16;
+      var bits = [];
+      bits.push('<article class="bcard"><h3>Jeremy checklist</h3>');
+      (d.jeremyChecklist || []).forEach(function (ln) {
+        bits.push('<div class="row">' + escapeHtml(ln) + "</div>");
+      });
+      bits.push("</article>");
+      bits.push('<article class="bcard"><h3>Patrick review checklist</h3>');
+      (d.patrickReviewChecklist || []).forEach(function (ln) {
+        bits.push('<div class="row">' + escapeHtml(ln) + "</div>");
+      });
+      bits.push("</article>");
+      bits.push('<h3 style="margin:0.55rem 0 0.25rem;font-size:0.86rem;color:var(--accent);">Recent activity</h3>');
+      d.items.slice(0, sliceN).forEach(function (it) {
+        bits.push(
+          '<article class="bcard"><h3>' +
+            escapeHtml(it.activityType || "activity") +
+            '</h3><div class="row">' +
+            escapeHtml(it.description || "") +
+            '</div><div class="row">' +
+            escapeHtml(it.timestamp || "") +
+            "</div></article>"
+        );
+      });
+      host.innerHTML = bits.join("");
+    }
+
+    async function helpbotSuggestionsReload() {
+      var mode = getDashboardViewMode();
+      var r = await jgetCached("/api/cheeky-ai/suggestions?mode=" + encodeURIComponent(mode), 12000);
+      var d = r.body && r.body.data ? r.body.data : null;
+      var host = document.getElementById("phase7-suggest-host");
+      if (!host) return;
+      host.innerHTML = "";
+      if (!d || !d.suggestions) return;
+      d.suggestions.forEach(function (prompt) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "mini";
+        btn.textContent = prompt;
+        btn.addEventListener("click", function () {
+          var ta = document.getElementById("phase7-ai-input");
+          if (ta) ta.value = prompt;
+        });
+        host.appendChild(btn);
+      });
+    }
+
+    async function helpbotSendAsk() {
+      var ta = document.getElementById("phase7-ai-input");
+      var out = document.getElementById("phase7-ai-output");
+      if (!ta || !out) return;
+      out.textContent = "Scanning cockpit files locally…";
+      var r = await fetch("/api/cheeky-ai/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ question: ta.value, mode: getDashboardViewMode() }),
+      });
+      var txt = await r.text();
+      var j;
+      try {
+        j = JSON.parse(txt);
+      } catch (_eJ) {
+        j = {};
+      }
+      var data = j.data || {};
+      if (!data.answer) {
+        out.textContent = (j.safeMessage || "Helpbot paused safely.").slice(0, 900);
+        return;
+      }
+      var links = (data.dashboardLinks || [])
+        .map(function (l) {
+          return (l.label || "") + " → " + (l.href || "");
+        })
+        .join(" | ");
+      var extra = [
+        data.topConcern ? "Top concern: " + data.topConcern : "",
+        data.changedSinceYesterday ? "Changed: " + data.changedSinceYesterday : "",
+        data.jeremyFinishToday ? "Jeremy: " + data.jeremyFinishToday : "",
+        data.patrickReviewTonight ? "Patrick tonight: " + data.patrickReviewTonight : "",
+      ]
+        .filter(Boolean)
+        .join(" · ");
+      out.textContent = (data.answer + (extra ? " · " + extra : "") + (links ? " · Jump cues: " + links : "")).slice(0, 3900);
+    }
+
+    async function refreshAll() {
+      setPill("pill-health", "warn", "/health …");
+      setPill("pill-square", "warn", "Square …");
+      setPill("pill-blockers", "warn", "Blockers …");
+      setPill("pill-whatnow", "warn", "What now …");
+      setPill("pill-growth", "warn", "Growth …");
+
+      var h = await jget("/health");
+      setPill("pill-health", h.ok ? "ok" : "risk", "/health " + (h.ok ? "ok" : h.status));
+
+      var blk = await jget("/api/dashboard/blockers");
+      var b = blk.body || {};
+      if (!blk.ok || b.success === false) {
+        setPill("pill-blockers", "risk", "blockers failed");
+        showDegradedBanner(b.alert || (b.safeMessage ? b : null));
+        renderSections(b.sections || []);
+        try {
+          updateStickyStrip(b);
+        } catch (_st) {}
+      } else {
+        setPill("pill-blockers", b.degraded ? "warn" : "ok", b.degraded ? "blockers (degraded)" : "blockers ok");
+        var sqSt = b.squareStatus || "—";
+        var sqLbl = sqSt === "fresh" ? "Square live snapshot" : "Square " + sqSt + " (cache ok)";
+        setPill("pill-square", b.squareStatus === "fresh" ? "ok" : "warn", sqLbl);
+        showDegradedBanner(b.degraded ? b.alert : null);
+        renderSections(b.sections);
+        try {
+          updateStickyStrip(b);
+        } catch (_st2) {}
+      }
+      var blockerCount = 0;
+      try {
+        var c0 = b && b.sections && b.sections[0] && b.sections[0].cards ? b.sections[0].cards : [];
+        blockerCount = c0.filter(function (x) {
+          return x && x.blockerType && x.blockerType !== "none";
+        }).length;
+      } catch (_bc) {}
+
+      await loadPhase2Panels();
+      await jget("/api/dashboard/production");
+
+      var wn = await jget("/api/operator/what-now");
+      var wb = wn.body || {};
+      if (!wn.ok || wb.success === false) {
+        setPill("pill-whatnow", "risk", "what-now?");
+        lastWhatNowData = null;
+        renderWhatNow(null);
+      } else {
+        setPill("pill-whatnow", wb.degraded ? "warn" : "ok", wb.degraded ? "brief (cached/degraded)" : "brief ok");
+        if (wb.degraded && wb.alert) {
+          var slot = document.getElementById("degraded-slot");
+          if (!slot.innerHTML && wb.alert.safeMessage) showDegradedBanner(wb.alert);
+        }
+        lastWhatNowData = wb.data || null;
+        renderWhatNow(wb.data);
+      }
+
+      await loadPatrickGrowthPanel();
+      await loadPatrickPhase4Executive();
+      await loadJeremyIntakeQueuePreview();
+      await loadStickyHealthMini();
+      await refreshDailyAdvisorPanel(b, lastWhatNowData);
+      await refreshTeamPulse();
+      try {
+        var ap = await jget("/api/approvals/pending");
+        var apCount = ap.body && ap.body.data && typeof ap.body.data.count === "number" ? ap.body.data.count : 0;
+        var hs = await jgetCached("/api/monitoring/system-health", 12000);
+        var hsData = hs.body && hs.body.data ? hs.body.data : null;
+        var hPct = hsData && hsData.healthScore != null ? Math.round(Number(hsData.healthScore) * 100) + "%" : "unknown";
+        var ts = new Date().toISOString().replace("T", " ").slice(0, 19) + "Z";
+        var mh = document.getElementById("phase7-meta-health");
+        var mb = document.getElementById("phase7-meta-blockers");
+        var ma = document.getElementById("phase7-meta-approvals");
+        var ms = document.getElementById("phase7-meta-sync");
+        if (mh) mh.textContent = "Health: " + hPct;
+        if (mb) mb.textContent = "Blockers: " + blockerCount;
+        if (ma) ma.textContent = "Approvals: " + apCount;
+        if (ms) ms.textContent = "Last sync: " + ts;
+      } catch (_metaE) {}
+
+      /** non-critical tail updates complete */
+    }
+
+    hydrateDashboardView();
+    hydratePatrickRemoteToggle();
+    hydrateJeremyTrainingToggle();
+    refreshAll().catch(function (e) {
+      console.error(e);
+      setPill("pill-blockers", "risk", "refresh error");
+    });
+  </script>
+</body>
+</html>

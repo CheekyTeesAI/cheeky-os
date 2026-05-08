@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "messages": [
+    {
+      "storedAt": "2026-04-18T03:36:42.495Z",
+      "sourceMessageId": "em-mo3scm4e-869dc24d",
+      "fromName": "Sarah",
+      "fromEmail": "sarah@example.com",
+      "subject": "Here is the logo",
+      "bodyText": "See attached",
+      "bodyHtml": "",
+      "attachments": [],
+      "receivedAt": "2026-04-18T03:36:42.492Z"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "generatedAt": "2026-05-06T19:35:06.891Z",
+  "topRevenueOpportunities": [],
+  "adCampaignWarnings": [
+    "No high-severity campaigns flagged in import — still eye CPC manually."
+  ],
+  "recommendedAdActions": [
+    {
+      "campaign": "Simpsonville trades rush",
+      "move": "Draft tighter RSA + negative keyword pass before bid changes (human executes in Google Ads).",
+      "guardrail": "You are the Cheeky Tees operational + growth AI co-pilot. Never execute high-impact actions; never mutate ad spend automatically; analyze using imported metrics only; drafts and recommendations stay approval-gated; if confidence is low, say so."
+    }
+  ],
+  "outreachRecommendations": [
+    "Demo Cafe • warm_reactivation"
+  ],
+  "quoteConversionInsights": [
+    "Quote conversion rate withheld — widen tracked quote cohort before trusting."
+  ],
+  "localMarketInsights": [
+    "Standard planning window — keep rush-order proof points visible for local timelines."
+  ],
+  "tomorrowFocus": [
+    "Patrick clears 2 approval ticket(s) before any outbound customer touch.",
+    "Import fresh Google Ads rows for GEMINI review + run generate-drafts if campaigns look noisy.",
+    "Scan KPI summary for quote follow-up deterioration — pair with outreach drafts only."
+  ],
+  "growthMomentumScore": 0.4,
+  "confidence": 0.62,
+  "blockerPatternNote": "Blocker envelope measured — still verify cash + art manually.",
+  "cashWarningsEcho": "Outstanding balance signal (sampled) ~ $36753 — align with deposit policy.",
+  "strategyPromptEcho": "You are the Cheeky Tees growth strategy AI. Priorities: protect cashflow, protect production, improve Google Ads efficiency, increase qualified leads, increase quote conversion, identify growth opportunities. Rules: recommendations only; no autonomous changes; metric-driven reasoning only; blockers first; concise and actionable.",
+  "guardrailEcho": "You are the Cheeky Tees operational + growth AI co-pilot. Never execute high-impact actions; never mutate ad spend automatically; analyze using imported metrics only; drafts and recommendations stay approval-gated; if confidence is low, say so.",
+  "topConcern": "Live query failed safely — reconcile Prisma columns vs database. Showing empty buckets until repaired.",
+  "changedSinceYesterday": "2 recent friction note(s) captured; review repeated areas before tomorrow shift.",
+  "jeremyFinishToday": "Finish top blocker clear path before opening new jobs in production queue.",
+  "patrickReviewTonight": "Review approvals + ad warnings + stale estimate insights before approving outbound drafts.",
+  "systemHealth": {
+    "healthScore": 0.6,
+    "operationalConfidence": 0.65,
+    "warnings": [],
+    "blockers": [],
+    "connectorStatus": {
+      "prismaReadable": true,
+      "squareCache": "cached_snapshot_present",
+      "cachedSquareAt": "2026-05-06T19:35:07.854Z",
+      "note": "You are the Cheeky Tees operational AI co-pilot. Protect cashflow and production; never send communications automatically; if confidence is low, say so; generate recommendations only."
+    },
+    "intakeSignals": {
+      "pendingSelfServiceReview": 0
+    },
+    "draftBacklogTotals": {
+      "workOrderDraftsPending": 0,
+      "garmentDraftsPending": 0,
+      "customerFollowUpDraftsPending": 0
+    },
+    "escalationRecommendations": [
+      "Keep logging friction snapshots — playbook auto-compilation stays enabled."
+    ],
+    "generatedAt": "2026-05-06T19:35:07.918Z",
+    "guardrailEcho": "You are the Cheeky Tees operational AI co-pilot. Protect cashflow and production; never send communications automatically; if confidence is low, say so; generate recommendations only."
+  }
+}

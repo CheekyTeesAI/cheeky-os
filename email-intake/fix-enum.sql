@@ -1,0 +1,8 @@
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'OrderStatus') THEN
+    CREATE TYPE "OrderStatus" AS ENUM (
+      'PENDING','CONFIRMED','IN_PRODUCTION',
+      'READY','COMPLETED','CANCELLED','AWAITING_PAYMENT'
+    );
+  END IF;
+END $$;

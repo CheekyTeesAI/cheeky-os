@@ -1,0 +1,115 @@
+openapi: 3.0.1
+info:
+  title: Anthropic Messages API (Claude)
+  description: |
+    Custom connector for Power Platform — Messages API.
+    Use API key from https://console.anthropic.com/ stored in connector connection (secure).
+    For Power Automate: set policy to handle 429/5xx with retry.
+  version: "1.0.0"
+
+servers:
+  - url: https://api.anthropic.com
+
+paths:
+  /v1/messages:
+    post:
+      summary: Create a message (Claude)
+      operationId: CreateMessage
+      parameters:
+        - name: anthropic-version
+          in: header
+          required: true
+          description: Required by Anthropic API. Use LATEST stable date from https://docs.anthropic.com/
+          schema:
+            type: string
+            default: "2023-06-01"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Bad request
+        "401":
+          description: Unauthorized
+        "429":
+          description: Rate limited
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+
+  schemas:
+    MessageRequest:
+      type: object
+      required: [model, max_tokens, messages]
+      properties:
+        model:
+          type: string
+          description: e.g. claude-sonnet-4-20250514, claude-opus-4-20250514
+          example: claude-sonnet-4-20250514
+        max_tokens:
+          type: integer
+          example: 4096
+        system:
+          type: string
+          description: System prompt for parsing/pricing rules
+        messages:
+          type: array
+          items:
+            type: object
+            required: [role, content]
+            properties:
+              role:
+                type: string
+                enum: [user, assistant]
+              content:
+                type: string
+        temperature:
+          type: number
+          format: float
+          default: 0.2
+
+    MessageResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        role:
+          type: string
+        content:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              text:
+                type: string
+        model:
+          type: string
+        stop_reason:
+          type: string
+        usage:
+          type: object
+          properties:
+            input_tokens:
+              type: integer
+            output_tokens:
+              type: integer
+
+security:
+  - ApiKeyAuth: []

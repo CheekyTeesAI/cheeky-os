@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cheeky — Sales &amp; reactivation</title>
+  <style>
+    :root {
+      --bg: #0c1017;
+      --panel: #151b24;
+      --border: #2a3544;
+      --text: #e8edf4;
+      --muted: #8b9aab;
+      --accent: #38bdf8;
+      --high: #f472b6;
+      --open: #34d399;
+      --draft: #fbbf24;
+      --snooze: #64748b;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    header {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+      padding: 14px 18px; background: var(--panel); border-bottom: 1px solid var(--border);
+    }
+    header h1 { margin: 0; font-size: 1.15rem; }
+    .meta { color: var(--muted); font-size: 0.8rem; }
+    button {
+      background: var(--accent); color: #0f172a; border: none; padding: 8px 14px;
+      border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.85rem;
+    }
+    button.secondary { background: #475569; color: #fff; }
+    button.warn { background: var(--draft); color: #1a1a12; }
+    button.ok { background: var(--open); color: #042f1f; }
+    button.bad { background: #be123c; color: #fff; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    a.hdr { color: var(--accent); font-weight: 700; font-size: 0.9rem; text-decoration: none; }
+    a.hdr:hover { text-decoration: underline; }
+    .metrics {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px; padding: 12px 18px;
+    }
+    .metric {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 12px; text-align: center;
+    }
+    .metric b { display: block; font-size: 1.25rem; }
+    .metric span { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .sections {
+      display: grid; grid-template-columns: repeat(2, minmax(280px, 1fr));
+      gap: 12px; padding: 0 12px 24px;
+    }
+    @media (max-width: 900px) { .sections { grid-template-columns: 1fr; } }
+    .col {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+      min-height: 160px; max-height: 55vh; display: flex; flex-direction: column;
+    }
+    .col h2 {
+      margin: 0; padding: 10px 12px; font-size: 0.72rem; text-transform: uppercase;
+      letter-spacing: 0.06em; border-bottom: 1px solid var(--border);
+    }
+    .col.high h2 { color: var(--high); }
+    .col.open h2 { color: var(--open); }
+    .col.drafted h2 { color: var(--draft); }
+    .col.snoozed h2 { color: var(--snooze); }
+    .list { overflow-y: auto; padding: 8px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .card {
+      background: #121a22; border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px; font-size: 0.82rem;
+    }
+    .card .t { font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+    .card .sub { color: var(--muted); font-size: 0.74rem; margin-bottom: 6px; }
+    .row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Sales &amp; reactivation</h1>
+    <span class="meta" id="status">Draft-only — no messages send without comms approval.</span>
+    <button type="button" id="scan">Run scan</button>
+    <button type="button" class="secondary" id="refresh">Refresh</button>
+    <a class="hdr" href="/production.html">Production</a>
+    <a class="hdr" href="/comms.html">Comms queue</a>
+  </header>
+  <div class="metrics" id="metrics"></div>
+  <div class="sections">
+    <section class="col high"><h2>High priority</h2><div class="list" id="high"></div></section>
+    <section class="col open"><h2>Open</h2><div class="list" id="open"></div></section>
+    <section class="col drafted"><h2>Drafted</h2><div class="list" id="drafted"></div></section>
+    <section class="col snoozed"><h2>Snoozed</h2><div class="list" id="snoozed"></div></section>
+  </div>
+  <script>
+    (function () {
+      var REFRESH_MS = 60000;
+      function esc(s) {
+        if (s == null) return "";
+        return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+      }
+      function card(parent, opp) {
+        var id = opp.id || "";
+        var div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML =
+          '<div class="t">' + esc(opp.type) + " · " + esc(opp.priority) + "</div>" +
+          '<div class="sub">' + esc(opp.customerName) + " · " + esc(opp.customerEmail) + "</div>" +
+          '<div class="sub">' + esc(opp.reason) + "</div>" +
+          '<div class="sub">Est: $' + (Number(opp.estimatedValue || 0).toFixed(0)) + " · " + esc(opp.status) + "</div>";
+        var row = document.createElement("div");
+        row.className = "row";
+        if (opp.status === "OPEN" || opp.status === "SNOOZED") {
+          addBtn(row, "Create draft", function () { draft(id); }, false, "");
+        }
+        if (opp.status !== "WON" && opp.status !== "LOST") {
+          addBtn(row, "Contacted", function () { patchSt(id, "CONTACTED", ""); }, false, "secondary");
+          addBtn(row, "Snooze", function () { patchSt(id, "SNOOZED", ""); }, false, "secondary");
+          addBtn(row, "Won", function () { patchSt(id, "WON", ""); }, false, "ok");
+          addBtn(row, "Lost", function () { patchSt(id, "LOST", ""); }, false, "bad");
+        }
+        div.appendChild(row);
+        parent.appendChild(div);
+      }
+      function addBtn(row, label, fn, disabled, cls) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.textContent = label;
+        if (cls) b.className = cls;
+        b.addEventListener("click", fn);
+        row.appendChild(b);
+      }
+      function patchSt(id, status, note) {
+        fetch("/api/sales/opportunities/" + encodeURIComponent(id) + "/status", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: status, note: note || "" }),
+          credentials: "same-origin",
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            if (!j.ok) alert(j.error || "failed");
+            load();
+          })
+          .catch(function () { alert("network"); });
+      }
+      function draft(id) {
+        fetch("/api/sales/opportunities/" + encodeURIComponent(id) + "/draft", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+          credentials: "same-origin",
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            if (!j.ok) alert(j.error || "draft failed");
+            load();
+          })
+          .catch(function () { alert("network"); });
+      }
+      function load() {
+        fetch("/api/sales/opportunities", { credentials: "same-origin" })
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            if (!j || j.ok !== true) throw new Error((j && j.error) || "bad");
+            var m = j.metrics || {};
+            document.getElementById("metrics").innerHTML =
+              '<div class="metric"><b>' + (m.open || 0) + '</b><span>Open</span></div>' +
+              '<div class="metric"><b>' + (m.drafted || 0) + '</b><span>Drafted</span></div>' +
+              '<div class="metric"><b>' + (m.highPriority || 0) + '</b><span>High pri</span></div>' +
+              '<div class="metric"><b>$' + (Number(m.estimatedPipeline || 0).toFixed(0)) + '</b><span>Pipeline est</span></div>';
+            var high = document.getElementById("high");
+            var op = document.getElementById("open");
+            var dr = document.getElementById("drafted");
+            var sn = document.getElementById("snoozed");
+            high.innerHTML = op.innerHTML = dr.innerHTML = sn.innerHTML = "";
+            (j.opportunities || []).forEach(function (o) {
+              if ((o.priority || "").toUpperCase() === "HIGH" && ["OPEN","DRAFTED","CONTACTED"].indexOf(o.status) >= 0) {
+                card(high, o);
+              }
+            });
+            (j.opportunities || []).forEach(function (o) {
+              if (o.status === "OPEN") card(op, o);
+            });
+            (j.opportunities || []).forEach(function (o) {
+              if (o.status === "DRAFTED") card(dr, o);
+            });
+            (j.opportunities || []).forEach(function (o) {
+              if (o.status === "SNOOZED") card(sn, o);
+            });
+            document.getElementById("status").textContent = "Updated " + new Date().toLocaleString();
+          })
+          .catch(function (e) {
+            document.getElementById("status").textContent = "Error: " + (e.message || e);
+          });
+      }
+      document.getElementById("refresh").addEventListener("click", load);
+      document.getElementById("scan").addEventListener("click", function () {
+        document.getElementById("status").textContent = "Scanning…";
+        fetch("/api/sales/scan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+          credentials: "same-origin",
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            if (!j.ok && j.error) alert(j.error);
+            load();
+          })
+          .catch(function () { alert("scan failed"); });
+      });
+      load();
+      setInterval(load, REFRESH_MS);
+    })();
+  </script>
+</body>
+</html>

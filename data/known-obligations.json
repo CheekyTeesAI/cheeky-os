@@ -1,0 +1,32 @@
+[
+  {
+    "id": "obl-rent",
+    "type": "rent",
+    "label": "Shop Rent",
+    "amount": 2500,
+    "dueDate": "2026-05-01",
+    "certainty": "estimated",
+    "source": "operator-maintained",
+    "notes": "Seeded obligation file"
+  },
+  {
+    "id": "obl-payroll",
+    "type": "payroll",
+    "label": "Payroll",
+    "amount": 4200,
+    "dueDate": "2026-04-29",
+    "certainty": "estimated",
+    "source": "operator-maintained",
+    "notes": "Seeded obligation file"
+  },
+  {
+    "id": "obl-tax",
+    "type": "tax",
+    "label": "Sales Tax Set-Aside",
+    "amount": 1200,
+    "dueDate": "2026-05-10",
+    "certainty": "estimated",
+    "source": "operator-maintained",
+    "notes": "Seeded obligation file"
+  }
+]

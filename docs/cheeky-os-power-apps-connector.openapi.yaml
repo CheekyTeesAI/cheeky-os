@@ -1,0 +1,380 @@
+openapi: 3.0.3
+
+info:
+
+  title: Cheeky OS — Power Apps
+
+  description: >
+
+    Canvas app integration for Cheeky OS v4.3+. Primary feed:
+
+    GET /api/cheeky-os/dashboard-data returns `status`, `summary`, `powerAppsTestHint`, `tiles`
+
+    (PascalCase integers + strings; `tiles.HealthSummary` is a one-line ops subtitle). Set Security host to your public base URL (no trailing slash).
+
+  version: 1.2.0
+
+servers:
+
+  - url: https://YOUR-HOST
+
+    description: Replace with your Cheeky OS base URL.
+
+security:
+
+  - DashboardKey: []
+
+paths:
+
+  /api/cheeky-os/dashboard-data:
+
+    get:
+
+      operationId: GetDashboardData
+
+      summary: Dashboard JSON — tiles, summary, degraded/success gate
+
+      security:
+
+        - DashboardKey: []
+
+      responses:
+
+        "200":
+
+          description: Always includes full `tiles` object; inspect `status` and `tiles.Source`.
+
+          content:
+
+            application/json:
+
+              schema:
+
+                $ref: "#/components/schemas/DashboardDataResponse"
+
+        "401":
+
+          description: Dashboard auth required
+
+  /health:
+
+    get:
+
+      operationId: GetHealth
+
+      summary: Liveness + observability snapshot
+
+      responses:
+
+        "200":
+
+          description: OK
+
+          content:
+
+            application/json:
+
+              schema:
+
+                type: object
+
+                properties:
+
+                  ok:
+
+                    type: boolean
+
+                  status:
+
+                    type: string
+
+                  service:
+
+                    type: string
+
+                  port:
+
+                    type: integer
+
+                  time:
+
+                    type: string
+
+                  observability:
+
+                    type: object
+
+  /api/operator/queue:
+
+    get:
+
+      operationId: GetQueue
+
+      summary: Intake rows eligible for printing
+
+      responses:
+
+        "200":
+
+          description: OK
+
+          content:
+
+            application/json:
+
+              schema:
+
+                type: object
+
+                properties:
+
+                  ok:
+
+                    type: boolean
+
+                  source:
+
+                    type: string
+
+                  count:
+
+                    type: integer
+
+                  jobs:
+
+                    type: array
+
+                    items:
+
+                      type: object
+
+components:
+
+  securitySchemes:
+
+    DashboardKey:
+
+      type: apiKey
+
+      in: header
+
+      name: X-Cheeky-Dashboard-Key
+
+      description: >
+
+        Set to CHEEKY_DASHBOARD_API_KEY when CHEEKY_DASHBOARD_AUTH_MODE=api_key.
+
+        Or send Entra Bearer when CHEEKY_DASHBOARD_AUTH_MODE=entra.
+
+  schemas:
+
+    DashboardDataResponse:
+
+      type: object
+
+      required:
+
+        - ok
+
+        - status
+
+        - summary
+
+        - powerAppsTestHint
+
+        - tiles
+
+      properties:
+
+        ok:
+
+          type: boolean
+
+        status:
+
+          type: string
+
+          enum:
+
+            - success
+
+            - degraded
+
+        summary:
+
+          $ref: "#/components/schemas/DashboardSummary"
+
+        powerAppsTestHint:
+
+          type: string
+
+          description: One-line curl example using request Host/proto (substitute YOUR_KEY).
+
+        generatedAt:
+
+          type: string
+
+          format: date-time
+
+        version:
+
+          type: string
+
+        port:
+
+          type: integer
+
+        dataverseProfile:
+
+          type: string
+
+        observability:
+
+          type: object
+
+        integrations:
+
+          type: array
+
+          items:
+
+            type: object
+
+        tiles:
+
+          $ref: "#/components/schemas/PowerAppsTiles"
+
+    DashboardSummary:
+
+      type: object
+
+      properties:
+
+        headline:
+
+          type: string
+
+        tileSource:
+
+          type: string
+
+          description: prisma | partial | database_unavailable | error
+
+        workerStatus:
+
+          type: string
+
+          description: Healthy | Degraded | Recovering | Stopped | Disabled
+
+        queueDepth:
+
+          type: integer
+
+        activeProductionJobs:
+
+          type: integer
+
+        ordersCreatedToday:
+
+          type: integer
+
+        lastIntakeTime:
+
+          type: string
+
+          nullable: true
+
+          format: date-time
+
+        attentionTileSum:
+
+          type: integer
+
+          description: Sum of key attention tiles (hold + waiting art + blanks + needing art).
+
+    PowerAppsTiles:
+
+      type: object
+
+      description: Fixed shape for canvas bindings; zeros on failure paths.
+
+      properties:
+
+        Source:
+
+          type: string
+
+        OrdersOnHold:
+
+          type: integer
+
+        OrdersWaitingOnArt:
+
+          type: integer
+
+        Estimates:
+
+          type: integer
+
+        BlanksNeeded:
+
+          type: integer
+
+        OrdersNeedingArt:
+
+          type: integer
+
+        QueueDepth:
+
+          type: integer
+
+        LastIntakeTime:
+
+          type: string
+
+          nullable: true
+
+          description: ISO-8601 from observability intake lastAt; null when none.
+
+        WorkerStatus:
+
+          type: string
+
+        ActiveJobs:
+
+          type: integer
+
+          description: Orders in PRODUCTION_READY, PRINTING, or QC.
+
+        TotalOrdersToday:
+
+          type: integer
+
+          description: Orders created since local midnight.
+
+        GeneratedAt:
+
+          type: string
+
+          format: date-time
+
+        HealthSummary:
+
+          type: string
+
+          description: Single-line subtitle for canvas labels (source, worker, queue, active, attention).
+
+        Notes:
+
+          type: array
+
+          items:
+
+            type: string
+
+        Error:
+
+          type: string
+
+          description: Optional legacy/fatal helper text; prefer Notes + Source=error
+

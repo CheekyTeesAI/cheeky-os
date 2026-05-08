@@ -1,0 +1,577 @@
+{
+  "version": 1,
+  "assignments": [
+    {
+      "taskId": "TT-JOB-1776461775815-G6AQ-068da1969f",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775815-G6AQ",
+      "task": "Pretreat",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775815-G6AQ-0fe456cde7",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775815-G6AQ",
+      "task": "Load Garment",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775815-G6AQ-82c16d0c3e",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775815-G6AQ",
+      "task": "Print",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775815-G6AQ-f1e93cba36",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775815-G6AQ",
+      "task": "Cure",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775815-G6AQ-238459446e",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775815-G6AQ",
+      "task": "QC",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775837-PMK8-e861f8620f",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775837-PMK8",
+      "task": "Pretreat",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775837-PMK8-a35bce7003",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775837-PMK8",
+      "task": "Load Garment",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775837-PMK8-a3811fbe4e",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775837-PMK8",
+      "task": "Print",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775837-PMK8-a9dc8d6356",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775837-PMK8",
+      "task": "Cure",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775837-PMK8-4d4f3fb9b8",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775837-PMK8",
+      "task": "QC",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775856-4WRJ-8109ee32ec",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775856-4WRJ",
+      "task": "Burn Screens",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "SCREEN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775856-4WRJ-b233951153",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775856-4WRJ",
+      "task": "Setup Press",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "SCREEN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775856-4WRJ-85225952fd",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775856-4WRJ",
+      "task": "Print",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "SCREEN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775856-4WRJ-1fdb72f287",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775856-4WRJ",
+      "task": "Cure",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "SCREEN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775856-4WRJ-fafc3fe5a2",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775856-4WRJ",
+      "task": "QC",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "SCREEN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775874-87VC-8d370f4c40",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775874-87VC",
+      "task": "Print Transfer",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTF",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775874-87VC-da80eb7322",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775874-87VC",
+      "task": "Press",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTF",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775874-87VC-0cf009a7dd",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775874-87VC",
+      "task": "Peel",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTF",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776461775874-87VC-807c465fb6",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776461775874-87VC",
+      "task": "QC",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTF",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-INV-MOCK-9001-c65c3dd82d",
+      "assignedTo": "patrick",
+      "jobId": "JOB-INV-MOCK-9001",
+      "task": "Review Job Details",
+      "status": "PENDING",
+      "roleKind": "DESIGN",
+      "printMethod": "UNKNOWN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-INV-MOCK-9001-80f5a52c37",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-INV-MOCK-9001",
+      "task": "Determine Print Method",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "UNKNOWN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-INV-MOCK-9001-53e7fcf041",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-INV-MOCK-9001",
+      "task": "QC",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "UNKNOWN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-INV-MOCK-9002-e52a97b2a3",
+      "assignedTo": "patrick",
+      "jobId": "JOB-INV-MOCK-9002",
+      "task": "Review Job Details",
+      "status": "PENDING",
+      "roleKind": "DESIGN",
+      "printMethod": "UNKNOWN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-INV-MOCK-9002-98d302476b",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-INV-MOCK-9002",
+      "task": "Determine Print Method",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "UNKNOWN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-INV-MOCK-9002-b08a2be1a3",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-INV-MOCK-9002",
+      "task": "QC",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "UNKNOWN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-INV-MOCK-9003-6fafcf8a76",
+      "assignedTo": "patrick",
+      "jobId": "JOB-INV-MOCK-9003",
+      "task": "Review Job Details",
+      "status": "PENDING",
+      "roleKind": "DESIGN",
+      "printMethod": "UNKNOWN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-INV-MOCK-9003-561dc29a74",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-INV-MOCK-9003",
+      "task": "Determine Print Method",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "UNKNOWN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-INV-MOCK-9003-80355a16a1",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-INV-MOCK-9003",
+      "task": "QC",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "UNKNOWN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-INV-MOCK-9004-d36d105682",
+      "assignedTo": "patrick",
+      "jobId": "JOB-INV-MOCK-9004",
+      "task": "Review Job Details",
+      "status": "PENDING",
+      "roleKind": "DESIGN",
+      "printMethod": "UNKNOWN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-INV-MOCK-9004-d0e46722d2",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-INV-MOCK-9004",
+      "task": "Determine Print Method",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "UNKNOWN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-INV-MOCK-9004-84d64d6c53",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-INV-MOCK-9004",
+      "task": "QC",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "UNKNOWN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-INV-MOCK-9005-7da88effc1",
+      "assignedTo": "patrick",
+      "jobId": "JOB-INV-MOCK-9005",
+      "task": "Review Job Details",
+      "status": "PENDING",
+      "roleKind": "DESIGN",
+      "printMethod": "UNKNOWN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-INV-MOCK-9005-9e7e3ed850",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-INV-MOCK-9005",
+      "task": "Determine Print Method",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "UNKNOWN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-INV-MOCK-9005-52362a5c8b",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-INV-MOCK-9005",
+      "task": "QC",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "UNKNOWN",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776463119818-KUB6-96b8243fe6",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776463119818-KUB6",
+      "task": "Pretreat",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776463119818-KUB6-b0dcf19bba",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776463119818-KUB6",
+      "task": "Load Garment",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776463119818-KUB6-135a2939cf",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776463119818-KUB6",
+      "task": "Print",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776463119818-KUB6-581ddd2584",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776463119818-KUB6",
+      "task": "Cure",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776463119818-KUB6-8e8255fb5b",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776463119818-KUB6",
+      "task": "QC",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776463119847-7YY5-eefca424ba",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776463119847-7YY5",
+      "task": "Print Transfer",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTF",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776463119847-7YY5-5f2dfa941c",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776463119847-7YY5",
+      "task": "Press",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTF",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776463119847-7YY5-f800581c79",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776463119847-7YY5",
+      "task": "Peel",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTF",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776463119847-7YY5-0945427616",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776463119847-7YY5",
+      "task": "QC",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTF",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776463163562-APJK-a9e4add370",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776463163562-APJK",
+      "task": "Hoop",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "EMBROIDERY",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776463163562-APJK-55914e43f8",
+      "assignedTo": "patrick",
+      "jobId": "JOB-1776463163562-APJK",
+      "task": "Thread Setup",
+      "status": "PENDING",
+      "roleKind": "ADMIN",
+      "printMethod": "EMBROIDERY",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776463163562-APJK-4d0ffd4342",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776463163562-APJK",
+      "task": "Stitch",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "EMBROIDERY",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776463163562-APJK-06acbe36fb",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776463163562-APJK",
+      "task": "Trim",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "EMBROIDERY",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776463163562-APJK-5bb14f0f0b",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776463163562-APJK",
+      "task": "QC",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "EMBROIDERY",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776466354571-INP4-52f90d3fa4",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776466354571-INP4",
+      "task": "Pretreat",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776466354571-INP4-1830c54b0d",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776466354571-INP4",
+      "task": "Load Garment",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776466354571-INP4-6a4cf5aa64",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776466354571-INP4",
+      "task": "Print",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776466354571-INP4-520155fa7e",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776466354571-INP4",
+      "task": "Cure",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776466354571-INP4-0c2b4f4078",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776466354571-INP4",
+      "task": "QC",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTG",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776466359086-5WC6-55cdb396c8",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776466359086-5WC6",
+      "task": "Print Transfer",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTF",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776466359086-5WC6-dd3141a2f5",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776466359086-5WC6",
+      "task": "Press",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTF",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776466359086-5WC6-a2e94cbabc",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776466359086-5WC6",
+      "task": "Peel",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTF",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    },
+    {
+      "taskId": "TT-JOB-1776466359086-5WC6-c8be22422f",
+      "assignedTo": "jeremy",
+      "jobId": "JOB-1776466359086-5WC6",
+      "task": "QC",
+      "status": "PENDING",
+      "roleKind": "PRINTER",
+      "printMethod": "DTF",
+      "updatedAt": "2026-04-18T01:58:18.002Z"
+    }
+  ],
+  "completedToday": [],
+  "jobFlags": {}
+}

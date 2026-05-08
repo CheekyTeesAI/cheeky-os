@@ -1,0 +1,14 @@
+# Blueprint for Render.com — Cheeky OS (email-intake).
+#
+# If the Git repo root is above `email-intake/`, create the web service with
+# Root Directory = `email-intake`, or move this file to the repo root and set `rootDir: email-intake`.
+#
+# Run DB migrations from `email-intake` after deploy: `npx prisma migrate deploy` (and foundation schema if used).
+
+services:
+  - type: web
+    name: cheeky-os
+    runtime: node
+    buildCommand: npm install && npx prisma generate
+    startCommand: npm start
+    healthCheckPath: /cheeky/health

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cheeky — Production board</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a222d;
+      --border: #2a3544;
+      --text: #e8edf4;
+      --muted: #8b9aab;
+      --accent: #3b9eff;
+      --ready: #22c55e;
+      --print: #eab308;
+      --qc: #a78bfa;
+      --done: #64748b;
+      --stuck: #f43f5e;
+      --stuck-glow: rgba(244, 63, 94, 0.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { filter: brightness(1.08); }
+    button:active { filter: brightness(0.95); }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(220px, 1fr));
+      gap: 10px;
+      padding: 12px;
+      align-items: start;
+    }
+    @media (max-width: 1200px) {
+      .board { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .board { grid-template-columns: 1fr; }
+    }
+    .column {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 100px);
+    }
+    .column header.col-head {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .column.ready .col-head { color: var(--ready); }
+    .column.printing .col-head { color: var(--print); }
+    .column.qc .col-head { color: var(--qc); }
+    .column.completed .col-head { color: var(--done); }
+    .column.stuck .col-head {
+      color: var(--stuck);
+      background: rgba(244, 63, 94, 0.08);
+    }
+    .cards {
+      padding: 8px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .card {
+      background: #121922;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 11px;
+      font-size: 0.85rem;
+    }
+    .card.stuck-card {
+      border-color: var(--stuck);
+      box-shadow: 0 0 0 1px var(--stuck-glow);
+      background: #1c1418;
+    }
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .card .label {
+      color: var(--muted);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-top: 6px;
+    }
+    .card .value {
+      word-break: break-word;
+    }
+    .err-banner {
+      margin: 8px 12px;
+      padding: 10px;
+      border-radius: 6px;
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid var(--stuck);
+      color: #fecaca;
+      display: none;
+    }
+    .err-banner.visible { display: block; }
+    header a.link {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    header a.link:hover { text-decoration: underline; }
+    .card .assign-row { margin-top: 8px; }
+    .btn-assign {
+      background: var(--qc);
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    .art-badge {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .art-badge.approved { background: rgba(34, 197, 94, 0.2); color: var(--ready); }
+    .art-badge.requested { background: rgba(234, 179, 8, 0.2); color: var(--print); }
+    .art-badge.changes { background: rgba(244, 63, 94, 0.2); color: var(--stuck); }
+    .art-badge.none { background: rgba(100, 116, 139, 0.2); color: var(--muted); }
+    .card .comms-meta { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Production board</h1>
+    <span class="meta" id="generated">Loading…</span>
+    <button type="button" id="refresh">Refresh board</button>
+    <a class="link" href="/purchasing.html">Purchasing</a>
+    <a class="link" href="/qc.html">QC</a>
+    <a class="link" href="/fulfillment.html">Fulfillment</a>
+    <a class="link" href="/sales.html">Sales queue</a>
+    <a class="link" href="/comms.html">Comms queue</a>
+    <a class="link" href="/jeremy.html" target="_blank" rel="noopener">Jeremy view</a>
+    <a class="link" href="/api/operator/status" target="_blank" rel="noopener">Operator status</a>
+  </header>
+  <div class="err-banner" id="err"></div>
+  <main class="board" id="board"></main>
+
+  <script>
+    (function () {
+      var REFRESH_MS = 30000;
+      var columns = [
+        { key: "PRODUCTION_READY", title: "Production ready", className: "ready" },
+        { key: "PRINTING", title: "Printing", className: "printing" },
+        { key: "QC", title: "QC", className: "qc" },
+        { key: "COMPLETED", title: "Completed", className: "completed" },
+        { key: "STUCK", title: "Stuck", className: "stuck" },
+      ];
+
+      function esc(s) {
+        if (s == null || s === "") return "";
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function disp(v, fallback) {
+        if (v == null || v === "") return fallback || "—";
+        return String(v);
+      }
+
+      function formatDate(d) {
+        if (!d) return "—";
+        try {
+          var x = new Date(d);
+          if (isNaN(x.getTime())) return "—";
+          return x.toLocaleString();
+        } catch (e) {
+          return "—";
+        }
+      }
+
+      function field(label, value) {
+        return (
+          '<div class="label">' + esc(label) + '</div><div class="value">' + value + "</div>"
+        );
+      }
+
+      function renderCard(o, colKey) {
+        var isStuckCol = colKey === "STUCK";
+        var reasonsArr = Array.isArray(o.stuckReasons) ? o.stuckReasons : [];
+        var reasons = reasonsArr.length ? reasonsArr.join("; ") : "";
+        var stuckClass = isStuckCol || reasons ? " stuck-card" : "";
+        var productBits = [];
+        if (o.garmentType) productBits.push(disp(o.garmentType, ""));
+        if (o.lineItemsSummary) productBits.push(o.lineItemsSummary);
+        var productLine = productBits.filter(Boolean).join(" · ") || null;
+        var colorLine = o.colorHint != null && o.colorHint !== "" ? o.colorHint : null;
+        var qtySummary =
+          o.quantity != null
+            ? "Qty (order): " + o.quantity
+            : o.lineItemsSummary
+            ? "(see line items)"
+            : null;
+        var html = "";
+        html += '<article class="card' + stuckClass + '">';
+        html += "<h3>" + esc(disp(o.customerName, "Unknown customer")) + "</h3>";
+        html += field("Order", esc(disp(o.orderTitle || o.orderNumber, "No order #")));
+        html += field("Stage", esc(disp(o.status, "—")));
+        html += field("Production type", esc(disp(o.productionTypeFinal, "—")));
+        html += field("Product", esc(disp(productLine, "—")));
+        if (colorLine) html += field("Color", esc(colorLine));
+        html += field("Quantities", esc(disp(qtySummary, "—")));
+        html += field("Due", esc(formatDate(o.quoteExpiresAt)));
+        html += field("Next action", esc(disp(o.nextAction, "—")));
+        html += field("Garment order", esc(disp(o.garmentOrderStatus, "—")));
+        if (o.purchasePlanStatus) {
+          html += field("Purchase plan", esc(disp(o.purchasePlanStatus, "—")));
+          html += field("Blank cost covered", o.blankCostCovered ? "Yes" : "No");
+          if (o.vendorName) html += field("Plan vendor", esc(String(o.vendorName)));
+          if (o.receivedAt) html += field("Blanks received", esc(formatDate(o.receivedAt)));
+          var pr = Array.isArray(o.purchasingWarnings) ? o.purchasingWarnings : [];
+          if (pr.length) html += field("Purchasing", esc(pr.join("; ")));
+        }
+        if (o.qcStatus && o.qcStatus !== "NONE") {
+          html += field("QC status", esc(String(o.qcStatus)));
+          if (o.needsReprint) html += field("Reprint", "Required");
+          if (o.productionBlocked) html += field("Production blocked", "Inventory / purchasing — see QC & purchasing boards");
+          var qw = Array.isArray(o.qcWarnings) ? o.qcWarnings : [];
+          if (qw.length) html += field("QC", esc(qw.join("; ")));
+        }
+        html += field("Updated", esc(formatDate(o.updatedAt)));
+        var art = String(o.artApprovalStatus || "NOT_REQUESTED").toUpperCase();
+        var badgeClass = "none";
+        if (art === "APPROVED") badgeClass = "approved";
+        else if (art === "REQUESTED") badgeClass = "requested";
+        else if (art === "CHANGES_REQUESTED") badgeClass = "changes";
+        var badgeText = "Art: " + art.replace(/_/g, " ");
+        html += '<div class="art-badge ' + badgeClass + '">' + esc(badgeText) + "</div>";
+        if (o.artApprovedAt) html += field("Art approved at", esc(formatDate(o.artApprovedAt)));
+        var cd = o.commsDraftCount != null ? o.commsDraftCount : 0;
+        var need = o.needsCustomerApproval ? " · needs customer" : "";
+        html +=
+          '<div class="comms-meta">Open comms drafts: ' +
+          esc(String(cd)) +
+          esc(need) +
+          '</div>';
+        if (reasons) html += field("Stuck reasons", esc(reasons));
+        if (o.id) {
+          html +=
+            '<div class="assign-row"><button type="button" class="btn-assign req-art-approval" data-order-id="' +
+            esc(o.id) +
+            '">Request art approval</button></div>';
+          html +=
+            '<div class="assign-row"><a class="link" href="/comms.html">Open comms queue</a></div>';
+        }
+        if (colKey === "PRODUCTION_READY" && o.id) {
+          html +=
+            '<div class="assign-row"><button type="button" class="btn-assign assign-jeremy" data-order-id="' +
+            esc(o.id) +
+            '">Assign to Jeremy</button></div>';
+        }
+        html += "</article>";
+        return html;
+      }
+
+      function buildBoard(data) {
+        var board = document.getElementById("board");
+        board.innerHTML = "";
+        columns.forEach(function (col) {
+          var wrap = document.createElement("section");
+          wrap.className = "column " + col.className;
+          var head = document.createElement("header");
+          head.className = "col-head";
+          var list = (data && data[col.key]) || [];
+          head.textContent = col.title + " (" + list.length + ")";
+          var cards = document.createElement("div");
+          cards.className = "cards";
+          for (var i = 0; i < list.length; i++) {
+            cards.innerHTML += renderCard(list[i], col.key);
+          }
+          wrap.appendChild(head);
+          wrap.appendChild(cards);
+          board.appendChild(wrap);
+        });
+      }
+
+      function showErr(msg) {
+        var el = document.getElementById("err");
+        if (!msg) {
+          el.className = "err-banner";
+          el.textContent = "";
+          return;
+        }
+        el.textContent = msg;
+        el.className = "err-banner visible";
+      }
+
+      function load() {
+        showErr("");
+        return fetch("/api/production-board", { credentials: "same-origin" })
+          .then(function (r) {
+            return r.json().then(function (j) {
+              return { ok: r.ok, j: j };
+            });
+          })
+          .then(function (_ref) {
+            var j = _ref.j;
+            if (!j || j.ok !== true) {
+              throw new Error((j && j.error) || "board_failed");
+            }
+            document.getElementById("generated").textContent =
+              "Updated " + (j.generatedAt ? formatDate(j.generatedAt) : "");
+            buildBoard(j);
+          })
+          .catch(function (e) {
+            showErr("Could not load board: " + (e && e.message ? e.message : String(e)));
+          });
+      }
+
+      document.getElementById("refresh").addEventListener("click", load);
+      document.getElementById("board").addEventListener("click", function (ev) {
+        var reqA = ev.target.closest(".req-art-approval");
+        if (reqA) {
+          var oid = reqA.getAttribute("data-order-id");
+          if (!oid) return;
+          fetch("/api/orders/" + encodeURIComponent(oid) + "/art/request-approval", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: "{}",
+          })
+            .then(function (r) {
+              return r.json();
+            })
+            .then(function (j) {
+              if (!j || !j.ok) {
+                showErr((j && j.error) || "art approval request failed");
+                return;
+              }
+              load();
+            })
+            .catch(function (e) {
+              showErr(e.message || "art approval request failed");
+            });
+          return;
+        }
+        var btn = ev.target.closest(".assign-jeremy");
+        if (!btn) return;
+        var id = btn.getAttribute("data-order-id");
+        if (!id) return;
+        fetch("/api/orders/" + encodeURIComponent(id) + "/assign", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({
+            assignedTo: "Jeremy",
+            assignedRole: "Printer",
+            nextAction: "Begin production",
+            priority: "NORMAL",
+          }),
+        })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (j) {
+            if (!j || !j.ok) {
+              document.getElementById("err").textContent = (j && j.error) || "assign failed";
+              document.getElementById("err").className = "err-banner visible";
+              return;
+            }
+            load();
+          })
+          .catch(function (e) {
+            document.getElementById("err").textContent = e.message || "assign failed";
+            document.getElementById("err").className = "err-banner visible";
+          });
+      });
+      load();
+      setInterval(load, REFRESH_MS);
+    })();
+  </script>
+</body>
+</html>

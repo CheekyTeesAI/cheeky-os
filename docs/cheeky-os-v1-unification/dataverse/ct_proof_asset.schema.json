@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ct_proof_asset",
+  "description": "Proof file / version for customer approval (links + status per round).",
+  "tableName": "ct_proof_asset",
+  "tableDisplayName": "Proof Asset",
+  "tableSetName": "ct_proof_assets",
+  "primaryKey": "ct_proof_assetid",
+  "primaryNameColumn": "ct_label",
+  "fields": [
+    {
+      "fieldName": "ct_proof_assetid",
+      "displayName": "Proof Asset ID",
+      "dataverseType": "uniqueidentifier",
+      "required": true,
+      "description": "Primary key."
+    },
+    {
+      "fieldName": "ct_label",
+      "displayName": "Label",
+      "dataverseType": "string",
+      "maxLength": 200,
+      "required": true,
+      "description": "e.g. Mockup v2 — front"
+    },
+    {
+      "fieldName": "ct_round_number",
+      "displayName": "Round",
+      "dataverseType": "whole",
+      "required": true,
+      "description": "1-based revision round."
+    },
+    {
+      "fieldName": "ct_file_url",
+      "displayName": "File URL",
+      "dataverseType": "string",
+      "maxLength": 2000,
+      "required": false,
+      "description": "SharePoint / blob SAS / portal link — never raw secrets."
+    },
+    {
+      "fieldName": "ct_status",
+      "displayName": "Round Status",
+      "dataverseType": "choice",
+      "required": true,
+      "description": "DRAFT | SENT | APPROVED | REJECTED | SUPERSEDED",
+      "options": ["DRAFT", "SENT", "APPROVED", "REJECTED", "SUPERSEDED"]
+    },
+    {
+      "fieldName": "ct_sent_at",
+      "displayName": "Sent At",
+      "dataverseType": "datetime",
+      "required": false,
+      "description": "When customer notified."
+    },
+    {
+      "fieldName": "ct_responded_at",
+      "displayName": "Customer Responded At",
+      "dataverseType": "datetime",
+      "required": false,
+      "description": "Approval / rejection timestamp."
+    },
+    {
+      "fieldName": "ct_customer_note",
+      "displayName": "Customer Note",
+      "dataverseType": "multilinestring",
+      "required": false,
+      "description": "Free text from reply classifier or portal."
+    },
+    {
+      "fieldName": "ct_intake_queueid",
+      "displayName": "Intake Queue",
+      "dataverseType": "lookup",
+      "required": true,
+      "lookupTarget": "ct_intake_queue",
+      "description": "Parent job."
+    }
+  ],
+  "relationships": [
+    {
+      "type": "N:1",
+      "relatedTable": "ct_intake_queue",
+      "lookupField": "ct_intake_queueid",
+      "description": ""
+    }
+  ],
+  "notes": [
+    "Mirror ct_proof_status on parent intake from latest non-superseded round.",
+    "Node proofRoutingService / sendProofForOrder should Create or PATCH ct_proof_asset via Dataverse connector when dual-writing."
+  ]
+}

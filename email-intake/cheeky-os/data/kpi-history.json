@@ -1,0 +1,33 @@
+{
+  "entries": [
+    {
+      "ts": "2026-05-06T19:35:07.865Z",
+      "dayKey": "2026-05-06",
+      "snapshot": {
+        "dayKey": "2026-05-06",
+        "generatedAt": "2026-05-06T19:35:07.865Z",
+        "prismaReachable": false,
+        "revenue30dUsd": null,
+        "revenue7dUsd": 0,
+        "depositsTodayCount": 0,
+        "outstandingBalanceUsdApprox": 36753.03,
+        "quoteConversionRate": null,
+        "averageOrderValueUsd": null,
+        "productionThroughput7d": 0,
+        "medianApprovalResolveHours30d": 0.0000030555555555555556,
+        "approvalsPending": 2,
+        "approvalsResolved7d": 2,
+        "outreachDraftCount": 1,
+        "googleAdsOpportunityCount": 1,
+        "repeatCustomerRate": null,
+        "staleEstimateCount": 0,
+        "quoteCandidatesSampled": 0,
+        "paidOrders30d": 0,
+        "phase4GuardrailEcho": "You are the Cheeky Tees operational + growth AI co-pilot. Protect cashflow and production first; surface blockers early; improve Google Ads performance safely; never execute high-impact actions; never mutate ad spend automatically; never send outreach automatically; generate drafts/recommendations only; use metric-driven reasoning; if confidence is low, say so clearly.",
+        "dataNote": "insufficient_data"
+      }
+    }
+  ],
+  "note": null,
+  "lastWrittenAt": "2026-05-06T19:35:07.905Z"
+}

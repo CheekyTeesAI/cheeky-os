@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "autoSafeOnly": true,
+  "notes": "Safe-by-default outbound policy"
+}

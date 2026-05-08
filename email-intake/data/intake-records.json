@@ -1,0 +1,43 @@
+{
+  "records": [
+    {
+      "id": "INT-mo3scm4t-79e69f",
+      "source": "EMAIL",
+      "customerId": "CUS-mo3scm4s-b7fcdb",
+      "rawSubject": "Here is the logo",
+      "rawBody": "See attached",
+      "normalizedText": "Here is the logo\nSee attached",
+      "intent": "ART",
+      "status": "NEW",
+      "missingFields": [
+        "routing"
+      ],
+      "extractedData": {
+        "fromEmail": "sarah@example.com",
+        "artHint": {
+          "artDetected": true,
+          "attachmentCount": 0,
+          "textHints": {
+            "artWords": true,
+            "attachHint": true
+          }
+        }
+      },
+      "assumptions": [],
+      "artDetected": false,
+      "attachmentCount": 0,
+      "attachmentsMeta": [],
+      "createdJobId": null,
+      "createdQuoteRef": null,
+      "reviewRequired": true,
+      "customerMatch": {},
+      "reorder": null,
+      "nextAction": null,
+      "decisionReasons": [],
+      "mock": false,
+      "isDemo": false,
+      "createdAt": "2026-04-18T03:36:42.509Z",
+      "updatedAt": "2026-04-18T03:36:42.510Z"
+    }
+  ]
+}

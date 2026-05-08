@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cheeky — Jeremy · Today’s production</title>
+  <style>
+    :root {
+      --bg: #0c0f12;
+      --panel: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --go: #3fb950;
+      --warn: #d29922;
+      --danger: #f85149;
+      --btn: #238636;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: 64px;
+    }
+    header {
+      padding: 14px 16px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+    }
+    h1 { margin: 0; font-size: 1.35rem; }
+    .rules {
+      margin-top: 10px;
+      padding: 10px;
+      background: #21262d;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: var(--warn);
+      border: 1px solid var(--border);
+    }
+    .rules ul { margin: 6px 0 0; padding-left: 1.2rem; }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 12px 16px;
+      align-items: center;
+    }
+    .toolbar label { font-size: 0.85rem; color: var(--muted); }
+    select {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      font-size: 1rem;
+      min-width: 160px;
+    }
+    button.action {
+      padding: 14px 18px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      min-height: 48px;
+    }
+    button.action.primary { background: var(--btn); color: #fff; }
+    button.action.secondary { background: var(--accent); color: #fff; }
+    button.action.warn { background: var(--warn); color: #000; }
+    button.action.danger { background: var(--danger); color: #fff; }
+    button.action:disabled { opacity: 0.45; cursor: not-allowed; }
+    .clock-panel {
+      margin: 0 16px 12px;
+      padding: 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.95rem;
+    }
+    .tasks { padding: 8px 12px; max-width: 720px; margin: 0 auto; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .card.stuck { border-color: var(--danger); box-shadow: 0 0 0 1px rgba(248,81,73,0.35); }
+    .card h2 { margin: 0 0 8px; font-size: 1.1rem; }
+    .meta { color: var(--muted); font-size: 0.8rem; margin-bottom: 10px; }
+    .row-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .row-btns button { flex: 1; min-width: 120px; }
+    .err { color: var(--danger); padding: 8px 16px; font-size: 0.9rem; display: none; }
+    .err.on { display: block; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Today’s production</h1>
+    <p style="margin:8px 0 0;font-size:0.9rem;"><a href="/production.html" style="color:var(--accent);font-weight:600;">Open production board</a>
+      · <a href="/qc.html" style="color:var(--accent);font-weight:600;">Quality control</a></p>
+    <div class="rules">
+      <strong>Rules</strong>
+      <ul>
+        <li>Only work from this board.</li>
+        <li>Do not print STUCK orders.</li>
+        <li>Ask Patrick before overriding anything.</li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <button type="button" class="action secondary" id="refresh">Refresh</button>
+    <label>Clock category <select id="cat">
+      <option>Production</option>
+      <option>Overhead Work</option>
+      <option>Break</option>
+      <option>Projects</option>
+      <option>Other</option>
+    </select></label>
+    <button type="button" class="action primary" id="clockIn">Clock In</button>
+    <button type="button" class="action warn" id="clockOut">Clock Out</button>
+  </div>
+
+  <div class="clock-panel" id="clockPanel">Clock: loading…</div>
+  <div class="err" id="err"></div>
+
+  <main class="tasks" id="tasks"></main>
+
+  <script>
+    (function () {
+      var REFRESH_MS = 30000;
+      var EMP = "Jeremy";
+
+      function esc(s) {
+        if (s == null) return "";
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function showErr(msg) {
+        var el = document.getElementById("err");
+        if (!msg) {
+          el.className = "err";
+          el.textContent = "";
+          return;
+        }
+        el.textContent = msg;
+        el.className = "err on";
+      }
+
+      function refreshClock() {
+        var p = document.getElementById("clockPanel");
+        p.textContent = "Clock: loading…";
+        var q = encodeURIComponent(EMP);
+        fetch("/api/time-clock/status?employeeName=" + q)
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (s) {
+            return fetch("/api/time-clock/today?employeeName=" + q).then(function (r2) {
+              return r2.json().then(function (t) {
+                return { s: s, t: t };
+              });
+            });
+          })
+          .then(function (x) {
+            var st = x.s;
+            var td = x.t;
+            var active = st && st.active && st.entry;
+            var line1 = active
+              ? "Clocked IN since " + String(st.entry.clockInAt) + " (" + String(st.entry.category) + ")"
+              : "Not clocked in";
+            var mins = td && typeof td.totalMinutes === "number" ? td.totalMinutes : 0;
+            var hrs = td && typeof td.hoursApprox === "number" ? td.hoursApprox : mins / 60;
+            p.textContent =
+              line1 + " · Today ~" + Math.round(hrs * 100) / 100 + " h (" + mins + " min)";
+          })
+          .catch(function () {
+            p.textContent = "Clock: unavailable";
+          });
+      }
+
+      function postJson(url, body) {
+        return fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify(body || {}),
+        }).then(function (r) {
+          return r.json().then(function (j) {
+            return { ok: r.ok, j: j };
+          });
+        });
+      }
+
+      document.getElementById("clockIn").addEventListener("click", function () {
+        showErr("");
+        var cat = document.getElementById("cat").value;
+        postJson("/api/time-clock/clock-in", {
+          employeeName: EMP,
+          category: cat,
+          note: "",
+        }).then(function (x) {
+          if (!x.j || !x.j.ok) {
+            showErr((x.j && x.j.error) || "clock-in failed");
+            return;
+          }
+          refreshClock();
+        });
+      });
+
+      document.getElementById("clockOut").addEventListener("click", function () {
+        showErr("");
+        postJson("/api/time-clock/clock-out", { employeeName: EMP, note: "" }).then(function (x) {
+          if (!x.j || !x.j.ok) {
+            showErr((x.j && x.j.error) || "clock-out failed");
+            return;
+          }
+          refreshClock();
+        });
+      });
+
+      function stagePatch(orderId, stage, note) {
+        return fetch("/api/orders/" + encodeURIComponent(orderId) + "/stage", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ stage: stage, note: note || "", requestedBy: "jeremy-ui" }),
+        }).then(function (r) {
+          return r.json().then(function (j) {
+            return { ok: r.ok, j: j };
+          });
+        });
+      }
+
+      function notePatch(orderId) {
+        var note = window.prompt("Add note (saved on order):");
+        if (note == null || note === "") return;
+        postJson("/api/orders/" + encodeURIComponent(orderId) + "/operator-note", { text: note }).then(
+          function (x) {
+            if (!x.j || !x.j.ok) {
+              showErr((x.j && x.j.error) || "note failed");
+              return;
+            }
+            loadTasks();
+          }
+        );
+      }
+
+      function loadTasks() {
+        showErr("");
+        var el = document.getElementById("tasks");
+        fetch("/api/jeremy/tasks")
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (d) {
+            if (!d || !d.ok) {
+              showErr((d && d.error) || "tasks failed");
+              return;
+            }
+            el.innerHTML = "";
+            var list = d.tasks || [];
+            if (!list.length) {
+              el.innerHTML = "<p class=\"meta\">No tasks right now.</p>";
+              return;
+            }
+            list.forEach(function (t) {
+              var stuck = t.stuckReasons && t.stuckReasons.length;
+              var div = document.createElement("div");
+              div.className = "card" + (stuck ? " stuck" : "");
+              var reasonsHtml = "";
+              if (t.stuckReasons && t.stuckReasons.length) {
+                reasonsHtml =
+                  "<div class=\"meta\"><strong>STUCK:</strong> " +
+                  esc(t.stuckReasons.join(" · ")) +
+                  "</div>";
+              }
+              div.innerHTML =
+                "<h2>" +
+                esc(t.customerName || "Customer") +
+                "</h2>" +
+                "<div class=\"meta\">" +
+                esc(t.orderTitle || t.orderId) +
+                " · " +
+                esc(t.stage) +
+                "</div>" +
+                reasonsHtml +
+                "<div class=\"meta\">Next: " +
+                esc(t.nextAction || "—") +
+                " · Priority: " +
+                esc(t.priority || "NORMAL") +
+                "</div>" +
+                "<div class=\"row-btns\">" +
+                '<button type="button" class="action primary" data-a="print" data-id="' +
+                esc(t.orderId) +
+                '"' +
+                (stuck ? " disabled" : "") +
+                ">Start Printing</button>" +
+                '<button type="button" class="action secondary" data-a="qc" data-id="' +
+                esc(t.orderId) +
+                '">Move to QC</button>' +
+                '<button type="button" class="action warn" data-a="done" data-id="' +
+                esc(t.orderId) +
+                '">Mark Complete</button>' +
+                '<button type="button" class="action secondary" data-a="note" data-id="' +
+                esc(t.orderId) +
+                '">Add Note</button>' +
+                "</div>";
+              el.appendChild(div);
+            });
+
+            el.querySelectorAll("button[data-a]").forEach(function (btn) {
+              btn.addEventListener("click", function () {
+                var id = btn.getAttribute("data-id");
+                var a = btn.getAttribute("data-a");
+                if (a === "note") {
+                  notePatch(id);
+                  return;
+                }
+                if (btn.disabled) {
+                  showErr("STUCK — ask Patrick before printing.");
+                  return;
+                }
+                var stage =
+                  a === "print" ? "PRINTING" : a === "qc" ? "QC" : a === "done" ? "COMPLETED" : null;
+                if (!stage) return;
+                stagePatch(id, stage, "jeremy-ui " + a).then(function (x) {
+                  if (!x.j || !x.j.ok) {
+                    showErr((x.j && x.j.error) || "stage update failed");
+                    return;
+                  }
+                  loadTasks();
+                });
+              });
+            });
+          })
+          .catch(function (e) {
+            showErr(e.message || "load failed");
+          });
+      }
+
+      document.getElementById("refresh").addEventListener("click", function () {
+        loadTasks();
+        refreshClock();
+      });
+
+      refreshClock();
+      loadTasks();
+      setInterval(function () {
+        loadTasks();
+        refreshClock();
+      }, REFRESH_MS);
+    })();
+  </script>
+</body>
+</html>

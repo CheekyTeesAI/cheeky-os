@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "entities": {
+    "customer:smoke-cust": {
+      "id": "customer:smoke-cust",
+      "entityType": "customer",
+      "smoke": true
+    }
+  },
+  "edges": []
+}

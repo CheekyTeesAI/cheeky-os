@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cheeky — Quality control</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #141c26;
+      --border: #2a3544;
+      --text: #e8edf4;
+      --muted: #8b9aab;
+      --accent: #a78bfa;
+      --accent2: #38bdf8;
+      --ok: #34d399;
+      --bad: #f43f5e;
+      --warn: #fbbf24;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.45; padding-bottom: 48px; }
+    header {
+      padding: 14px 16px; background: var(--panel); border-bottom: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    }
+    header h1 { margin: 0; font-size: 1.1rem; }
+    .muted { color: var(--muted); font-size: 0.82rem; }
+    .nav { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+    .nav a { color: var(--accent2); text-decoration: none; font-weight: 600; font-size: 0.85rem; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; }
+    button, .btn {
+      background: var(--accent); color: #111; border: none; padding: 8px 12px; border-radius: 8px;
+      font-weight: 700; cursor: pointer; font-size: 0.85rem;
+    }
+    button.secondary { background: #334155; color: var(--text); }
+    button.danger { background: var(--bad); color: #fff; }
+    button.ok { background: var(--ok); color: #111; }
+    main { padding: 16px; max-width: 1400px; margin: 0 auto; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; margin-bottom: 14px; }
+    .metric { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 0.75rem; }
+    .metric b { display: block; font-size: 1rem; }
+    .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+    .col { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; min-height: 120px; }
+    .col h2 { margin: 0 0 8px; font-size: 0.85rem; color: var(--accent); }
+    .card {
+      border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 0.82rem;
+      background: #0e131a; cursor: pointer;
+    }
+    .card.sel { outline: 2px solid var(--accent2); }
+    .card h4 { margin: 0 0 6px; font-size: 0.9rem; }
+    .tag { display: inline-block; padding: 2px 6px; border-radius: 4px; background: #334155; font-size: 0.7rem; margin-right: 4px; }
+    .tag.bad { background: rgba(244, 63, 94, 0.25); color: #fda4af; }
+    .tag.ok { background: rgba(52, 211, 153, 0.2); color: #6ee7b7; }
+    .tag.warn { background: rgba(251, 191, 36, 0.2); color: #fde68a; }
+    .tools { margin: 14px 0; padding: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; }
+    .tools input, .tools select, .tools textarea {
+      padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: #0e1118; color: var(--text);
+      margin: 4px 8px 4px 0; max-width: 100%;
+    }
+    .row-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .defect-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0; font-size: 0.8rem; }
+    .foot { font-size: 0.75rem; color: var(--muted); margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Quality control</h1>
+    <span class="muted">Explicit PASS/FAIL only — no auto-pass</span>
+    <button type="button" id="refresh">Refresh</button>
+    <div class="nav">
+      <a href="/owner.html">Owner</a>
+      <a href="/production.html">Production</a>
+      <a href="/jeremy.html">Jeremy</a>
+    </div>
+  </header>
+  <main>
+    <div class="metrics" id="metrics"></div>
+    <div class="tools">
+      <div><strong>Inspector</strong> <input type="text" id="checkedBy" placeholder="Name (e.g. Jeremy)" value="Jeremy" /></div>
+      <div><strong>Notes / override reason</strong></div>
+      <textarea id="notes" rows="2" style="width:100%;max-width:560px;" placeholder="Required for OVERRIDE_PASS; recommended for FAIL"></textarea>
+      <div class="defect-row" id="defect-add">
+        <select id="d-type">
+          <option value="PRINT_QUALITY">PRINT_QUALITY</option>
+          <option value="COLOR">COLOR</option>
+          <option value="ALIGNMENT">ALIGNMENT</option>
+          <option value="PRESS_ISSUE">PRESS_ISSUE</option>
+          <option value="GARMENT_DEFECT">GARMENT_DEFECT</option>
+          <option value="OTHER">OTHER</option>
+        </select>
+        <select id="d-sev">
+          <option value="LOW">LOW</option>
+          <option value="MEDIUM" selected>MEDIUM</option>
+          <option value="HIGH">HIGH</option>
+          <option value="CRITICAL">CRITICAL</option>
+        </select>
+        <input type="text" id="d-loc" placeholder="location on garment" style="max-width:160px;" />
+        <input type="text" id="d-note" placeholder="defect notes" style="max-width:220px;" />
+        <button type="button" class="secondary" id="btnAddDefect">Add defect</button>
+      </div>
+      <div id="defect-list" class="muted" style="font-size:0.8rem;">No defects added.</div>
+      <div class="row-actions">
+        <button type="button" class="ok" id="btnPass">PASS</button>
+        <button type="button" class="danger" id="btnFail">FAIL</button>
+        <button type="button" class="secondary" id="btnOverride">OVERRIDE PASS</button>
+      </div>
+      <p class="muted" style="margin:8px 0 0;font-size:0.78rem;">Select a job card below, then submit. Opening detail runs <code>GET /api/qc/:orderId</code> (starts PENDING when allowed).</p>
+    </div>
+    <div class="cols">
+      <div class="col" id="c-pend"><h2>Pending QC</h2><div class="list"></div></div>
+      <div class="col" id="c-fail"><h2>Failed QC</h2><div class="list"></div></div>
+      <div class="col" id="c-pass"><h2>Passed QC</h2><div class="list"></div></div>
+    </div>
+    <p class="foot">API: GET /api/qc/board · GET /api/qc/:orderId · POST /api/qc/:orderId <code>{"status":"PASS"|"FAIL"|"OVERRIDE_PASS","checkedBy":"…","defects":[]}</code></p>
+  </main>
+  <script>
+    (function () {
+      var REFRESH_MS = 30000;
+      var selId = null;
+      var defects = [];
+
+      function esc(s) {
+        return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+      }
+
+      function renderDefects() {
+        var el = document.getElementById("defect-list");
+        if (!defects.length) {
+          el.textContent = "No defects added.";
+          return;
+        }
+        el.innerHTML = defects
+          .map(function (d, i) {
+            return (
+              "<div>" +
+              esc(d.type) +
+              " / " +
+              esc(d.severity) +
+              " — " +
+              esc(d.location || "") +
+              " " +
+              esc(d.notes || "") +
+              " <button type='button' data-i='" +
+              i +
+              "' class='rm'>✕</button></div>"
+            );
+          })
+          .join("");
+        el.querySelectorAll(".rm").forEach(function (b) {
+          b.onclick = function () {
+            defects.splice(Number(b.getAttribute("data-i")), 1);
+            renderDefects();
+          };
+        });
+      }
+
+      function cardHtml(c, bucket) {
+        var tags = (c.qcWarnings || []).map(function (w) {
+          return '<span class="tag warn">' + esc(w) + "</span>";
+        }).join(" ");
+        var st = esc(c.qcStatus || c.status || "");
+        var tagClass = c.qcFailed ? "tag bad" : c.qcPassed ? "tag ok" : "tag";
+        return (
+          '<div class="card" data-id="' +
+          esc(c.id) +
+          '" data-bucket="' +
+          esc(bucket) +
+          '"><h4><span class="' +
+          tagClass +
+          '">' +
+          st +
+          "</span> " +
+          esc(c.customerName || "?") +
+          "</h4>" +
+          "<div>#" +
+          esc(c.orderNumber || c.id.slice(0, 8)) +
+          " · " +
+          esc(c.status) +
+          "</div>" +
+          (c.lineSummary ? "<div class='muted'>" + esc(c.lineSummary) + "</div>" : "") +
+          "<div style='margin-top:6px;'>" +
+          tags +
+          "</div></div>"
+        );
+      }
+
+      function paint(board) {
+        var m = board.metrics || {};
+        document.getElementById("metrics").innerHTML =
+          "<div class='metric'><b>" +
+          (m.pending || 0) +
+          "</b>Pending (board)</div>" +
+          "<div class='metric'><b>" +
+          (m.failed || 0) +
+          "</b>Failed</div>" +
+          "<div class='metric'><b>" +
+          (m.passed || 0) +
+          "</b>Passed</div>" +
+          "<div class='metric'><b>" +
+          ((board.snapshot && board.snapshot.pending) || 0) +
+          "</b>Open PENDING checks</div>" +
+          "<div class='metric'><b>" +
+          ((board.snapshot && board.snapshot.reprints) || 0) +
+          "</b>Reprints</div>";
+
+        document.querySelector("#c-pend .list").innerHTML = (board.pending || [])
+          .map(function (c) {
+            return cardHtml(c, "pending");
+          })
+          .join("");
+        document.querySelector("#c-fail .list").innerHTML = (board.failed || [])
+          .map(function (c) {
+            return cardHtml(c, "failed");
+          })
+          .join("");
+        document.querySelector("#c-pass .list").innerHTML = (board.passed || [])
+          .map(function (c) {
+            return cardHtml(c, "passed");
+          })
+          .join("");
+
+        document.querySelectorAll(".card").forEach(function (n) {
+          n.classList.toggle("sel", n.getAttribute("data-id") === selId);
+          n.onclick = function () {
+            selId = n.getAttribute("data-id");
+            document.querySelectorAll(".card").forEach(function (x) {
+              x.classList.toggle("sel", x.getAttribute("data-id") === selId);
+            });
+            defects = [];
+            renderDefects();
+            fetch("/api/qc/" + encodeURIComponent(selId), { credentials: "same-origin" })
+              .then(function (r) {
+                return r.json();
+              })
+              .then(function (j) {
+                console.log("[qc] detail", j);
+              })
+              .catch(function () {});
+          };
+        });
+      }
+
+      function load() {
+        fetch("/api/qc/board", { credentials: "same-origin" })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (j) {
+            if (j && j.ok) paint(j);
+            else console.warn(j);
+          })
+          .catch(function (e) {
+            console.warn(e);
+          });
+      }
+
+      document.getElementById("refresh").onclick = load;
+      document.getElementById("btnAddDefect").onclick = function () {
+        defects.push({
+          type: document.getElementById("d-type").value,
+          severity: document.getElementById("d-sev").value,
+          location: document.getElementById("d-loc").value,
+          notes: document.getElementById("d-note").value,
+        });
+        document.getElementById("d-loc").value = "";
+        document.getElementById("d-note").value = "";
+        renderDefects();
+      };
+
+      function postStatus(st) {
+        if (!selId) {
+          alert("Select an order card first.");
+          return;
+        }
+        var notes = document.getElementById("notes").value.trim();
+        var body = {
+          status: st,
+          checkedBy: document.getElementById("checkedBy").value.trim() || "operator",
+          defects: defects.slice(),
+          notes: notes,
+        };
+        fetch("/api/qc/" + encodeURIComponent(selId), {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (j) {
+            if (!j.ok) alert(j.error || JSON.stringify(j));
+            load();
+          })
+          .catch(function (e) {
+            alert(e.message || String(e));
+          });
+      }
+
+      document.getElementById("btnPass").onclick = function () {
+        postStatus("PASS");
+      };
+      document.getElementById("btnFail").onclick = function () {
+        postStatus("FAIL");
+      };
+      document.getElementById("btnOverride").onclick = function () {
+        postStatus("OVERRIDE_PASS");
+      };
+
+      load();
+      setInterval(load, REFRESH_MS);
+    })();
+  </script>
+</body>
+</html>

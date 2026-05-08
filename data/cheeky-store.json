@@ -1,0 +1,1485 @@
+{
+  "orders": [],
+  "contacts": [
+    {
+      "from": "ops@metrorealty.com",
+      "subject": "invoice payment question",
+      "customer_name": "ops",
+      "storedAt": "2026-04-17T13:33:33.785Z"
+    }
+  ],
+  "auditLogs": [
+    {
+      "event": "cheeky_ai_run",
+      "queue_count": 3,
+      "diagnostics": {
+        "missing_env_keys": [
+          "SQUARE_ACCESS_TOKEN",
+          "SQUARE_LOCATION_ID",
+          "RESEND_API_KEY",
+          "TWILIO_ACCOUNT_SID",
+          "TWILIO_AUTH_TOKEN",
+          "AZURE_TENANT_ID",
+          "AZURE_CLIENT_ID",
+          "AZURE_CLIENT_SECRET"
+        ],
+        "broken_routes": [
+          "POST /cheeky-ai/run",
+          "POST /collections/run",
+          "POST /webhooks/email-intake"
+        ],
+        "modules": {
+          "sales_mocked": false,
+          "collections_mocked": false,
+          "action_engine_mocked": false
+        },
+        "system_health": {
+          "status": "RED",
+          "missing_keys": [
+            "CHEEKY_OS_PORT",
+            "SQUARE_ACCESS_TOKEN",
+            "SQUARE_LOCATION_ID",
+            "SQUARE_ENVIRONMENT",
+            "SQUARE_WEBHOOK_SIGNATURE_KEY",
+            "SQUARE_WEBHOOK_NOTIFICATION_URL",
+            "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+            "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+            "DEFAULT_FROM_EMAIL",
+            "RESEND_API_KEY",
+            "EMAIL_API_KEY",
+            "RESEND_FROM",
+            "OUTREACH_EMAIL",
+            "OUTREACH_PASSWORD",
+            "MAX_SEND",
+            "AVG_ORDER_VALUE",
+            "CHEEKY_BIZ_NAME",
+            "CHEEKY_PHONE",
+            "CHEEKY_PROMO",
+            "TWILIO_ACCOUNT_SID",
+            "TWILIO_AUTH_TOKEN",
+            "TWILIO_FROM",
+            "MSGRAPH_ACCESS_TOKEN",
+            "ONEDRIVE_AUDIT_ITEM_ID",
+            "DAILY_DIGEST_TO",
+            "DAILY_DIGEST_HOUR"
+          ],
+          "broken_routes": [
+            "POST /cheeky-ai/run",
+            "POST /collections/run",
+            "POST /webhooks/email-intake"
+          ],
+          "last_error": null,
+          "uptime": 18,
+          "checked_at": "2026-04-17T13:20:41.254Z"
+        }
+      },
+      "storedAt": "2026-04-17T13:20:41.254Z"
+    },
+    {
+      "event": "cheeky_ai_run",
+      "queue_count": 3,
+      "diagnostics": {
+        "missing_env_keys": [
+          "SQUARE_ACCESS_TOKEN",
+          "SQUARE_LOCATION_ID",
+          "RESEND_API_KEY",
+          "TWILIO_ACCOUNT_SID",
+          "TWILIO_AUTH_TOKEN",
+          "AZURE_TENANT_ID",
+          "AZURE_CLIENT_ID",
+          "AZURE_CLIENT_SECRET"
+        ],
+        "broken_routes": [
+          "POST /cheeky-ai/run",
+          "POST /collections/run",
+          "POST /webhooks/email-intake"
+        ],
+        "modules": {
+          "sales_mocked": false,
+          "collections_mocked": false,
+          "action_engine_mocked": false
+        },
+        "system_health": {
+          "status": "RED",
+          "missing_keys": [
+            "CHEEKY_OS_PORT",
+            "SQUARE_ACCESS_TOKEN",
+            "SQUARE_LOCATION_ID",
+            "SQUARE_ENVIRONMENT",
+            "SQUARE_WEBHOOK_SIGNATURE_KEY",
+            "SQUARE_WEBHOOK_NOTIFICATION_URL",
+            "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+            "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+            "DEFAULT_FROM_EMAIL",
+            "RESEND_API_KEY",
+            "EMAIL_API_KEY",
+            "RESEND_FROM",
+            "OUTREACH_EMAIL",
+            "OUTREACH_PASSWORD",
+            "MAX_SEND",
+            "AVG_ORDER_VALUE",
+            "CHEEKY_BIZ_NAME",
+            "CHEEKY_PHONE",
+            "CHEEKY_PROMO",
+            "TWILIO_ACCOUNT_SID",
+            "TWILIO_AUTH_TOKEN",
+            "TWILIO_FROM",
+            "MSGRAPH_ACCESS_TOKEN",
+            "ONEDRIVE_AUDIT_ITEM_ID",
+            "DAILY_DIGEST_TO",
+            "DAILY_DIGEST_HOUR"
+          ],
+          "broken_routes": [
+            "POST /cheeky-ai/run",
+            "POST /collections/run",
+            "POST /webhooks/email-intake"
+          ],
+          "last_error": {
+            "event": "cheeky_ai_run",
+            "queue_count": 3,
+            "diagnostics": {
+              "missing_env_keys": [
+                "SQUARE_ACCESS_TOKEN",
+                "SQUARE_LOCATION_ID",
+                "RESEND_API_KEY",
+                "TWILIO_ACCOUNT_SID",
+                "TWILIO_AUTH_TOKEN",
+                "AZURE_TENANT_ID",
+                "AZURE_CLIENT_ID",
+                "AZURE_CLIENT_SECRET"
+              ],
+              "broken_routes": [
+                "POST /cheeky-ai/run",
+                "POST /collections/run",
+                "POST /webhooks/email-intake"
+              ],
+              "modules": {
+                "sales_mocked": false,
+                "collections_mocked": false,
+                "action_engine_mocked": false
+              },
+              "system_health": {
+                "status": "RED",
+                "missing_keys": [
+                  "CHEEKY_OS_PORT",
+                  "SQUARE_ACCESS_TOKEN",
+                  "SQUARE_LOCATION_ID",
+                  "SQUARE_ENVIRONMENT",
+                  "SQUARE_WEBHOOK_SIGNATURE_KEY",
+                  "SQUARE_WEBHOOK_NOTIFICATION_URL",
+                  "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+                  "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+                  "DEFAULT_FROM_EMAIL",
+                  "RESEND_API_KEY",
+                  "EMAIL_API_KEY",
+                  "RESEND_FROM",
+                  "OUTREACH_EMAIL",
+                  "OUTREACH_PASSWORD",
+                  "MAX_SEND",
+                  "AVG_ORDER_VALUE",
+                  "CHEEKY_BIZ_NAME",
+                  "CHEEKY_PHONE",
+                  "CHEEKY_PROMO",
+                  "TWILIO_ACCOUNT_SID",
+                  "TWILIO_AUTH_TOKEN",
+                  "TWILIO_FROM",
+                  "MSGRAPH_ACCESS_TOKEN",
+                  "ONEDRIVE_AUDIT_ITEM_ID",
+                  "DAILY_DIGEST_TO",
+                  "DAILY_DIGEST_HOUR"
+                ],
+                "broken_routes": [
+                  "POST /cheeky-ai/run",
+                  "POST /collections/run",
+                  "POST /webhooks/email-intake"
+                ],
+                "last_error": null,
+                "uptime": 18,
+                "checked_at": "2026-04-17T13:20:41.254Z"
+              }
+            },
+            "storedAt": "2026-04-17T13:20:41.254Z"
+          },
+          "uptime": 790,
+          "checked_at": "2026-04-17T13:33:33.781Z"
+        }
+      },
+      "storedAt": "2026-04-17T13:33:33.781Z"
+    },
+    {
+      "event": "email_intake_process",
+      "used_ai": false,
+      "suggested_action": "EMAIL_COLLECTIONS",
+      "queue_source": "cheeky-ai/run",
+      "storedAt": "2026-04-17T13:33:33.791Z"
+    },
+    {
+      "event": "daily_brief_generated",
+      "mocked_delivery": true,
+      "to": "owner@cheekyteesllc.com",
+      "queue_count": 3,
+      "open_collections_total": 2075,
+      "store_counts": {
+        "contacts": 1,
+        "orders": 0,
+        "auditLogs": 3
+      },
+      "storedAt": "2026-04-17T13:33:47.235Z"
+    },
+    {
+      "event": "cheeky_ai_run",
+      "queue_count": 3,
+      "mock": true,
+      "data_source": "mock",
+      "gaps": [
+        "SQUARE_ACCESS_TOKEN",
+        "RESEND_API_KEY",
+        "TWILIO_ACCOUNT_SID",
+        "TWILIO_AUTH_TOKEN",
+        "AZURE_TENANT_ID",
+        "AZURE_CLIENT_ID",
+        "AZURE_CLIENT_SECRET",
+        "JOB_BLOCKERS"
+      ],
+      "diagnostics": {
+        "missing_env_keys": [
+          "SQUARE_ACCESS_TOKEN",
+          "SQUARE_LOCATION_ID",
+          "RESEND_API_KEY",
+          "TWILIO_ACCOUNT_SID",
+          "TWILIO_AUTH_TOKEN",
+          "AZURE_TENANT_ID",
+          "AZURE_CLIENT_ID",
+          "AZURE_CLIENT_SECRET"
+        ],
+        "broken_routes": [
+          "POST /cheeky-ai/run",
+          "POST /collections/run",
+          "POST /webhooks/email-intake"
+        ],
+        "modules": {
+          "sales_mocked": false,
+          "collections_mocked": false,
+          "action_engine_mocked": false
+        },
+        "system_health": {
+          "status": "RED",
+          "missing_keys": [
+            "CHEEKY_OS_PORT",
+            "SQUARE_ACCESS_TOKEN",
+            "SQUARE_LOCATION_ID",
+            "SQUARE_ENVIRONMENT",
+            "SQUARE_WEBHOOK_SIGNATURE_KEY",
+            "SQUARE_WEBHOOK_NOTIFICATION_URL",
+            "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+            "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+            "DEFAULT_FROM_EMAIL",
+            "RESEND_API_KEY",
+            "EMAIL_API_KEY",
+            "RESEND_FROM",
+            "OUTREACH_EMAIL",
+            "OUTREACH_PASSWORD",
+            "MAX_SEND",
+            "AVG_ORDER_VALUE",
+            "CHEEKY_BIZ_NAME",
+            "CHEEKY_PHONE",
+            "CHEEKY_PROMO",
+            "TWILIO_ACCOUNT_SID",
+            "TWILIO_AUTH_TOKEN",
+            "TWILIO_FROM",
+            "MSGRAPH_ACCESS_TOKEN",
+            "ONEDRIVE_AUDIT_ITEM_ID",
+            "DAILY_DIGEST_TO",
+            "DAILY_DIGEST_HOUR"
+          ],
+          "broken_routes": [],
+          "last_error": {
+            "event": "cheeky_ai_run",
+            "queue_count": 3,
+            "diagnostics": {
+              "missing_env_keys": [
+                "SQUARE_ACCESS_TOKEN",
+                "SQUARE_LOCATION_ID",
+                "RESEND_API_KEY",
+                "TWILIO_ACCOUNT_SID",
+                "TWILIO_AUTH_TOKEN",
+                "AZURE_TENANT_ID",
+                "AZURE_CLIENT_ID",
+                "AZURE_CLIENT_SECRET"
+              ],
+              "broken_routes": [
+                "POST /cheeky-ai/run",
+                "POST /collections/run",
+                "POST /webhooks/email-intake"
+              ],
+              "modules": {
+                "sales_mocked": false,
+                "collections_mocked": false,
+                "action_engine_mocked": false
+              },
+              "system_health": {
+                "status": "RED",
+                "missing_keys": [
+                  "CHEEKY_OS_PORT",
+                  "SQUARE_ACCESS_TOKEN",
+                  "SQUARE_LOCATION_ID",
+                  "SQUARE_ENVIRONMENT",
+                  "SQUARE_WEBHOOK_SIGNATURE_KEY",
+                  "SQUARE_WEBHOOK_NOTIFICATION_URL",
+                  "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+                  "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+                  "DEFAULT_FROM_EMAIL",
+                  "RESEND_API_KEY",
+                  "EMAIL_API_KEY",
+                  "RESEND_FROM",
+                  "OUTREACH_EMAIL",
+                  "OUTREACH_PASSWORD",
+                  "MAX_SEND",
+                  "AVG_ORDER_VALUE",
+                  "CHEEKY_BIZ_NAME",
+                  "CHEEKY_PHONE",
+                  "CHEEKY_PROMO",
+                  "TWILIO_ACCOUNT_SID",
+                  "TWILIO_AUTH_TOKEN",
+                  "TWILIO_FROM",
+                  "MSGRAPH_ACCESS_TOKEN",
+                  "ONEDRIVE_AUDIT_ITEM_ID",
+                  "DAILY_DIGEST_TO",
+                  "DAILY_DIGEST_HOUR"
+                ],
+                "broken_routes": [
+                  "POST /cheeky-ai/run",
+                  "POST /collections/run",
+                  "POST /webhooks/email-intake"
+                ],
+                "last_error": {
+                  "event": "cheeky_ai_run",
+                  "queue_count": 3,
+                  "diagnostics": {
+                    "missing_env_keys": [
+                      "SQUARE_ACCESS_TOKEN",
+                      "SQUARE_LOCATION_ID",
+                      "RESEND_API_KEY",
+                      "TWILIO_ACCOUNT_SID",
+                      "TWILIO_AUTH_TOKEN",
+                      "AZURE_TENANT_ID",
+                      "AZURE_CLIENT_ID",
+                      "AZURE_CLIENT_SECRET"
+                    ],
+                    "broken_routes": [
+                      "POST /cheeky-ai/run",
+                      "POST /collections/run",
+                      "POST /webhooks/email-intake"
+                    ],
+                    "modules": {
+                      "sales_mocked": false,
+                      "collections_mocked": false,
+                      "action_engine_mocked": false
+                    },
+                    "system_health": {
+                      "status": "RED",
+                      "missing_keys": [
+                        "CHEEKY_OS_PORT",
+                        "SQUARE_ACCESS_TOKEN",
+                        "SQUARE_LOCATION_ID",
+                        "SQUARE_ENVIRONMENT",
+                        "SQUARE_WEBHOOK_SIGNATURE_KEY",
+                        "SQUARE_WEBHOOK_NOTIFICATION_URL",
+                        "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+                        "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+                        "DEFAULT_FROM_EMAIL",
+                        "RESEND_API_KEY",
+                        "EMAIL_API_KEY",
+                        "RESEND_FROM",
+                        "OUTREACH_EMAIL",
+                        "OUTREACH_PASSWORD",
+                        "MAX_SEND",
+                        "AVG_ORDER_VALUE",
+                        "CHEEKY_BIZ_NAME",
+                        "CHEEKY_PHONE",
+                        "CHEEKY_PROMO",
+                        "TWILIO_ACCOUNT_SID",
+                        "TWILIO_AUTH_TOKEN",
+                        "TWILIO_FROM",
+                        "MSGRAPH_ACCESS_TOKEN",
+                        "ONEDRIVE_AUDIT_ITEM_ID",
+                        "DAILY_DIGEST_TO",
+                        "DAILY_DIGEST_HOUR"
+                      ],
+                      "broken_routes": [
+                        "POST /cheeky-ai/run",
+                        "POST /collections/run",
+                        "POST /webhooks/email-intake"
+                      ],
+                      "last_error": null,
+                      "uptime": 18,
+                      "checked_at": "2026-04-17T13:20:41.254Z"
+                    }
+                  },
+                  "storedAt": "2026-04-17T13:20:41.254Z"
+                },
+                "uptime": 790,
+                "checked_at": "2026-04-17T13:33:33.781Z"
+              }
+            },
+            "storedAt": "2026-04-17T13:33:33.781Z"
+          },
+          "uptime": 24,
+          "checked_at": "2026-04-17T21:45:38.418Z"
+        }
+      },
+      "storedAt": "2026-04-17T21:45:38.480Z"
+    },
+    {
+      "event": "cheeky_ai_run",
+      "queue_count": 3,
+      "mock": true,
+      "data_source": "mock",
+      "gaps": [
+        "SQUARE_ACCESS_TOKEN",
+        "RESEND_API_KEY",
+        "TWILIO_ACCOUNT_SID",
+        "TWILIO_AUTH_TOKEN",
+        "AZURE_TENANT_ID",
+        "AZURE_CLIENT_ID",
+        "AZURE_CLIENT_SECRET",
+        "JOB_BLOCKERS"
+      ],
+      "diagnostics": {
+        "missing_env_keys": [
+          "SQUARE_ACCESS_TOKEN",
+          "SQUARE_LOCATION_ID",
+          "RESEND_API_KEY",
+          "TWILIO_ACCOUNT_SID",
+          "TWILIO_AUTH_TOKEN",
+          "AZURE_TENANT_ID",
+          "AZURE_CLIENT_ID",
+          "AZURE_CLIENT_SECRET"
+        ],
+        "broken_routes": [
+          "POST /cheeky-ai/run",
+          "POST /collections/run",
+          "POST /webhooks/email-intake"
+        ],
+        "modules": {
+          "sales_mocked": false,
+          "collections_mocked": false,
+          "action_engine_mocked": false
+        },
+        "system_health": {
+          "status": "RED",
+          "missing_keys": [
+            "CHEEKY_OS_PORT",
+            "SQUARE_ACCESS_TOKEN",
+            "SQUARE_LOCATION_ID",
+            "SQUARE_ENVIRONMENT",
+            "SQUARE_WEBHOOK_SIGNATURE_KEY",
+            "SQUARE_WEBHOOK_NOTIFICATION_URL",
+            "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+            "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+            "DEFAULT_FROM_EMAIL",
+            "RESEND_API_KEY",
+            "EMAIL_API_KEY",
+            "RESEND_FROM",
+            "OUTREACH_EMAIL",
+            "OUTREACH_PASSWORD",
+            "MAX_SEND",
+            "AVG_ORDER_VALUE",
+            "CHEEKY_BIZ_NAME",
+            "CHEEKY_PHONE",
+            "CHEEKY_PROMO",
+            "TWILIO_ACCOUNT_SID",
+            "TWILIO_AUTH_TOKEN",
+            "TWILIO_FROM",
+            "MSGRAPH_ACCESS_TOKEN",
+            "ONEDRIVE_AUDIT_ITEM_ID",
+            "DAILY_DIGEST_TO",
+            "DAILY_DIGEST_HOUR"
+          ],
+          "broken_routes": [],
+          "last_error": {
+            "event": "cheeky_ai_run",
+            "queue_count": 3,
+            "mock": true,
+            "data_source": "mock",
+            "gaps": [
+              "SQUARE_ACCESS_TOKEN",
+              "RESEND_API_KEY",
+              "TWILIO_ACCOUNT_SID",
+              "TWILIO_AUTH_TOKEN",
+              "AZURE_TENANT_ID",
+              "AZURE_CLIENT_ID",
+              "AZURE_CLIENT_SECRET",
+              "JOB_BLOCKERS"
+            ],
+            "diagnostics": {
+              "missing_env_keys": [
+                "SQUARE_ACCESS_TOKEN",
+                "SQUARE_LOCATION_ID",
+                "RESEND_API_KEY",
+                "TWILIO_ACCOUNT_SID",
+                "TWILIO_AUTH_TOKEN",
+                "AZURE_TENANT_ID",
+                "AZURE_CLIENT_ID",
+                "AZURE_CLIENT_SECRET"
+              ],
+              "broken_routes": [
+                "POST /cheeky-ai/run",
+                "POST /collections/run",
+                "POST /webhooks/email-intake"
+              ],
+              "modules": {
+                "sales_mocked": false,
+                "collections_mocked": false,
+                "action_engine_mocked": false
+              },
+              "system_health": {
+                "status": "RED",
+                "missing_keys": [
+                  "CHEEKY_OS_PORT",
+                  "SQUARE_ACCESS_TOKEN",
+                  "SQUARE_LOCATION_ID",
+                  "SQUARE_ENVIRONMENT",
+                  "SQUARE_WEBHOOK_SIGNATURE_KEY",
+                  "SQUARE_WEBHOOK_NOTIFICATION_URL",
+                  "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+                  "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+                  "DEFAULT_FROM_EMAIL",
+                  "RESEND_API_KEY",
+                  "EMAIL_API_KEY",
+                  "RESEND_FROM",
+                  "OUTREACH_EMAIL",
+                  "OUTREACH_PASSWORD",
+                  "MAX_SEND",
+                  "AVG_ORDER_VALUE",
+                  "CHEEKY_BIZ_NAME",
+                  "CHEEKY_PHONE",
+                  "CHEEKY_PROMO",
+                  "TWILIO_ACCOUNT_SID",
+                  "TWILIO_AUTH_TOKEN",
+                  "TWILIO_FROM",
+                  "MSGRAPH_ACCESS_TOKEN",
+                  "ONEDRIVE_AUDIT_ITEM_ID",
+                  "DAILY_DIGEST_TO",
+                  "DAILY_DIGEST_HOUR"
+                ],
+                "broken_routes": [],
+                "last_error": {
+                  "event": "cheeky_ai_run",
+                  "queue_count": 3,
+                  "diagnostics": {
+                    "missing_env_keys": [
+                      "SQUARE_ACCESS_TOKEN",
+                      "SQUARE_LOCATION_ID",
+                      "RESEND_API_KEY",
+                      "TWILIO_ACCOUNT_SID",
+                      "TWILIO_AUTH_TOKEN",
+                      "AZURE_TENANT_ID",
+                      "AZURE_CLIENT_ID",
+                      "AZURE_CLIENT_SECRET"
+                    ],
+                    "broken_routes": [
+                      "POST /cheeky-ai/run",
+                      "POST /collections/run",
+                      "POST /webhooks/email-intake"
+                    ],
+                    "modules": {
+                      "sales_mocked": false,
+                      "collections_mocked": false,
+                      "action_engine_mocked": false
+                    },
+                    "system_health": {
+                      "status": "RED",
+                      "missing_keys": [
+                        "CHEEKY_OS_PORT",
+                        "SQUARE_ACCESS_TOKEN",
+                        "SQUARE_LOCATION_ID",
+                        "SQUARE_ENVIRONMENT",
+                        "SQUARE_WEBHOOK_SIGNATURE_KEY",
+                        "SQUARE_WEBHOOK_NOTIFICATION_URL",
+                        "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+                        "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+                        "DEFAULT_FROM_EMAIL",
+                        "RESEND_API_KEY",
+                        "EMAIL_API_KEY",
+                        "RESEND_FROM",
+                        "OUTREACH_EMAIL",
+                        "OUTREACH_PASSWORD",
+                        "MAX_SEND",
+                        "AVG_ORDER_VALUE",
+                        "CHEEKY_BIZ_NAME",
+                        "CHEEKY_PHONE",
+                        "CHEEKY_PROMO",
+                        "TWILIO_ACCOUNT_SID",
+                        "TWILIO_AUTH_TOKEN",
+                        "TWILIO_FROM",
+                        "MSGRAPH_ACCESS_TOKEN",
+                        "ONEDRIVE_AUDIT_ITEM_ID",
+                        "DAILY_DIGEST_TO",
+                        "DAILY_DIGEST_HOUR"
+                      ],
+                      "broken_routes": [
+                        "POST /cheeky-ai/run",
+                        "POST /collections/run",
+                        "POST /webhooks/email-intake"
+                      ],
+                      "last_error": {
+                        "event": "cheeky_ai_run",
+                        "queue_count": 3,
+                        "diagnostics": {
+                          "missing_env_keys": [
+                            "SQUARE_ACCESS_TOKEN",
+                            "SQUARE_LOCATION_ID",
+                            "RESEND_API_KEY",
+                            "TWILIO_ACCOUNT_SID",
+                            "TWILIO_AUTH_TOKEN",
+                            "AZURE_TENANT_ID",
+                            "AZURE_CLIENT_ID",
+                            "AZURE_CLIENT_SECRET"
+                          ],
+                          "broken_routes": [
+                            "POST /cheeky-ai/run",
+                            "POST /collections/run",
+                            "POST /webhooks/email-intake"
+                          ],
+                          "modules": {
+                            "sales_mocked": false,
+                            "collections_mocked": false,
+                            "action_engine_mocked": false
+                          },
+                          "system_health": {
+                            "status": "RED",
+                            "missing_keys": [
+                              "CHEEKY_OS_PORT",
+                              "SQUARE_ACCESS_TOKEN",
+                              "SQUARE_LOCATION_ID",
+                              "SQUARE_ENVIRONMENT",
+                              "SQUARE_WEBHOOK_SIGNATURE_KEY",
+                              "SQUARE_WEBHOOK_NOTIFICATION_URL",
+                              "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+                              "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+                              "DEFAULT_FROM_EMAIL",
+                              "RESEND_API_KEY",
+                              "EMAIL_API_KEY",
+                              "RESEND_FROM",
+                              "OUTREACH_EMAIL",
+                              "OUTREACH_PASSWORD",
+                              "MAX_SEND",
+                              "AVG_ORDER_VALUE",
+                              "CHEEKY_BIZ_NAME",
+                              "CHEEKY_PHONE",
+                              "CHEEKY_PROMO",
+                              "TWILIO_ACCOUNT_SID",
+                              "TWILIO_AUTH_TOKEN",
+                              "TWILIO_FROM",
+                              "MSGRAPH_ACCESS_TOKEN",
+                              "ONEDRIVE_AUDIT_ITEM_ID",
+                              "DAILY_DIGEST_TO",
+                              "DAILY_DIGEST_HOUR"
+                            ],
+                            "broken_routes": [
+                              "POST /cheeky-ai/run",
+                              "POST /collections/run",
+                              "POST /webhooks/email-intake"
+                            ],
+                            "last_error": null,
+                            "uptime": 18,
+                            "checked_at": "2026-04-17T13:20:41.254Z"
+                          }
+                        },
+                        "storedAt": "2026-04-17T13:20:41.254Z"
+                      },
+                      "uptime": 790,
+                      "checked_at": "2026-04-17T13:33:33.781Z"
+                    }
+                  },
+                  "storedAt": "2026-04-17T13:33:33.781Z"
+                },
+                "uptime": 24,
+                "checked_at": "2026-04-17T21:45:38.418Z"
+              }
+            },
+            "storedAt": "2026-04-17T21:45:38.480Z"
+          },
+          "uptime": 36,
+          "checked_at": "2026-04-17T21:45:51.115Z"
+        }
+      },
+      "storedAt": "2026-04-17T21:45:51.130Z"
+    },
+    {
+      "event": "cheeky_ai_run",
+      "queue_count": 3,
+      "mock": true,
+      "data_source": "mock",
+      "gaps": [
+        "SQUARE_ACCESS_TOKEN",
+        "RESEND_API_KEY",
+        "TWILIO_ACCOUNT_SID",
+        "TWILIO_AUTH_TOKEN",
+        "AZURE_TENANT_ID",
+        "AZURE_CLIENT_ID",
+        "AZURE_CLIENT_SECRET",
+        "JOB_BLOCKERS"
+      ],
+      "diagnostics": {
+        "missing_env_keys": [
+          "SQUARE_ACCESS_TOKEN",
+          "SQUARE_LOCATION_ID",
+          "RESEND_API_KEY",
+          "TWILIO_ACCOUNT_SID",
+          "TWILIO_AUTH_TOKEN",
+          "AZURE_TENANT_ID",
+          "AZURE_CLIENT_ID",
+          "AZURE_CLIENT_SECRET"
+        ],
+        "broken_routes": [
+          "POST /cheeky-ai/run",
+          "POST /collections/run",
+          "POST /webhooks/email-intake"
+        ],
+        "modules": {
+          "sales_mocked": false,
+          "collections_mocked": false,
+          "action_engine_mocked": false
+        },
+        "system_health": {
+          "status": "RED",
+          "missing_keys": [
+            "CHEEKY_OS_PORT",
+            "SQUARE_ACCESS_TOKEN",
+            "SQUARE_LOCATION_ID",
+            "SQUARE_ENVIRONMENT",
+            "SQUARE_WEBHOOK_SIGNATURE_KEY",
+            "SQUARE_WEBHOOK_NOTIFICATION_URL",
+            "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+            "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+            "DEFAULT_FROM_EMAIL",
+            "RESEND_API_KEY",
+            "EMAIL_API_KEY",
+            "RESEND_FROM",
+            "OUTREACH_EMAIL",
+            "OUTREACH_PASSWORD",
+            "MAX_SEND",
+            "AVG_ORDER_VALUE",
+            "CHEEKY_BIZ_NAME",
+            "CHEEKY_PHONE",
+            "CHEEKY_PROMO",
+            "TWILIO_ACCOUNT_SID",
+            "TWILIO_AUTH_TOKEN",
+            "TWILIO_FROM",
+            "MSGRAPH_ACCESS_TOKEN",
+            "ONEDRIVE_AUDIT_ITEM_ID",
+            "DAILY_DIGEST_TO",
+            "DAILY_DIGEST_HOUR"
+          ],
+          "broken_routes": [],
+          "last_error": {
+            "event": "cheeky_ai_run",
+            "queue_count": 3,
+            "mock": true,
+            "data_source": "mock",
+            "gaps": [
+              "SQUARE_ACCESS_TOKEN",
+              "RESEND_API_KEY",
+              "TWILIO_ACCOUNT_SID",
+              "TWILIO_AUTH_TOKEN",
+              "AZURE_TENANT_ID",
+              "AZURE_CLIENT_ID",
+              "AZURE_CLIENT_SECRET",
+              "JOB_BLOCKERS"
+            ],
+            "diagnostics": {
+              "missing_env_keys": [
+                "SQUARE_ACCESS_TOKEN",
+                "SQUARE_LOCATION_ID",
+                "RESEND_API_KEY",
+                "TWILIO_ACCOUNT_SID",
+                "TWILIO_AUTH_TOKEN",
+                "AZURE_TENANT_ID",
+                "AZURE_CLIENT_ID",
+                "AZURE_CLIENT_SECRET"
+              ],
+              "broken_routes": [
+                "POST /cheeky-ai/run",
+                "POST /collections/run",
+                "POST /webhooks/email-intake"
+              ],
+              "modules": {
+                "sales_mocked": false,
+                "collections_mocked": false,
+                "action_engine_mocked": false
+              },
+              "system_health": {
+                "status": "RED",
+                "missing_keys": [
+                  "CHEEKY_OS_PORT",
+                  "SQUARE_ACCESS_TOKEN",
+                  "SQUARE_LOCATION_ID",
+                  "SQUARE_ENVIRONMENT",
+                  "SQUARE_WEBHOOK_SIGNATURE_KEY",
+                  "SQUARE_WEBHOOK_NOTIFICATION_URL",
+                  "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+                  "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+                  "DEFAULT_FROM_EMAIL",
+                  "RESEND_API_KEY",
+                  "EMAIL_API_KEY",
+                  "RESEND_FROM",
+                  "OUTREACH_EMAIL",
+                  "OUTREACH_PASSWORD",
+                  "MAX_SEND",
+                  "AVG_ORDER_VALUE",
+                  "CHEEKY_BIZ_NAME",
+                  "CHEEKY_PHONE",
+                  "CHEEKY_PROMO",
+                  "TWILIO_ACCOUNT_SID",
+                  "TWILIO_AUTH_TOKEN",
+                  "TWILIO_FROM",
+                  "MSGRAPH_ACCESS_TOKEN",
+                  "ONEDRIVE_AUDIT_ITEM_ID",
+                  "DAILY_DIGEST_TO",
+                  "DAILY_DIGEST_HOUR"
+                ],
+                "broken_routes": [],
+                "last_error": {
+                  "event": "cheeky_ai_run",
+                  "queue_count": 3,
+                  "mock": true,
+                  "data_source": "mock",
+                  "gaps": [
+                    "SQUARE_ACCESS_TOKEN",
+                    "RESEND_API_KEY",
+                    "TWILIO_ACCOUNT_SID",
+                    "TWILIO_AUTH_TOKEN",
+                    "AZURE_TENANT_ID",
+                    "AZURE_CLIENT_ID",
+                    "AZURE_CLIENT_SECRET",
+                    "JOB_BLOCKERS"
+                  ],
+                  "diagnostics": {
+                    "missing_env_keys": [
+                      "SQUARE_ACCESS_TOKEN",
+                      "SQUARE_LOCATION_ID",
+                      "RESEND_API_KEY",
+                      "TWILIO_ACCOUNT_SID",
+                      "TWILIO_AUTH_TOKEN",
+                      "AZURE_TENANT_ID",
+                      "AZURE_CLIENT_ID",
+                      "AZURE_CLIENT_SECRET"
+                    ],
+                    "broken_routes": [
+                      "POST /cheeky-ai/run",
+                      "POST /collections/run",
+                      "POST /webhooks/email-intake"
+                    ],
+                    "modules": {
+                      "sales_mocked": false,
+                      "collections_mocked": false,
+                      "action_engine_mocked": false
+                    },
+                    "system_health": {
+                      "status": "RED",
+                      "missing_keys": [
+                        "CHEEKY_OS_PORT",
+                        "SQUARE_ACCESS_TOKEN",
+                        "SQUARE_LOCATION_ID",
+                        "SQUARE_ENVIRONMENT",
+                        "SQUARE_WEBHOOK_SIGNATURE_KEY",
+                        "SQUARE_WEBHOOK_NOTIFICATION_URL",
+                        "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+                        "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+                        "DEFAULT_FROM_EMAIL",
+                        "RESEND_API_KEY",
+                        "EMAIL_API_KEY",
+                        "RESEND_FROM",
+                        "OUTREACH_EMAIL",
+                        "OUTREACH_PASSWORD",
+                        "MAX_SEND",
+                        "AVG_ORDER_VALUE",
+                        "CHEEKY_BIZ_NAME",
+                        "CHEEKY_PHONE",
+                        "CHEEKY_PROMO",
+                        "TWILIO_ACCOUNT_SID",
+                        "TWILIO_AUTH_TOKEN",
+                        "TWILIO_FROM",
+                        "MSGRAPH_ACCESS_TOKEN",
+                        "ONEDRIVE_AUDIT_ITEM_ID",
+                        "DAILY_DIGEST_TO",
+                        "DAILY_DIGEST_HOUR"
+                      ],
+                      "broken_routes": [],
+                      "last_error": {
+                        "event": "cheeky_ai_run",
+                        "queue_count": 3,
+                        "diagnostics": {
+                          "missing_env_keys": [
+                            "SQUARE_ACCESS_TOKEN",
+                            "SQUARE_LOCATION_ID",
+                            "RESEND_API_KEY",
+                            "TWILIO_ACCOUNT_SID",
+                            "TWILIO_AUTH_TOKEN",
+                            "AZURE_TENANT_ID",
+                            "AZURE_CLIENT_ID",
+                            "AZURE_CLIENT_SECRET"
+                          ],
+                          "broken_routes": [
+                            "POST /cheeky-ai/run",
+                            "POST /collections/run",
+                            "POST /webhooks/email-intake"
+                          ],
+                          "modules": {
+                            "sales_mocked": false,
+                            "collections_mocked": false,
+                            "action_engine_mocked": false
+                          },
+                          "system_health": {
+                            "status": "RED",
+                            "missing_keys": [
+                              "CHEEKY_OS_PORT",
+                              "SQUARE_ACCESS_TOKEN",
+                              "SQUARE_LOCATION_ID",
+                              "SQUARE_ENVIRONMENT",
+                              "SQUARE_WEBHOOK_SIGNATURE_KEY",
+                              "SQUARE_WEBHOOK_NOTIFICATION_URL",
+                              "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+                              "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+                              "DEFAULT_FROM_EMAIL",
+                              "RESEND_API_KEY",
+                              "EMAIL_API_KEY",
+                              "RESEND_FROM",
+                              "OUTREACH_EMAIL",
+                              "OUTREACH_PASSWORD",
+                              "MAX_SEND",
+                              "AVG_ORDER_VALUE",
+                              "CHEEKY_BIZ_NAME",
+                              "CHEEKY_PHONE",
+                              "CHEEKY_PROMO",
+                              "TWILIO_ACCOUNT_SID",
+                              "TWILIO_AUTH_TOKEN",
+                              "TWILIO_FROM",
+                              "MSGRAPH_ACCESS_TOKEN",
+                              "ONEDRIVE_AUDIT_ITEM_ID",
+                              "DAILY_DIGEST_TO",
+                              "DAILY_DIGEST_HOUR"
+                            ],
+                            "broken_routes": [
+                              "POST /cheeky-ai/run",
+                              "POST /collections/run",
+                              "POST /webhooks/email-intake"
+                            ],
+                            "last_error": {
+                              "event": "cheeky_ai_run",
+                              "queue_count": 3,
+                              "diagnostics": {
+                                "missing_env_keys": [
+                                  "SQUARE_ACCESS_TOKEN",
+                                  "SQUARE_LOCATION_ID",
+                                  "RESEND_API_KEY",
+                                  "TWILIO_ACCOUNT_SID",
+                                  "TWILIO_AUTH_TOKEN",
+                                  "AZURE_TENANT_ID",
+                                  "AZURE_CLIENT_ID",
+                                  "AZURE_CLIENT_SECRET"
+                                ],
+                                "broken_routes": [
+                                  "POST /cheeky-ai/run",
+                                  "POST /collections/run",
+                                  "POST /webhooks/email-intake"
+                                ],
+                                "modules": {
+                                  "sales_mocked": false,
+                                  "collections_mocked": false,
+                                  "action_engine_mocked": false
+                                },
+                                "system_health": {
+                                  "status": "RED",
+                                  "missing_keys": [
+                                    "CHEEKY_OS_PORT",
+                                    "SQUARE_ACCESS_TOKEN",
+                                    "SQUARE_LOCATION_ID",
+                                    "SQUARE_ENVIRONMENT",
+                                    "SQUARE_WEBHOOK_SIGNATURE_KEY",
+                                    "SQUARE_WEBHOOK_NOTIFICATION_URL",
+                                    "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+                                    "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+                                    "DEFAULT_FROM_EMAIL",
+                                    "RESEND_API_KEY",
+                                    "EMAIL_API_KEY",
+                                    "RESEND_FROM",
+                                    "OUTREACH_EMAIL",
+                                    "OUTREACH_PASSWORD",
+                                    "MAX_SEND",
+                                    "AVG_ORDER_VALUE",
+                                    "CHEEKY_BIZ_NAME",
+                                    "CHEEKY_PHONE",
+                                    "CHEEKY_PROMO",
+                                    "TWILIO_ACCOUNT_SID",
+                                    "TWILIO_AUTH_TOKEN",
+                                    "TWILIO_FROM",
+                                    "MSGRAPH_ACCESS_TOKEN",
+                                    "ONEDRIVE_AUDIT_ITEM_ID",
+                                    "DAILY_DIGEST_TO",
+                                    "DAILY_DIGEST_HOUR"
+                                  ],
+                                  "broken_routes": [
+                                    "POST /cheeky-ai/run",
+                                    "POST /collections/run",
+                                    "POST /webhooks/email-intake"
+                                  ],
+                                  "last_error": null,
+                                  "uptime": 18,
+                                  "checked_at": "2026-04-17T13:20:41.254Z"
+                                }
+                              },
+                              "storedAt": "2026-04-17T13:20:41.254Z"
+                            },
+                            "uptime": 790,
+                            "checked_at": "2026-04-17T13:33:33.781Z"
+                          }
+                        },
+                        "storedAt": "2026-04-17T13:33:33.781Z"
+                      },
+                      "uptime": 24,
+                      "checked_at": "2026-04-17T21:45:38.418Z"
+                    }
+                  },
+                  "storedAt": "2026-04-17T21:45:38.480Z"
+                },
+                "uptime": 36,
+                "checked_at": "2026-04-17T21:45:51.115Z"
+              }
+            },
+            "storedAt": "2026-04-17T21:45:51.130Z"
+          },
+          "uptime": 29,
+          "checked_at": "2026-04-17T21:46:45.859Z"
+        }
+      },
+      "storedAt": "2026-04-17T21:46:45.900Z"
+    },
+    {
+      "event": "cheeky_ai_run",
+      "queue_count": 3,
+      "mock": true,
+      "data_source": "mock",
+      "gaps": [
+        "SQUARE_ACCESS_TOKEN",
+        "RESEND_API_KEY",
+        "TWILIO_ACCOUNT_SID",
+        "TWILIO_AUTH_TOKEN",
+        "AZURE_TENANT_ID",
+        "AZURE_CLIENT_ID",
+        "AZURE_CLIENT_SECRET",
+        "JOB_BLOCKERS"
+      ],
+      "diagnostics": {
+        "missing_env_keys": [
+          "SQUARE_ACCESS_TOKEN",
+          "SQUARE_LOCATION_ID",
+          "RESEND_API_KEY",
+          "TWILIO_ACCOUNT_SID",
+          "TWILIO_AUTH_TOKEN",
+          "AZURE_TENANT_ID",
+          "AZURE_CLIENT_ID",
+          "AZURE_CLIENT_SECRET"
+        ],
+        "broken_routes": [
+          "POST /cheeky-ai/run",
+          "POST /collections/run",
+          "POST /webhooks/email-intake"
+        ],
+        "modules": {
+          "sales_mocked": false,
+          "collections_mocked": false,
+          "action_engine_mocked": false
+        },
+        "system_health": {
+          "status": "RED",
+          "missing_keys": [
+            "CHEEKY_OS_PORT",
+            "SQUARE_ACCESS_TOKEN",
+            "SQUARE_LOCATION_ID",
+            "SQUARE_ENVIRONMENT",
+            "SQUARE_WEBHOOK_SIGNATURE_KEY",
+            "SQUARE_WEBHOOK_NOTIFICATION_URL",
+            "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+            "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+            "DEFAULT_FROM_EMAIL",
+            "RESEND_API_KEY",
+            "EMAIL_API_KEY",
+            "RESEND_FROM",
+            "OUTREACH_EMAIL",
+            "OUTREACH_PASSWORD",
+            "MAX_SEND",
+            "AVG_ORDER_VALUE",
+            "CHEEKY_BIZ_NAME",
+            "CHEEKY_PHONE",
+            "CHEEKY_PROMO",
+            "TWILIO_ACCOUNT_SID",
+            "TWILIO_AUTH_TOKEN",
+            "TWILIO_FROM",
+            "MSGRAPH_ACCESS_TOKEN",
+            "ONEDRIVE_AUDIT_ITEM_ID",
+            "DAILY_DIGEST_TO",
+            "DAILY_DIGEST_HOUR"
+          ],
+          "broken_routes": [],
+          "last_error": {
+            "event": "cheeky_ai_run",
+            "queue_count": 3,
+            "mock": true,
+            "data_source": "mock",
+            "gaps": [
+              "SQUARE_ACCESS_TOKEN",
+              "RESEND_API_KEY",
+              "TWILIO_ACCOUNT_SID",
+              "TWILIO_AUTH_TOKEN",
+              "AZURE_TENANT_ID",
+              "AZURE_CLIENT_ID",
+              "AZURE_CLIENT_SECRET",
+              "JOB_BLOCKERS"
+            ],
+            "diagnostics": {
+              "missing_env_keys": [
+                "SQUARE_ACCESS_TOKEN",
+                "SQUARE_LOCATION_ID",
+                "RESEND_API_KEY",
+                "TWILIO_ACCOUNT_SID",
+                "TWILIO_AUTH_TOKEN",
+                "AZURE_TENANT_ID",
+                "AZURE_CLIENT_ID",
+                "AZURE_CLIENT_SECRET"
+              ],
+              "broken_routes": [
+                "POST /cheeky-ai/run",
+                "POST /collections/run",
+                "POST /webhooks/email-intake"
+              ],
+              "modules": {
+                "sales_mocked": false,
+                "collections_mocked": false,
+                "action_engine_mocked": false
+              },
+              "system_health": {
+                "status": "RED",
+                "missing_keys": [
+                  "CHEEKY_OS_PORT",
+                  "SQUARE_ACCESS_TOKEN",
+                  "SQUARE_LOCATION_ID",
+                  "SQUARE_ENVIRONMENT",
+                  "SQUARE_WEBHOOK_SIGNATURE_KEY",
+                  "SQUARE_WEBHOOK_NOTIFICATION_URL",
+                  "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+                  "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+                  "DEFAULT_FROM_EMAIL",
+                  "RESEND_API_KEY",
+                  "EMAIL_API_KEY",
+                  "RESEND_FROM",
+                  "OUTREACH_EMAIL",
+                  "OUTREACH_PASSWORD",
+                  "MAX_SEND",
+                  "AVG_ORDER_VALUE",
+                  "CHEEKY_BIZ_NAME",
+                  "CHEEKY_PHONE",
+                  "CHEEKY_PROMO",
+                  "TWILIO_ACCOUNT_SID",
+                  "TWILIO_AUTH_TOKEN",
+                  "TWILIO_FROM",
+                  "MSGRAPH_ACCESS_TOKEN",
+                  "ONEDRIVE_AUDIT_ITEM_ID",
+                  "DAILY_DIGEST_TO",
+                  "DAILY_DIGEST_HOUR"
+                ],
+                "broken_routes": [],
+                "last_error": {
+                  "event": "cheeky_ai_run",
+                  "queue_count": 3,
+                  "mock": true,
+                  "data_source": "mock",
+                  "gaps": [
+                    "SQUARE_ACCESS_TOKEN",
+                    "RESEND_API_KEY",
+                    "TWILIO_ACCOUNT_SID",
+                    "TWILIO_AUTH_TOKEN",
+                    "AZURE_TENANT_ID",
+                    "AZURE_CLIENT_ID",
+                    "AZURE_CLIENT_SECRET",
+                    "JOB_BLOCKERS"
+                  ],
+                  "diagnostics": {
+                    "missing_env_keys": [
+                      "SQUARE_ACCESS_TOKEN",
+                      "SQUARE_LOCATION_ID",
+                      "RESEND_API_KEY",
+                      "TWILIO_ACCOUNT_SID",
+                      "TWILIO_AUTH_TOKEN",
+                      "AZURE_TENANT_ID",
+                      "AZURE_CLIENT_ID",
+                      "AZURE_CLIENT_SECRET"
+                    ],
+                    "broken_routes": [
+                      "POST /cheeky-ai/run",
+                      "POST /collections/run",
+                      "POST /webhooks/email-intake"
+                    ],
+                    "modules": {
+                      "sales_mocked": false,
+                      "collections_mocked": false,
+                      "action_engine_mocked": false
+                    },
+                    "system_health": {
+                      "status": "RED",
+                      "missing_keys": [
+                        "CHEEKY_OS_PORT",
+                        "SQUARE_ACCESS_TOKEN",
+                        "SQUARE_LOCATION_ID",
+                        "SQUARE_ENVIRONMENT",
+                        "SQUARE_WEBHOOK_SIGNATURE_KEY",
+                        "SQUARE_WEBHOOK_NOTIFICATION_URL",
+                        "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+                        "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+                        "DEFAULT_FROM_EMAIL",
+                        "RESEND_API_KEY",
+                        "EMAIL_API_KEY",
+                        "RESEND_FROM",
+                        "OUTREACH_EMAIL",
+                        "OUTREACH_PASSWORD",
+                        "MAX_SEND",
+                        "AVG_ORDER_VALUE",
+                        "CHEEKY_BIZ_NAME",
+                        "CHEEKY_PHONE",
+                        "CHEEKY_PROMO",
+                        "TWILIO_ACCOUNT_SID",
+                        "TWILIO_AUTH_TOKEN",
+                        "TWILIO_FROM",
+                        "MSGRAPH_ACCESS_TOKEN",
+                        "ONEDRIVE_AUDIT_ITEM_ID",
+                        "DAILY_DIGEST_TO",
+                        "DAILY_DIGEST_HOUR"
+                      ],
+                      "broken_routes": [],
+                      "last_error": {
+                        "event": "cheeky_ai_run",
+                        "queue_count": 3,
+                        "mock": true,
+                        "data_source": "mock",
+                        "gaps": [
+                          "SQUARE_ACCESS_TOKEN",
+                          "RESEND_API_KEY",
+                          "TWILIO_ACCOUNT_SID",
+                          "TWILIO_AUTH_TOKEN",
+                          "AZURE_TENANT_ID",
+                          "AZURE_CLIENT_ID",
+                          "AZURE_CLIENT_SECRET",
+                          "JOB_BLOCKERS"
+                        ],
+                        "diagnostics": {
+                          "missing_env_keys": [
+                            "SQUARE_ACCESS_TOKEN",
+                            "SQUARE_LOCATION_ID",
+                            "RESEND_API_KEY",
+                            "TWILIO_ACCOUNT_SID",
+                            "TWILIO_AUTH_TOKEN",
+                            "AZURE_TENANT_ID",
+                            "AZURE_CLIENT_ID",
+                            "AZURE_CLIENT_SECRET"
+                          ],
+                          "broken_routes": [
+                            "POST /cheeky-ai/run",
+                            "POST /collections/run",
+                            "POST /webhooks/email-intake"
+                          ],
+                          "modules": {
+                            "sales_mocked": false,
+                            "collections_mocked": false,
+                            "action_engine_mocked": false
+                          },
+                          "system_health": {
+                            "status": "RED",
+                            "missing_keys": [
+                              "CHEEKY_OS_PORT",
+                              "SQUARE_ACCESS_TOKEN",
+                              "SQUARE_LOCATION_ID",
+                              "SQUARE_ENVIRONMENT",
+                              "SQUARE_WEBHOOK_SIGNATURE_KEY",
+                              "SQUARE_WEBHOOK_NOTIFICATION_URL",
+                              "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+                              "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+                              "DEFAULT_FROM_EMAIL",
+                              "RESEND_API_KEY",
+                              "EMAIL_API_KEY",
+                              "RESEND_FROM",
+                              "OUTREACH_EMAIL",
+                              "OUTREACH_PASSWORD",
+                              "MAX_SEND",
+                              "AVG_ORDER_VALUE",
+                              "CHEEKY_BIZ_NAME",
+                              "CHEEKY_PHONE",
+                              "CHEEKY_PROMO",
+                              "TWILIO_ACCOUNT_SID",
+                              "TWILIO_AUTH_TOKEN",
+                              "TWILIO_FROM",
+                              "MSGRAPH_ACCESS_TOKEN",
+                              "ONEDRIVE_AUDIT_ITEM_ID",
+                              "DAILY_DIGEST_TO",
+                              "DAILY_DIGEST_HOUR"
+                            ],
+                            "broken_routes": [],
+                            "last_error": {
+                              "event": "cheeky_ai_run",
+                              "queue_count": 3,
+                              "diagnostics": {
+                                "missing_env_keys": [
+                                  "SQUARE_ACCESS_TOKEN",
+                                  "SQUARE_LOCATION_ID",
+                                  "RESEND_API_KEY",
+                                  "TWILIO_ACCOUNT_SID",
+                                  "TWILIO_AUTH_TOKEN",
+                                  "AZURE_TENANT_ID",
+                                  "AZURE_CLIENT_ID",
+                                  "AZURE_CLIENT_SECRET"
+                                ],
+                                "broken_routes": [
+                                  "POST /cheeky-ai/run",
+                                  "POST /collections/run",
+                                  "POST /webhooks/email-intake"
+                                ],
+                                "modules": {
+                                  "sales_mocked": false,
+                                  "collections_mocked": false,
+                                  "action_engine_mocked": false
+                                },
+                                "system_health": {
+                                  "status": "RED",
+                                  "missing_keys": [
+                                    "CHEEKY_OS_PORT",
+                                    "SQUARE_ACCESS_TOKEN",
+                                    "SQUARE_LOCATION_ID",
+                                    "SQUARE_ENVIRONMENT",
+                                    "SQUARE_WEBHOOK_SIGNATURE_KEY",
+                                    "SQUARE_WEBHOOK_NOTIFICATION_URL",
+                                    "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+                                    "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+                                    "DEFAULT_FROM_EMAIL",
+                                    "RESEND_API_KEY",
+                                    "EMAIL_API_KEY",
+                                    "RESEND_FROM",
+                                    "OUTREACH_EMAIL",
+                                    "OUTREACH_PASSWORD",
+                                    "MAX_SEND",
+                                    "AVG_ORDER_VALUE",
+                                    "CHEEKY_BIZ_NAME",
+                                    "CHEEKY_PHONE",
+                                    "CHEEKY_PROMO",
+                                    "TWILIO_ACCOUNT_SID",
+                                    "TWILIO_AUTH_TOKEN",
+                                    "TWILIO_FROM",
+                                    "MSGRAPH_ACCESS_TOKEN",
+                                    "ONEDRIVE_AUDIT_ITEM_ID",
+                                    "DAILY_DIGEST_TO",
+                                    "DAILY_DIGEST_HOUR"
+                                  ],
+                                  "broken_routes": [
+                                    "POST /cheeky-ai/run",
+                                    "POST /collections/run",
+                                    "POST /webhooks/email-intake"
+                                  ],
+                                  "last_error": {
+                                    "event": "cheeky_ai_run",
+                                    "queue_count": 3,
+                                    "diagnostics": {
+                                      "missing_env_keys": [
+                                        "SQUARE_ACCESS_TOKEN",
+                                        "SQUARE_LOCATION_ID",
+                                        "RESEND_API_KEY",
+                                        "TWILIO_ACCOUNT_SID",
+                                        "TWILIO_AUTH_TOKEN",
+                                        "AZURE_TENANT_ID",
+                                        "AZURE_CLIENT_ID",
+                                        "AZURE_CLIENT_SECRET"
+                                      ],
+                                      "broken_routes": [
+                                        "POST /cheeky-ai/run",
+                                        "POST /collections/run",
+                                        "POST /webhooks/email-intake"
+                                      ],
+                                      "modules": {
+                                        "sales_mocked": false,
+                                        "collections_mocked": false,
+                                        "action_engine_mocked": false
+                                      },
+                                      "system_health": {
+                                        "status": "RED",
+                                        "missing_keys": [
+                                          "CHEEKY_OS_PORT",
+                                          "SQUARE_ACCESS_TOKEN",
+                                          "SQUARE_LOCATION_ID",
+                                          "SQUARE_ENVIRONMENT",
+                                          "SQUARE_WEBHOOK_SIGNATURE_KEY",
+                                          "SQUARE_WEBHOOK_NOTIFICATION_URL",
+                                          "POWER_AUTOMATE_DATAVERSE_WEBHOOK",
+                                          "POWER_AUTOMATE_OUTLOOK_WEBHOOK",
+                                          "DEFAULT_FROM_EMAIL",
+                                          "RESEND_API_KEY",
+                                          "EMAIL_API_KEY",
+                                          "RESEND_FROM",
+                                          "OUTREACH_EMAIL",
+                                          "OUTREACH_PASSWORD",
+                                          "MAX_SEND",
+                                          "AVG_ORDER_VALUE",
+                                          "CHEEKY_BIZ_NAME",
+                                          "CHEEKY_PHONE",
+                                          "CHEEKY_PROMO",
+                                          "TWILIO_ACCOUNT_SID",
+                                          "TWILIO_AUTH_TOKEN",
+                                          "TWILIO_FROM",
+                                          "MSGRAPH_ACCESS_TOKEN",
+                                          "ONEDRIVE_AUDIT_ITEM_ID",
+                                          "DAILY_DIGEST_TO",
+                                          "DAILY_DIGEST_HOUR"
+                                        ],
+                                        "broken_routes": [
+                                          "POST /cheeky-ai/run",
+                                          "POST /collections/run",
+                                          "POST /webhooks/email-intake"
+                                        ],
+                                        "last_error": null,
+                                        "uptime": 18,
+                                        "checked_at": "2026-04-17T13:20:41.254Z"
+                                      }
+                                    },
+                                    "storedAt": "2026-04-17T13:20:41.254Z"
+                                  },
+                                  "uptime": 790,
+                                  "checked_at": "2026-04-17T13:33:33.781Z"
+                                }
+                              },
+                              "storedAt": "2026-04-17T13:33:33.781Z"
+                            },
+                            "uptime": 24,
+                            "checked_at": "2026-04-17T21:45:38.418Z"
+                          }
+                        },
+                        "storedAt": "2026-04-17T21:45:38.480Z"
+                      },
+                      "uptime": 36,
+                      "checked_at": "2026-04-17T21:45:51.115Z"
+                    }
+                  },
+                  "storedAt": "2026-04-17T21:45:51.130Z"
+                },
+                "uptime": 29,
+                "checked_at": "2026-04-17T21:46:45.859Z"
+              }
+            },
+            "storedAt": "2026-04-17T21:46:45.900Z"
+          },
+          "uptime": 174,
+          "checked_at": "2026-04-17T21:53:02.070Z"
+        }
+      },
+      "storedAt": "2026-04-17T21:53:02.102Z"
+    }
+  ],
+  "updatedAt": "2026-04-17T21:53:02.102Z"
+}

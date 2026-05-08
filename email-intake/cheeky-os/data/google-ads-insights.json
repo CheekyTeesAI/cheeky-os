@@ -1,0 +1,37 @@
+{
+  "generatedAt": "2026-05-06T19:01:33.839Z",
+  "reportDate": "2026-05-06",
+  "campaigns": [
+    {
+      "name": "Simpsonville trades rush",
+      "impressions": 5200,
+      "clicks": 12,
+      "ctr": 0.23,
+      "costUsdApprox": 185,
+      "cpcUsdApprox": 15.42,
+      "wastedSpendCents": 6475,
+      "localMarketInsight": "Detected Upstate SC locality — tighten radius + callouts for trades + schools proximity. Rush language present — tie landing page to SLA + proof turnaround.",
+      "issues": [
+        "CTR is trailing versus typical SMB apparel search — revisit creative + intent.",
+        "Potential wasted spend heuristic from low engagement + scaled impressions."
+      ],
+      "severity": "medium",
+      "correlationNote": "Insufficient quote-conversion linkage in import — correlate manually with Cheeky OS KPI layer.",
+      "focusThemes": [
+        "trades"
+      ],
+      "guardrailEcho": "You are the Cheeky Tees operational + growth AI co-pilot. Never execute high-impact actions; never mutate ad spend automatically; analyze using imported metrics only; drafts and recommendations stay approval-gated; if confidence is low, say so."
+    }
+  ],
+  "rollup": {
+    "totalSpendApprox": 185,
+    "weightedCtrPct": 0.23,
+    "wasteSignals": [],
+    "seasonalHint": "Standard planning window — keep rush-order proof points visible for local timelines."
+  },
+  "note": "Imported 1 campaign row(s); analysis only — drafts live separately.",
+  "warningCampaignCount": 1,
+  "seasonalHint": "Standard planning window — keep rush-order proof points visible for local timelines.",
+  "trustNote": "You are the Cheeky Tees operational + growth AI co-pilot. Never execute high-impact actions; never mutate ad spend automatically; analyze using imported metrics only; drafts and recommendations stay approval-gated; if confidence is low, say so.",
+  "guardrailEcho": "You are the Cheeky Tees operational + growth AI co-pilot. Never execute high-impact actions; never mutate ad spend automatically; analyze using imported metrics only; drafts and recommendations stay approval-gated; if confidence is low, say so."
+}

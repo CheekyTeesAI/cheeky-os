@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cheeky OS Command Center</title>
+  <link rel="stylesheet" href="/command-center.css" />
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="dot"></span>
+      <h1>Cheeky OS <span class="thin">Command Center</span></h1>
+    </div>
+    <div class="status" id="status-pill">
+      <span class="status-label">Status</span>
+      <span class="status-value" id="status-value">—</span>
+    </div>
+  </header>
+
+  <main class="app">
+
+    <section class="card query-card">
+      <label for="q" class="card-label">Command the system</label>
+      <div class="query-row">
+        <button id="btn-mic" class="mic" title="Speak command" aria-label="Speak command">🎙</button>
+        <input
+          id="q"
+          type="text"
+          autocomplete="off"
+          placeholder="Ask anything, or try: 'Create invoice for 50 shirts for Amber HVAC'"
+        />
+        <button id="btn-run" class="primary">Run</button>
+      </div>
+      <div class="quick-row">
+        <button data-quick="system">Run System</button>
+        <button data-quick="today">Jobs Due Today</button>
+        <button data-quick="queue">Production Queue</button>
+        <button data-quick="print">What Should We Print</button>
+        <button data-quick="order">Purchasing List</button>
+        <button data-quick="finance">Profit</button>
+        <button data-quick="invoice">Invoice: 50 Shirts</button>
+      </div>
+      <div class="answer" id="answer">Ready. Ask a question, give a command, or tap the mic.</div>
+      <div id="preview" class="preview hidden">
+        <div class="preview-head">
+          <span class="preview-label">Invoice preview</span>
+          <button id="btn-cancel" class="ghost">Cancel</button>
+        </div>
+        <pre id="preview-text"></pre>
+        <div class="preview-row">
+          <button id="btn-confirm" class="primary">Confirm &amp; Send</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Financials</h2>
+        <span class="subtle" id="finance-source">—</span>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi"><span class="kpi-label">Revenue</span><span class="kpi-value" id="k-revenue">$0</span></div>
+        <div class="kpi"><span class="kpi-label">Cost</span><span class="kpi-value" id="k-cost">$0</span></div>
+        <div class="kpi"><span class="kpi-label">Profit</span><span class="kpi-value" id="k-profit">$0</span></div>
+        <div class="kpi"><span class="kpi-label">Margin</span><span class="kpi-value" id="k-margin">0%</span></div>
+        <div class="kpi"><span class="kpi-label">Jobs</span><span class="kpi-value" id="k-jobs">0</span></div>
+        <div class="kpi"><span class="kpi-label">Overdue $</span><span class="kpi-value" id="k-overdue">$0</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Production Queue</h2>
+        <span class="subtle" id="queue-summary">—</span>
+      </div>
+      <div id="queue" class="list"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Batches</h2>
+        <span class="subtle" id="batches-summary">—</span>
+      </div>
+      <div id="batches" class="list"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Blocked</h2>
+        <span class="subtle" id="blocked-summary">—</span>
+      </div>
+      <div id="blocked" class="list"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Purchasing</h2>
+        <span class="subtle" id="purchasing-summary">—</span>
+      </div>
+      <div id="purchasing" class="list"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Routing Decisions</h2>
+        <span class="subtle" id="routing-summary">—</span>
+      </div>
+      <div id="routing" class="list"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Communications</h2>
+        <span class="subtle" id="comm-summary">—</span>
+      </div>
+      <div class="kpi-grid comm-kpi">
+        <div class="kpi"><span class="kpi-label">Ready</span><span class="kpi-value" id="comm-ready">0</span></div>
+        <div class="kpi"><span class="kpi-label">Pending approval</span><span class="kpi-value" id="comm-pending">0</span></div>
+        <div class="kpi"><span class="kpi-label">Failed</span><span class="kpi-value" id="comm-failed">0</span></div>
+        <div class="kpi"><span class="kpi-label">Sent today</span><span class="kpi-value" id="comm-sent">0</span></div>
+      </div>
+      <div id="comm-lists" class="list comm-lists"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Service desk</h2>
+        <span class="subtle" id="sd-summary">—</span>
+      </div>
+      <div class="kpi-grid comm-kpi">
+        <div class="kpi"><span class="kpi-label">New</span><span class="kpi-value" id="sd-new">0</span></div>
+        <div class="kpi"><span class="kpi-label">Team</span><span class="kpi-value" id="sd-team">0</span></div>
+        <div class="kpi"><span class="kpi-label">Customer</span><span class="kpi-value" id="sd-cust">0</span></div>
+        <div class="kpi"><span class="kpi-label">Escalated</span><span class="kpi-value" id="sd-esc">0</span></div>
+      </div>
+      <div id="sd-lists" class="list"></div>
+    </section>
+
+    <section class="card admin-card" id="admin-system-card">
+      <div class="card-head">
+        <h2>Admin / System</h2>
+        <span class="subtle" id="admin-version">—</span>
+      </div>
+      <div class="admin-grid">
+        <div class="admin-tile">
+          <span class="admin-label">Startup</span>
+          <span class="admin-value" id="admin-startup">—</span>
+          <span class="admin-hint" id="admin-startup-detail"></span>
+        </div>
+        <div class="admin-tile">
+          <span class="admin-label">Config</span>
+          <span class="admin-value" id="admin-config">—</span>
+        </div>
+        <div class="admin-tile">
+          <span class="admin-label">Latest backup</span>
+          <span class="admin-value" id="admin-backup">—</span>
+        </div>
+      </div>
+      <div class="admin-actions">
+        <button type="button" class="ghost" id="btn-admin-refresh">Refresh</button>
+        <button type="button" class="primary" id="btn-admin-backup">Create backup</button>
+        <button type="button" class="ghost" id="btn-admin-bootstrap">Bootstrap</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Today's Plan</h2>
+      </div>
+      <ol id="plan" class="plan"></ol>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Gaps &amp; Self-Heal</h2>
+      </div>
+      <div id="selfheal" class="list"></div>
+    </section>
+
+    <footer class="foot">
+      <span id="foot-time">—</span>
+      <span class="dotsep"></span>
+      <span id="foot-mode">mode: ?</span>
+    </footer>
+
+  </main>
+
+  <script src="/command-center.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "cashAccounts": [],
+  "obligations": [
+    {
+      "id": "obl-a7507a8a-25cd-4682-beb4-091cc0a7d0e3",
+      "name": "SC DOR Payment",
+      "vendor": "SC Department of Revenue",
+      "category": "TAX",
+      "amount": 150000,
+      "dueDate": "2026-05-01",
+      "status": "DUE_SOON",
+      "priority": "CRITICAL",
+      "autopay": false,
+      "notes": "",
+      "createdAt": "2026-04-29T20:49:36.895Z",
+      "updatedAt": "2026-04-29T20:49:36.895Z"
+    }
+  ],
+  "debts": [],
+  "events": [
+    {
+      "id": "evt-a702553d-dffe-4fbf-8b9d-19eb04c689f3",
+      "type": "EXPECTED_INCOME",
+      "source": "Square deposit",
+      "amount": 500000,
+      "expectedDate": "2026-05-02",
+      "status": "UPCOMING",
+      "notes": "",
+      "createdAt": "2026-04-29T20:49:37.000Z",
+      "updatedAt": "2026-04-29T20:49:37.000Z"
+    }
+  ]
+}

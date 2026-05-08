@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cheeky OS Board</title>
+  <style>
+    body {
+      font-family: Arial;
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .column {
+      width: 30%;
+      background: #f4f4f4;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .card {
+      background: white;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="column">
+    <h2>READY</h2>
+    <div id="ready"></div>
+  </div>
+
+  <div class="column">
+    <h2>IN PRODUCTION</h2>
+    <div id="production"></div>
+  </div>
+
+  <div class="column">
+    <h2>COMPLETED</h2>
+    <div id="completed"></div>
+  </div>
+
+<script>
+const API = "http://localhost:3099/cheeky/orders";
+
+async function loadColumn(endpoint, elementId) {
+  const res = await fetch(API + endpoint);
+  const data = await res.json();
+
+  const container = document.getElementById(elementId);
+  container.innerHTML = "";
+
+  if (!data.orders) return;
+
+  data.orders.forEach(order => {
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+      <strong>${order.customerName}</strong><br/>
+      ${order.quantity} @ $${order.unitPrice}<br/>
+      $${order.total}
+    `;
+    container.appendChild(div);
+  });
+}
+
+function loadBoard() {
+  loadColumn("/ready", "ready");
+  loadColumn("/production", "production");
+  loadColumn("/completed", "completed");
+}
+
+setInterval(loadBoard, 5000);
+loadBoard();
+</script>
+
+</body>
+</html>
+

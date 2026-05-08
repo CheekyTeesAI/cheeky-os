@@ -1,0 +1,12 @@
+services:
+  cheeky-os:
+    build: .
+    image: cheeky-os:4
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+    restart: unless-stopped

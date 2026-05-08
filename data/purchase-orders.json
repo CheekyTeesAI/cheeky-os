@@ -1,0 +1,124 @@
+{
+  "orders": [
+    {
+      "poNumber": "PO-20260417-001",
+      "supplier": "Carolina Made",
+      "items": [
+        {
+          "sku": "GEN:gildan-64000-tee|black|L",
+          "product": "Gildan 64000 Tee",
+          "color": "BLACK",
+          "size": "L",
+          "qty": 60
+        }
+      ],
+      "totalUnits": 60,
+      "linkedJobs": [
+        "JOB-1776461775815-G6AQ"
+      ],
+      "notes": "Preferred default supplier",
+      "sendStatus": "DRAFT",
+      "shipTo": null,
+      "createdAt": "2026-04-18T01:15:40.753Z",
+      "updatedAt": "2026-04-18T01:58:18.064Z",
+      "lastError": null,
+      "messageId": null
+    },
+    {
+      "poNumber": "PO-20260417-002",
+      "supplier": "Carolina Made",
+      "items": [
+        {
+          "sku": "GEN:gildan-64000-tee|white|L",
+          "product": "Gildan 64000 Tee",
+          "color": "WHITE",
+          "size": "L",
+          "qty": 48
+        }
+      ],
+      "totalUnits": 48,
+      "linkedJobs": [
+        "JOB-1776461775856-4WRJ"
+      ],
+      "notes": "Preferred default supplier",
+      "sendStatus": "DRAFT",
+      "shipTo": null,
+      "createdAt": "2026-04-18T01:15:40.753Z",
+      "updatedAt": "2026-04-18T01:58:18.064Z",
+      "lastError": null,
+      "messageId": null
+    },
+    {
+      "poNumber": "PO-20260417-003",
+      "supplier": "S&S",
+      "items": [
+        {
+          "sku": "GEN:independent-ss4500-hoodie|navy|L",
+          "product": "Independent SS4500 Hoodie",
+          "color": "NAVY",
+          "size": "L",
+          "qty": 8
+        }
+      ],
+      "totalUnits": 8,
+      "linkedJobs": [
+        "JOB-1776461775874-87VC"
+      ],
+      "notes": "Fallback catalog supplier",
+      "sendStatus": "DRAFT",
+      "shipTo": null,
+      "createdAt": "2026-04-18T01:15:40.753Z",
+      "updatedAt": "2026-04-18T01:58:18.064Z",
+      "lastError": null,
+      "messageId": null
+    },
+    {
+      "poNumber": "PO-20260417-004",
+      "supplier": "Carolina Made",
+      "items": [
+        {
+          "sku": "GEN:gildan-64000-tee|navy|L",
+          "product": "Gildan 64000 Tee",
+          "color": "NAVY",
+          "size": "L",
+          "qty": 12
+        }
+      ],
+      "totalUnits": 12,
+      "linkedJobs": [
+        "JOB-1776463163562-APJK"
+      ],
+      "notes": "Preferred default supplier",
+      "sendStatus": "DRAFT",
+      "shipTo": null,
+      "createdAt": "2026-04-18T01:15:40.753Z",
+      "updatedAt": "2026-04-18T01:58:18.064Z",
+      "lastError": null,
+      "messageId": null
+    },
+    {
+      "poNumber": "PO-20260417-005",
+      "supplier": "Carolina Made",
+      "items": [
+        {
+          "sku": "GEN:gildan-64000-tee|as-specified|L",
+          "product": "Gildan 64000 Tee",
+          "color": "As specified",
+          "size": "L",
+          "qty": 11
+        }
+      ],
+      "totalUnits": 11,
+      "linkedJobs": [
+        "JOB-1776466354571-INP4"
+      ],
+      "notes": "Preferred default supplier",
+      "sendStatus": "DRAFT",
+      "shipTo": null,
+      "createdAt": "2026-04-18T01:15:40.753Z",
+      "updatedAt": "2026-04-18T01:58:18.064Z",
+      "lastError": null,
+      "messageId": null
+    }
+  ]
+}

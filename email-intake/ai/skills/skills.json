@@ -1,0 +1,23 @@
+{
+  "scqa": {
+    "name": "SCQA Writing Framework",
+    "purpose": "structured communication",
+    "usage": "long-form explanation"
+  },
+  "copywriting": {
+    "name": "Structured Copywriting",
+    "purpose": "sales messaging"
+  },
+  "summary": {
+    "name": "Summary Compressor",
+    "purpose": "condense information"
+  },
+  "sales": {
+    "name": "Sales Response Builder",
+    "purpose": "customer interaction"
+  },
+  "workflow": {
+    "name": "Workflow Planner",
+    "purpose": "task execution"
+  }
+}

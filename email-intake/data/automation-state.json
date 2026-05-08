@@ -1,0 +1,14 @@
+{
+  "paused": false,
+  "rules": {
+    "intakeProcessing": true,
+    "productionFlow": true,
+    "scheduling": true,
+    "purchasing": true,
+    "customerService": true,
+    "communicationsAutoSafe": false,
+    "vendorOutboundAutoSend": false,
+    "squareSync": true,
+    "dryRun": false
+  }
+}

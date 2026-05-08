@@ -1,0 +1,109 @@
+{
+  "generatedAt": "2026-05-06T19:35:06.872Z",
+  "topPriorities": [
+    "Operational lane looks controlled in this snapshot — still verify deposits + art proofs manually.",
+    "Cash visibility: reconcile unpaid / stale-estimate signals with deposit policy.",
+    "2 approval gate ticket(s) need Patrick signature before outbound action."
+  ],
+  "jeremyFocus": [
+    "0 card(s) in PRODUCTION_READY — Jeremy keeps presses fed after approvals.",
+    "0 job(s) in QC — tighten pass/fail notes before boxing."
+  ],
+  "patrickApprovals": [
+    {
+      "id": "4e24c413-d46b-47c0-975f-55a781b19974",
+      "headline": "Demo Cafe — growth_outreach",
+      "why": "Outreach draft (warm_reactivation) — Patrick approves before any send.",
+      "moneyImpact": "customer_trust_and_pipeline"
+    },
+    {
+      "id": "50c1c5f8-dac1-46f5-bc37-6741c7a16a8b",
+      "headline": "Simpsonville trades rush — google_ads_optimization_draft",
+      "why": "CTR is trailing versus typical SMB apparel search — revisit creative + intent. Draft id c6456088-bd82-4f85-a88d-f293eefb376d. No mutating Google Ads accounts from Cheeky OS — Jerem",
+      "moneyImpact": "ads_efficiency_optional"
+    }
+  ],
+  "growthOpportunities": [],
+  "cashWarnings": [
+    {
+      "line": "No unpaid rows in snapshot — Either Square is quiet or connectors need configuration.",
+      "next": "If this feels wrong, verify Square sandbox/production tokens and rerun dashboard refresh."
+    }
+  ],
+  "outreachRecommendations": [
+    "Demo Cafe • warm_reactivation"
+  ],
+  "kpiSnapshot": {
+    "pendingApprovals": 2,
+    "productionReadyCount": 0,
+    "qcCount": 0,
+    "topLeadScore": 0,
+    "growthLeadsScored": 0,
+    "frictionNotesWindow": 2,
+    "shiftApprovalsPending": 2,
+    "unpaidInvoiceSignals": 0,
+    "squareConnector": "fresh"
+  },
+  "operationalSummary": "Ops attention still needed — growth work stays secondary until lane + cash checkpoints clear.",
+  "frictionOvernightNotes": [
+    {
+      "area": "cockpit-validation",
+      "description": "validation suite friction"
+    },
+    {
+      "area": "Playbook Insight",
+      "description": "Auto summary: cockpit-validation · low — validation suite friction"
+    }
+  ],
+  "shiftSummaryLine": "Snapshot: 0 completed-ish rows in sample, 0 in active production codes, 0 with holds. Pending gate approvals: 2. Drafts awaiting review (disk): 0. Square read: fresh.",
+  "confidence": 0.52,
+  "planningPromptEcho": "Executive planning lens: prioritize cashflow, blocked production, then growth. Separate Patrick approvals from Jeremy execution. Never bypass approvals.",
+  "recurringFrictionDigest": [
+    {
+      "area": "cockpit validation",
+      "count": 1,
+      "severity": "low"
+    }
+  ],
+  "recurringAdPerformanceDigest": [
+    "1 imported campaign rows still carry Medium/High attention — correlate with KPI summary before edits."
+  ],
+  "growthMomentumScore": 0.46,
+  "operationalConfidenceScore": 0.512,
+  "systemHealthScore": 0.5,
+  "phase4MomentumScores": {
+    "operationalConfidenceScore": 0.512,
+    "growthMomentumScore": 0.46,
+    "systemHealthScore": 0.5
+  },
+  "phase4GuardrailEcho": "You are the Cheeky Tees operational + growth AI co-pilot. Protect cashflow and production first; surface blockers early; improve Google Ads performance safely; never execute high-impact actions; never mutate ad spend automatically; never send outreach automatically; generate drafts/recommendations only; use metric-driven reasoning; if confidence is low, say so clearly.",
+  "topConcern": "Operational lane looks controlled in this snapshot — still verify deposits + art proofs manually.",
+  "changedSinceYesterday": "2 friction note(s) in overnight window plus 2 pending approval gate item(s).",
+  "jeremyFinishToday": "0 card(s) in PRODUCTION_READY — Jeremy keeps presses fed after approvals. Keep execution lanes clean before growth tasks.",
+  "patrickReviewTonight": "Review approvals (2), cash warnings (1), and ads signal before signing outbound decisions.",
+  "systemHealth": {
+    "healthScore": 0.6,
+    "operationalConfidence": 0.65,
+    "warnings": [],
+    "blockers": [],
+    "connectorStatus": {
+      "prismaReadable": true,
+      "squareCache": "cached_snapshot_present",
+      "cachedSquareAt": "2026-05-06T19:35:06.829Z",
+      "note": "You are the Cheeky Tees operational AI co-pilot. Protect cashflow and production; never send communications automatically; if confidence is low, say so; generate recommendations only."
+    },
+    "intakeSignals": {
+      "pendingSelfServiceReview": 0
+    },
+    "draftBacklogTotals": {
+      "workOrderDraftsPending": 0,
+      "garmentDraftsPending": 0,
+      "customerFollowUpDraftsPending": 0
+    },
+    "escalationRecommendations": [
+      "Keep logging friction snapshots — playbook auto-compilation stays enabled."
+    ],
+    "generatedAt": "2026-05-06T19:35:06.876Z",
+    "guardrailEcho": "You are the Cheeky Tees operational AI co-pilot. Protect cashflow and production; never send communications automatically; if confidence is low, say so; generate recommendations only."
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "cache_dashboard_summary_lastGood": {
+    "generatedAt": "2026-05-07T16:15:56.257Z",
+    "payload": {
+      "success": true,
+      "degradedMode": false,
+      "safeMessage": "",
+      "generatedAt": "2026-05-07T16:15:56.257Z",
+      "cachedAt": null,
+      "data": {
+        "blockers": 78,
+        "ordersOnHold": 62,
+        "production": 13,
+        "approvals": 2,
+        "estimates": 1,
+        "blanksNeeded": 10,
+        "artWaiting": 101,
+        "ordersNeedingArt": 101,
+        "tasks": 78,
+        "systemHealth": "ok",
+        "totalOrdersToday": 6,
+        "staleSources": [],
+        "warnings": []
+      }
+    }
+  }
+}

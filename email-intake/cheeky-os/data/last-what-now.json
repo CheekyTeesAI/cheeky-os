@@ -1,0 +1,277 @@
+{
+  "answer": "2 approval gate ticket(s) are waiting—Patrick signs customer + cash moves. Then: Nothing screaming in the blocker lane — still glance approvals + READY FOR JEREMY so Jeremy stays fed.",
+  "topConcern": "Live query failed safely — reconcile Prisma columns vs database. Showing empty buckets until repaired.",
+  "topBlockers": [
+    {
+      "id": "noop-critical",
+      "label": "· No critical blockers detected",
+      "blocker": "Live query failed safely — reconcile Prisma columns vs database. Showing empty buckets until repaired.",
+      "instructions": "Refresh often; log friction via POST /api/ops/friction-log if UX gaps appear.",
+      "moneyImpact": "none",
+      "prodImpact": "none",
+      "dueDate": null,
+      "daysUntilDue": null
+    }
+  ],
+  "recommendedActions": [
+    {
+      "who": "Patrick",
+      "instruction": "1. Clear 2 cockpit approval(s). 2. Review cash risks from Square snapshot before releasing garments."
+    },
+    {
+      "who": "Jeremy",
+      "instruction": "Jeremy: no PRODUCTION_READY jobs listed — help Patrick clear deposits, art, and garment receipts so cards land in READY FOR JEREMY. Never send email/SMS, never place vendor orders, never flip production status inside Cheeky OS—draft internally, approval first."
+    },
+    {
+      "who": "Team",
+      "instruction": "2 fresh friction marker(s)—fix root cause tomorrow, today keep logging."
+    },
+    {
+      "who": "Floor process",
+      "instruction": "Nothing pending on disk yet—tap POST /api/drafts/generate when you touch a risky customer lane."
+    }
+  ],
+  "jeremyInstructions": "Jeremy: no PRODUCTION_READY jobs listed — help Patrick clear deposits, art, and garment receipts so cards land in READY FOR JEREMY. Use drafts + approvals only—no autonomous execution from this cockpit.",
+  "patrickApprovals": [
+    {
+      "headline": "· approval · build",
+      "why": "risk_policy_auto",
+      "suggestedAction": "Patrick reviews queue in approvals console — no auto-send from Cheeky OS.",
+      "approvalRequired": true,
+      "idForOps": "afe88e48-fd2d-438d-8d04-7d89e7b0de7f"
+    },
+    {
+      "headline": "· approval · build",
+      "why": "risk_policy_auto",
+      "suggestedAction": "Patrick reviews queue in approvals console — no auto-send from Cheeky OS.",
+      "approvalRequired": true,
+      "idForOps": "dbce4aec-49f4-4170-ad40-ae1f70f0578c"
+    },
+    {
+      "headline": "Demo Cafe · growth_outreach",
+      "why": "Outreach draft (warm_reactivation) — Patrick approves before any send.",
+      "suggestedAction": "Patrick approves in gate before execution.",
+      "approvalRequired": true,
+      "idForOps": "4e24c413-d46b-47c0-975f-55a781b19974",
+      "source": "phase2_gate",
+      "impactLevel": "high",
+      "moneyImpact": "customer_trust_and_pipeline"
+    },
+    {
+      "headline": "Simpsonville trades rush · google_ads_optimization_draft",
+      "why": "CTR is trailing versus typical SMB apparel search — revisit creative + intent. Draft id c6456088-bd82-4f85-a88d-f293eefb376d. No mutating Google Ads accounts from Cheeky OS — Jeremy/Patrick decide externally.",
+      "suggestedAction": "Patrick approves in gate before execution.",
+      "approvalRequired": true,
+      "idForOps": "50c1c5f8-dac1-46f5-bc37-6741c7a16a8b",
+      "source": "phase2_gate",
+      "impactLevel": "medium",
+      "moneyImpact": "ads_efficiency_optional"
+    }
+  ],
+  "cashRisks": [
+    {
+      "id": "cash-est-EMeB3aY5kY1o7RbVkvuGEQsiSFeZY",
+      "label": "Open Square order · Stale estimate / open order",
+      "blocker": "Open Square order getting old — customer may ghost.",
+      "instructions": "Manual follow-up or internal draft comms (approval still required).",
+      "moneyImpact": "opportunity_loss",
+      "prodImpact": "none_yet",
+      "dueDate": null,
+      "daysUntilDue": null
+    },
+    {
+      "id": "cash-est-SH6GLLLB0Hvr6LnOqwYqIvKq9RfZY",
+      "label": "Open Square order · Stale estimate / open order",
+      "blocker": "Open Square order getting old — customer may ghost.",
+      "instructions": "Manual follow-up or internal draft comms (approval still required).",
+      "moneyImpact": "opportunity_loss",
+      "prodImpact": "none_yet",
+      "dueDate": null,
+      "daysUntilDue": null
+    },
+    {
+      "id": "cash-est-0GBUsG8u6n00rDqvyYZEKj1qh1QZY",
+      "label": "Open Square order · Stale estimate / open order",
+      "blocker": "Open Square order getting old — customer may ghost.",
+      "instructions": "Manual follow-up or internal draft comms (approval still required).",
+      "moneyImpact": "opportunity_loss",
+      "prodImpact": "none_yet",
+      "dueDate": null,
+      "daysUntilDue": null
+    },
+    {
+      "id": "cash-est-A8xkCARvw6OoyEulR3ZLuuJ1wkfZY",
+      "label": "Open Square order · Stale estimate / open order",
+      "blocker": "Open Square order getting old — customer may ghost.",
+      "instructions": "Manual follow-up or internal draft comms (approval still required).",
+      "moneyImpact": "opportunity_loss",
+      "prodImpact": "none_yet",
+      "dueDate": null,
+      "daysUntilDue": null
+    },
+    {
+      "id": "cash-est-mvJeBKugy34kAxkzNy4zR0druiMZY",
+      "label": "Open Square order · Stale estimate / open order",
+      "blocker": "Open Square order getting old — customer may ghost.",
+      "instructions": "Manual follow-up or internal draft comms (approval still required).",
+      "moneyImpact": "opportunity_loss",
+      "prodImpact": "none_yet",
+      "dueDate": null,
+      "daysUntilDue": null
+    },
+    {
+      "id": "cash-est-6Ftf1BLeGmVX88yyuQYyj4ojelAZY",
+      "label": "Open Square order · Stale estimate / open order",
+      "blocker": "Open Square order getting old — customer may ghost.",
+      "instructions": "Manual follow-up or internal draft comms (approval still required).",
+      "moneyImpact": "opportunity_loss",
+      "prodImpact": "none_yet",
+      "dueDate": null,
+      "daysUntilDue": null
+    },
+    {
+      "id": "cash-est-8Kzl9eviRaVcXtJ1juLRqGinzTCZY",
+      "label": "Open Square order · Stale estimate / open order",
+      "blocker": "Open Square order getting old — customer may ghost.",
+      "instructions": "Manual follow-up or internal draft comms (approval still required).",
+      "moneyImpact": "opportunity_loss",
+      "prodImpact": "none_yet",
+      "dueDate": null,
+      "daysUntilDue": null
+    },
+    {
+      "id": "cash-est-KxByOVSCFwi3XdAQOLX3prNfusJZY",
+      "label": "Open Square order · Stale estimate / open order",
+      "blocker": "Open Square order getting old — customer may ghost.",
+      "instructions": "Manual follow-up or internal draft comms (approval still required).",
+      "moneyImpact": "opportunity_loss",
+      "prodImpact": "none_yet",
+      "dueDate": null,
+      "daysUntilDue": null
+    },
+    {
+      "id": "cash-est-W1gwyGppMrwbtl57PRuMYEaGWzXZY",
+      "label": "Open Square order · Stale estimate / open order",
+      "blocker": "Open Square order getting old — customer may ghost.",
+      "instructions": "Manual follow-up or internal draft comms (approval still required).",
+      "moneyImpact": "opportunity_loss",
+      "prodImpact": "none_yet",
+      "dueDate": null,
+      "daysUntilDue": null
+    },
+    {
+      "id": "cash-est-g6MQTurwsvZRzCv7MJRsSfZBKa7YY",
+      "label": "Open Square order · Stale estimate / open order",
+      "blocker": "Open Square order getting old — customer may ghost.",
+      "instructions": "Manual follow-up or internal draft comms (approval still required).",
+      "moneyImpact": "opportunity_loss",
+      "prodImpact": "none_yet",
+      "dueDate": null,
+      "daysUntilDue": null
+    },
+    {
+      "id": "cash-est-cUaGG8WPySaUZ2GSEZbGMM4Q6uGZY",
+      "label": "Open Square order · Stale estimate / open order",
+      "blocker": "Open Square order getting old — customer may ghost.",
+      "instructions": "Manual follow-up or internal draft comms (approval still required).",
+      "moneyImpact": "opportunity_loss",
+      "prodImpact": "none_yet",
+      "dueDate": null,
+      "daysUntilDue": null
+    },
+    {
+      "id": "cash-est-SHM3jtFUPVFfGTJaLzyWPyDwMd9YY",
+      "label": "Open Square order · Stale estimate / open order",
+      "blocker": "Open Square order getting old — customer may ghost.",
+      "instructions": "Manual follow-up or internal draft comms (approval still required).",
+      "moneyImpact": "opportunity_loss",
+      "prodImpact": "none_yet",
+      "dueDate": null,
+      "daysUntilDue": null
+    },
+    {
+      "id": "cash-est-MsiSzqstXrqecR6x71w72Puq51GZY",
+      "label": "Open Square order · Stale estimate / open order",
+      "blocker": "Open Square order getting old — customer may ghost.",
+      "instructions": "Manual follow-up or internal draft comms (approval still required).",
+      "moneyImpact": "opportunity_loss",
+      "prodImpact": "none_yet",
+      "dueDate": null,
+      "daysUntilDue": null
+    },
+    {
+      "id": "cash-est-6FvkoOvBMYvk6XYPBKLlc0UK9sbZY",
+      "label": "Open Square order · Stale estimate / open order",
+      "blocker": "Open Square order getting old — customer may ghost.",
+      "instructions": "Manual follow-up or internal draft comms (approval still required).",
+      "moneyImpact": "opportunity_loss",
+      "prodImpact": "none_yet",
+      "dueDate": null,
+      "daysUntilDue": null
+    },
+    {
+      "id": "cash-est-qZJmSArKP3p08SkjHgxDEvhZ1xDZY",
+      "label": "Open Square order · Stale estimate / open order",
+      "blocker": "Open Square order getting old — customer may ghost.",
+      "instructions": "Manual follow-up or internal draft comms (approval still required).",
+      "moneyImpact": "opportunity_loss",
+      "prodImpact": "none_yet",
+      "dueDate": null,
+      "daysUntilDue": null
+    }
+  ],
+  "productionRisks": [
+    {
+      "id": "noop-prodblk",
+      "label": "· No production blocker rows surfaced",
+      "blocker": "Live query failed safely — reconcile Prisma columns vs database. Showing empty buckets until repaired.",
+      "instructions": "Coach Jeremy using Ready for Jeremy lane when PRODUCTION_READY items appear.",
+      "moneyImpact": "none",
+      "prodImpact": "none",
+      "dueDate": null,
+      "daysUntilDue": null
+    }
+  ],
+  "consolidationOpportunities": [],
+  "proactiveSuggestion": "2 gated drafts/decisions unresolved—stay in VISIBILITY→DRAFT→APPROVE before any outbound action.",
+  "pendingApprovalCount": 2,
+  "frictionRecent": [
+    {
+      "id": "bbe4f2d9-b1d7-4c38-b897-c6ccdfd55e1c",
+      "area": "cockpit-validation",
+      "description": "validation suite friction",
+      "severity": "low",
+      "whoNoticed": "pat",
+      "suggestedFix": "none",
+      "createdAt": "2026-05-06T18:39:47.000Z"
+    },
+    {
+      "id": "6dfbb628-af59-47d5-acb7-31a3841a9564",
+      "area": "Playbook Insight",
+      "description": "Auto summary: cockpit-validation · low — validation suite friction",
+      "severity": "insight",
+      "whoNoticed": "system",
+      "suggestedFix": "none",
+      "createdAt": "2026-05-06T18:39:47.000Z"
+    }
+  ],
+  "recurringFrictionPatterns": [
+    {
+      "area": "cockpit validation",
+      "count": 1,
+      "severity": "low"
+    }
+  ],
+  "recurringAdSignalsSummary": [
+    "1 imported campaign rows still carry Medium/High attention — correlate with KPI summary before edits."
+  ],
+  "draftsAvailable": {
+    "workOrders": [],
+    "garmentOrders": [],
+    "followUps": []
+  },
+  "changedSinceYesterday": "2 fresh friction log item(s) entered recently.",
+  "jeremyFinishToday": "Jeremy: no PRODUCTION_READY jobs listed — help Patrick clear deposits, art, and garment receipts so cards land in READY FOR JEREMY. Finish READY FOR JEREMY cards before touching growth or ad-review lanes.",
+  "patrickReviewTonight": "2 gate item(s) pending; review approvals + cash risk + ads warnings in one nightly pass.",
+  "generatedAt": "2026-05-06T19:59:52.676Z"
+}

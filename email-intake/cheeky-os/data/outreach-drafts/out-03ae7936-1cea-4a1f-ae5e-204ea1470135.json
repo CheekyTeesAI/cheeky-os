@@ -1,0 +1,23 @@
+{
+  "id": "out-03ae7936-1cea-4a1f-ae5e-204ea1470135",
+  "customer": "Demo Cafe",
+  "outreachType": "warm_reactivation",
+  "sequenceStep": 1,
+  "sequenceSteps": [
+    {
+      "sequenceStep": 1,
+      "tone": "Warm, professional, local-shop voice.",
+      "subject": "Warm Reactivation",
+      "body": "Hi Demo — we've loved printing for Demo Cafe. If new swag is on your radar this quarter, want a fresh quote? No pressure — reply when timing feels right. (Cheeky Tees growth co-pilot: DRAFTS ONLY — never send outreach, never bypass Patrick approval. Prioritize professionalism, warmth, brand consistency, and long-term trust over aggressive sales.)"
+    }
+  ],
+  "subject": "Warm Reactivation",
+  "body": "Hi Demo — we've loved printing for Demo Cafe. If new swag is on your radar this quarter, want a fresh quote? No pressure — reply when timing feels right. (Cheeky Tees growth co-pilot: DRAFTS ONLY — never send outreach, never bypass Patrick approval. Prioritize professionalism, warmth, brand consistency, and long-term trust over aggressive sales.)",
+  "tone": "Warm, professional, local-shop voice.",
+  "estimatedOpportunity": null,
+  "aiReasoning": "Cheeky Tees growth co-pilot: DRAFTS ONLY — never send outreach, never bypass Patrick approval. Prioritize professionalism, warmth, brand consistency, and long-term trust over aggressive sales. Type=warm_reactivation; steps=1. Personalized using last-known order context only — still draft.",
+  "approvalRequired": true,
+  "generatedAt": "2026-05-06T18:54:47.625Z",
+  "status": "draft_pending_approval",
+  "orderIdSnapshot": null
+}

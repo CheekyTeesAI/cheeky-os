@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ct_stage_definition",
+  "description": "Configurable Kanban columns / production statuses (replaces or supplements ct_pipeline_json).",
+  "tableName": "ct_stage_definition",
+  "tableDisplayName": "Production Stage",
+  "tableSetName": "ct_stage_definitions",
+  "primaryKey": "ct_stage_definitionid",
+  "primaryNameColumn": "ct_label",
+  "fields": [
+    {
+      "fieldName": "ct_stage_definitionid",
+      "displayName": "Stage ID",
+      "dataverseType": "uniqueidentifier",
+      "required": true,
+      "description": "Primary key."
+    },
+    {
+      "fieldName": "ct_code",
+      "displayName": "Stage Code",
+      "dataverseType": "string",
+      "maxLength": 80,
+      "required": true,
+      "description": "Stable key matching ct_intake_queue.ct_production_stage_code and Node Task types."
+    },
+    {
+      "fieldName": "ct_label",
+      "displayName": "Board Label",
+      "dataverseType": "string",
+      "maxLength": 120,
+      "required": true,
+      "description": "User-visible column header."
+    },
+    {
+      "fieldName": "ct_sort_order",
+      "displayName": "Sort Order",
+      "dataverseType": "whole",
+      "required": true,
+      "description": "Left-to-right on board."
+    },
+    {
+      "fieldName": "ct_kanban_column",
+      "displayName": "Kanban Column Index",
+      "dataverseType": "whole",
+      "required": false,
+      "description": "Optional grouping if multiple stages share a swimlane."
+    },
+    {
+      "fieldName": "ct_color_hex",
+      "displayName": "Accent Color",
+      "dataverseType": "string",
+      "maxLength": 9,
+      "required": false,
+      "description": "e.g. #10B981 for card strip / header in Power Apps."
+    },
+    {
+      "fieldName": "ct_visible_after_gate",
+      "displayName": "Visible After Gate",
+      "dataverseType": "boolean",
+      "required": true,
+      "description": "If true, hide from funded board until ct_deposit_paid AND GATE_PASSED (UX filter)."
+    },
+    {
+      "fieldName": "ct_is_terminal",
+      "displayName": "Is Terminal Stage",
+      "dataverseType": "boolean",
+      "required": false,
+      "description": "COMPLETE / PICKED_UP — exclude from WIP bottleneck KPIs."
+    }
+  ],
+  "relationships": [],
+  "notes": [
+    "Seed rows: ART_PREP, BLANKS_PO, AWAITING_BLANKS, PRINTING, QC, PACK_SHIP, COMPLETE.",
+    "Power Apps: Filter stage gallery by ct_visible_after_gate using intake row context."
+  ]
+}

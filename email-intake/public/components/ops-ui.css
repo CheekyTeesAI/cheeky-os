@@ -1,0 +1,293 @@
+/* Reusable ops dashboard primitives — additive; works with /styles.css */
+
+.ops-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.ops-grid.cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ops-grid.cols-5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+@media (max-width: 1200px) {
+  .ops-grid.cols-5 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .ops-grid.cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .ops-grid.cols-5 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .ops-grid.cols-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-grid.cols-5 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ops-card {
+  background: var(--panel-bg, rgba(20, 24, 32, 0.92));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.ops-card.ops-kpi {
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.ops-kpi-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted, #9aa4b2);
+  margin: 0;
+}
+
+.ops-kpi-value {
+  font-size: 1.65rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.ops-kpi-sub {
+  font-size: 0.8rem;
+  color: var(--muted, #9aa4b2);
+  margin: 0;
+}
+
+.ops-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+}
+
+.ops-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.ops-table thead th {
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--muted, #9aa4b2);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.ops-table tbody td {
+  padding: 0.55rem 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: middle;
+}
+
+.ops-table tbody tr {
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.ops-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ops-table tbody tr.ops-row-risk-high {
+  box-shadow: inset 3px 0 0 #f85149;
+}
+
+.ops-table tbody tr.ops-row-risk-medium {
+  box-shadow: inset 3px 0 0 #d29922;
+}
+
+.ops-pill {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  background: rgba(88, 166, 255, 0.15);
+  color: #79c0ff;
+  border: 1px solid rgba(121, 192, 255, 0.35);
+  white-space: nowrap;
+}
+
+.ops-pill.ops-pill-warn {
+  background: rgba(210, 153, 34, 0.15);
+  color: #e3b341;
+  border-color: rgba(227, 179, 65, 0.35);
+}
+
+.ops-pill.ops-pill-ok {
+  background: rgba(46, 160, 67, 0.15);
+  color: #56d364;
+  border-color: rgba(86, 211, 100, 0.35);
+}
+
+.ops-pill.ops-pill-muted {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted, #9aa4b2);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.ops-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  cursor: pointer;
+}
+
+.ops-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ops-btn.ops-btn-ghost {
+  background: transparent;
+}
+
+.ops-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.ops-drawer-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ops-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(420px, 100vw);
+  height: 100vh;
+  z-index: 50;
+  background: var(--panel-bg, #141820);
+  border-left: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.45);
+  transform: translateX(105%);
+  transition: transform 0.22s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.ops-drawer.is-open {
+  transform: translateX(0);
+}
+
+.ops-drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.1rem 1.15rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ops-drawer-body {
+  padding: 1rem 1.15rem 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.ops-drawer-section {
+  margin-bottom: 1.25rem;
+}
+
+.ops-drawer-section h3 {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted, #9aa4b2);
+  margin: 0 0 0.45rem;
+}
+
+.ops-project-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.5rem 0 0.75rem;
+}
+
+.ops-stage-dot {
+  font-size: 0.65rem;
+  padding: 0.25rem 0.45rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--muted, #9aa4b2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ops-stage-dot.is-active {
+  background: rgba(88, 166, 255, 0.2);
+  color: #c9e1ff;
+  border-color: rgba(121, 192, 255, 0.4);
+}
+
+.ops-stage-dot.is-done {
+  background: rgba(46, 160, 67, 0.15);
+  color: #8be9a5;
+  border-color: rgba(86, 211, 100, 0.35);
+}
+
+.ops-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ops-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  font-size: 0.88rem;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+}
+
+.ops-checklist input {
+  accent-color: #58a6ff;
+}

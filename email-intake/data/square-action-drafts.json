@@ -1,0 +1,19 @@
+{
+  "entries": [
+    {
+      "id": "sqd_d973941267c638fa174ee046",
+      "orderId": null,
+      "customerId": null,
+      "type": "INVOICE",
+      "status": "DRAFT",
+      "title": "Invoice draft",
+      "amount": 100,
+      "depositAmount": 0,
+      "lineItemsJson": "[{\"name\":\"x\",\"quantity\":1,\"price\":100}]",
+      "notes": "t",
+      "squareDraftId": null,
+      "createdAt": "2026-04-29T20:23:58.660Z",
+      "updatedAt": "2026-04-29T20:23:58.660Z"
+    }
+  ]
+}

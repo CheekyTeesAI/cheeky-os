@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cheeky — Fulfillment & pickup</title>
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --panel: #131820;
+      --border: #2a3544;
+      --text: #e8edf4;
+      --muted: #8b9aab;
+      --accent: #38bdf8;
+      --pickup: #34d399;
+      --ship: #a78bfa;
+      --review: #fbbf24;
+      --done: #64748b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+    }
+    header {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+      padding: 14px 18px; background: var(--panel); border-bottom: 1px solid var(--border);
+    }
+    header h1 { margin: 0; font-size: 1.15rem; }
+    .meta { color: var(--muted); font-size: 0.8rem; flex: 1; min-width: 200px; }
+    a.hdr {
+      color: var(--accent); text-decoration: none; font-weight: 600; font-size: 0.88rem;
+    }
+    a.hdr:hover { text-decoration: underline; }
+    button {
+      background: var(--accent); color: #0c1220; border: none; padding: 8px 14px;
+      border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85rem;
+    }
+    button.secondary { background: #334155; color: var(--text); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 18px; background: #0e1118;
+      border-bottom: 1px solid var(--border);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      padding: 14px 18px 48px;
+      align-items: start;
+    }
+    @media (max-width: 1200px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    section.col h2 {
+      margin: 0 0 8px; font-size: 0.95rem; font-weight: 700;
+      display: flex; align-items: center; gap: 8px;
+    }
+    section.col.pickup h2 { color: var(--pickup); }
+    section.col.ship h2 { color: var(--ship); }
+    section.col.review h2 { color: var(--review); }
+    section.col.done h2 { color: var(--done); }
+    .count { color: var(--muted); font-weight: 600; font-size: 0.8rem; }
+    .list { display: flex; flex-direction: column; gap: 8px; max-height: 70vh; overflow: auto; }
+    .card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 12px; cursor: pointer; text-align: left;
+      font: inherit; color: inherit; width: 100%;
+    }
+    .card:hover { border-color: var(--accent); }
+    .card.selected { outline: 2px solid var(--accent); }
+    .card .who { font-weight: 700; font-size: 0.9rem; }
+    .card .sub { color: var(--muted); font-size: 0.78rem; margin-top: 4px; }
+    .draft-out {
+      margin: 12px 18px; padding: 14px; background: #0e1118; border: 1px solid var(--border);
+      border-radius: 10px; font-family: ui-monospace, monospace; font-size: 0.75rem;
+      white-space: pre-wrap; max-height: 240px; overflow: auto; color: #cbd5e1;
+    }
+    .banner { padding: 8px 18px; background: #1e293b; font-size: 0.82rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Fulfillment & pickup</h1>
+    <span class="meta" id="status">Staging only — no auto-labels, no auto-send.</span>
+    <button type="button" id="refresh">Refresh</button>
+    <a class="hdr" href="/owner.html">Owner</a>
+    <a class="hdr" href="/production.html">Production</a>
+    <a class="hdr" href="/comms.html">Comms</a>
+  </header>
+  <div class="banner">
+    Balance-due orders cannot be marked shipped/picked up via API. Customer messages are drafts in Comms.
+  </div>
+  <div class="toolbar">
+    <button type="button" class="secondary" id="btnPickedUp" disabled>Mark picked up</button>
+    <button type="button" class="secondary" id="btnShipped" disabled>Mark shipped</button>
+    <button type="button" class="secondary" id="btnPirate" disabled>Pirate Ship draft</button>
+    <button type="button" class="secondary" id="btnDraftMsg" disabled>Draft customer message</button>
+  </div>
+  <div class="grid">
+    <section class="col pickup">
+      <h2>Pickup ready <span class="count" id="c-pickup"></span></h2>
+      <div class="list" id="list-pickup"></div>
+    </section>
+    <section class="col ship">
+      <h2>Shipping staged <span class="count" id="c-ship"></span></h2>
+      <div class="list" id="list-ship"></div>
+    </section>
+    <section class="col review">
+      <h2>Needs review <span class="count" id="c-review"></span></h2>
+      <div class="list" id="list-review"></div>
+    </section>
+    <section class="col done">
+      <h2>Completed <span class="count" id="c-done"></span></h2>
+      <div class="list" id="list-done"></div>
+    </section>
+  </div>
+  <div class="draft-out" id="draftOut" hidden></div>
+  <script>
+    (function () {
+      var REFRESH_MS = 30000;
+      var state = { rows: {}, selectedId: null, queue: null };
+
+      function esc(s) {
+        if (s == null) return "";
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function setStatus(t) {
+        document.getElementById("status").textContent = t;
+      }
+
+      function el(tag, cls, html) {
+        var n = document.createElement(tag);
+        if (cls) n.className = cls;
+        if (html != null) n.innerHTML = html;
+        return n;
+      }
+
+      function clearList(id) {
+        var n = document.getElementById(id);
+        while (n.firstChild) n.removeChild(n.firstChild);
+      }
+
+      function renderList(containerId, rows, bucket) {
+        clearList(containerId);
+        var root = document.getElementById(containerId);
+        rows.forEach(function (r) {
+          state.rows[r.orderId] = r;
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "card" + (state.selectedId === r.orderId ? " selected" : "");
+          b.dataset.id = r.orderId;
+          var ord = esc(r.orderNumber || r.orderId.slice(0, 8));
+          var bal = Number(r.balanceDue || 0) > 0.02 ? " · balance $" + Number(r.balanceDue).toFixed(2) : "";
+          b.innerHTML =
+            '<div class="who">' +
+            esc(r.customerName || "Customer") +
+            " · " +
+            ord +
+            "</div>" +
+            '<div class="sub">' +
+            esc(r.fulfillmentMethod || "—") +
+            " · " +
+            esc(r.fulfillmentStatus || "") +
+            bal +
+            "</div>" +
+            '<div class="sub">' +
+            esc(r.addressSummary || "—") +
+            "</div>";
+          b.addEventListener("click", function () {
+            state.selectedId = r.orderId;
+            document.querySelectorAll(".card").forEach(function (c) {
+              c.classList.toggle("selected", c.dataset.id === r.orderId);
+            });
+            updateToolbar();
+          });
+          root.appendChild(b);
+        });
+      }
+
+      function updateToolbar() {
+        var id = state.selectedId;
+        document.getElementById("btnPickedUp").disabled = !id;
+        document.getElementById("btnShipped").disabled = !id;
+        document.getElementById("btnPirate").disabled = !id;
+        document.getElementById("btnDraftMsg").disabled = !id;
+      }
+
+      function showDraft(obj) {
+        var o = document.getElementById("draftOut");
+        o.hidden = false;
+        o.textContent = JSON.stringify(obj, null, 2);
+      }
+
+      function render(q) {
+        state.queue = q;
+        document.getElementById("c-pickup").textContent = "(" + (q.metrics && q.metrics.pickupReady) + ")";
+        document.getElementById("c-ship").textContent = "(" + (q.metrics && q.metrics.shippingStaged) + ")";
+        document.getElementById("c-review").textContent = "(" + (q.metrics && q.metrics.needsReview) + ")";
+        document.getElementById("c-done").textContent = "(" + (q.metrics && q.metrics.completed) + ")";
+        state.rows = {};
+        renderList("list-pickup", q.pickupReady || [], "pickup");
+        renderList("list-ship", q.shippingStaged || [], "ship");
+        renderList("list-review", q.needsReview || [], "review");
+        renderList("list-done", q.completed || [], "done");
+        if (state.selectedId && !state.rows[state.selectedId]) state.selectedId = null;
+        document.querySelectorAll(".card").forEach(function (c) {
+          c.classList.toggle("selected", !!state.selectedId && c.dataset.id === state.selectedId);
+        });
+        updateToolbar();
+      }
+
+      function load() {
+        setStatus("Loading…");
+        fetch("/api/fulfillment/queue", { credentials: "same-origin" })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (q) {
+            render(q);
+            setStatus("Updated " + (q.timestamp || ""));
+            if (q.error) setStatus("Partial: " + q.error);
+          })
+          .catch(function (e) {
+            setStatus("Error: " + (e && e.message ? e.message : e));
+          });
+      }
+
+      document.getElementById("refresh").addEventListener("click", load);
+
+      document.getElementById("btnPickedUp").addEventListener("click", function () {
+        var id = state.selectedId;
+        if (!id) return;
+        var trk = window.prompt("Tracking (optional for pickup) — leave blank:", "");
+        fetch("/api/orders/" + encodeURIComponent(id) + "/fulfillment/status", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fulfillmentStatus: "PICKED_UP",
+            note: trk ? "pickup note: " + trk : "",
+          }),
+        })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (j) {
+            showDraft(j);
+            if (!j.ok) alert(j.error || "failed");
+            load();
+          })
+          .catch(function (e) {
+            alert(e.message || e);
+          });
+      });
+
+      document.getElementById("btnShipped").addEventListener("click", function () {
+        var id = state.selectedId;
+        if (!id) return;
+        var trk = window.prompt("Tracking number (required unless note has TRACKING_WAIVED):", "");
+        var car = window.prompt("Carrier (optional):", "") || "";
+        fetch("/api/orders/" + encodeURIComponent(id) + "/fulfillment/status", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fulfillmentStatus: "SHIPPED",
+            trackingNumber: trk || "",
+            carrier: car,
+            note: trk ? "" : "TRACKING_WAIVED manual entry",
+          }),
+        })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (j) {
+            showDraft(j);
+            if (!j.ok) alert(j.error || "failed");
+            load();
+          })
+          .catch(function (e) {
+            alert(e.message || e);
+          });
+      });
+
+      document.getElementById("btnPirate").addEventListener("click", function () {
+        var id = state.selectedId;
+        if (!id) return;
+        fetch("/api/fulfillment/" + encodeURIComponent(id) + "/pirate-ship/draft", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+        })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(showDraft);
+      });
+
+      document.getElementById("btnDraftMsg").addEventListener("click", function () {
+        var id = state.selectedId;
+        if (!id) return;
+        var row = state.rows[id] || {};
+        var typ = "READY_FOR_PICKUP";
+        if ((row.fulfillmentMethod || "").toUpperCase() === "SHIP") {
+          if ((row.fulfillmentStatus || "").toUpperCase() === "STAGED") typ = "SHIPPING_STAGED";
+          else typ = "SHIPPING_ADDRESS_NEEDED";
+        } else if ((row.fulfillmentMethod || "").toUpperCase() === "LOCAL_DELIVERY") {
+          typ = "LOCAL_DELIVERY_STAGED";
+        }
+        fetch("/api/fulfillment/" + encodeURIComponent(id) + "/customer-draft", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messageType: typ }),
+        })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (j) {
+            showDraft(j);
+            if (!j.ok) alert(j.error || "draft failed");
+          })
+      });
+
+      load();
+      setInterval(load, REFRESH_MS);
+    })();
+  </script>
+</body>
+</html>

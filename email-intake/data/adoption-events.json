@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "events": [
+    {
+      "id": "1776482084562-34m0qp",
+      "type": "demo_seed",
+      "createdAt": "2026-04-18T03:14:44.562Z",
+      "payload": {
+        "created": [
+          "job",
+          "intake",
+          "serviceDesk",
+          "communication",
+          "content",
+          "purchaseOrder",
+          "task"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "id": "1776482090228-h2yzby",
+      "type": "demo_clear",
+      "createdAt": "2026-04-18T03:14:50.228Z",
+      "payload": {
+        "jobs": 1,
+        "intake": 1,
+        "serviceDesk": 1,
+        "communications": 1,
+        "content": 1,
+        "purchaseOrders": 1,
+        "tasks": 1
+      }
+    },
+    {
+      "id": "1776482122040-t17w5d",
+      "type": "demo_seed",
+      "createdAt": "2026-04-18T03:15:22.040Z",
+      "payload": {
+        "created": [
+          "job",
+          "intake",
+          "serviceDesk",
+          "communication",
+          "content",
+          "purchaseOrder",
+          "task"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "id": "1776482127297-dj7jd3",
+      "type": "demo_clear",
+      "createdAt": "2026-04-18T03:15:27.297Z",
+      "payload": {
+        "jobs": 1,
+        "intake": 1,
+        "serviceDesk": 1,
+        "communications": 1,
+        "content": 1,
+        "purchaseOrders": 1,
+        "tasks": 1
+      }
+    },
+    {
+      "id": "1776482137608-9tr6lx",
+      "type": "setup_status_command",
+      "createdAt": "2026-04-18T03:15:37.608Z",
+      "payload": {}
+    },
+    {
+      "id": "1776483402496-vnzc3v",
+      "type": "inbound_email_ingested",
+      "createdAt": "2026-04-18T03:36:42.496Z",
+      "payload": {
+        "sourceMessageId": "em-mo3scm4e-869dc24d"
+      }
+    },
+    {
+      "id": "1776483402512-pvivi2",
+      "type": "timeline_event_created",
+      "createdAt": "2026-04-18T03:36:42.512Z",
+      "payload": {
+        "count": 1
+      }
+    },
+    {
+      "id": "1776484372054-1ccd6m",
+      "type": "go_live_readiness_generated",
+      "createdAt": "2026-04-18T03:52:52.054Z",
+      "payload": {
+        "ready": false,
+        "score": 58
+      }
+    }
+  ]
+}

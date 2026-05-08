@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "updatedAt": "2026-05-06T06:22:48.488Z",
+  "recentQueries": [
+    {
+      "kind": "query",
+      "at": "2026-05-06T06:22:36.987Z",
+      "payload": {
+        "q": "v5-smoke"
+      }
+    },
+    {
+      "kind": "query",
+      "at": "2026-05-06T06:22:48.487Z",
+      "payload": {
+        "q": "v5-smoke"
+      }
+    }
+  ],
+  "recentRecommendations": [],
+  "recentApprovals": [],
+  "activeOperationalFocus": null,
+  "recentFailures": [],
+  "ongoingBuilds": []
+}

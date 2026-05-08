@@ -1,0 +1,82 @@
+[
+    {
+        "test":  "health",
+        "ok":  true,
+        "detail":  "ok"
+    },
+    {
+        "test":  "dashboard_page",
+        "ok":  true,
+        "detail":  "status=200"
+    },
+    {
+        "test":  "new_order_page",
+        "ok":  true,
+        "detail":  "status=200"
+    },
+    {
+        "test":  "orders_quick_create",
+        "ok":  true,
+        "detail":  "orderId=1ef59bd4-b554-42e5-8d09-793c57ca33f1, status=AWAITING_DEPOSIT, squareInvoiceId="
+    },
+    {
+        "test":  "orders_advance_smart_1",
+        "ok":  true,
+        "detail":  "status=PRODUCTION_READY"
+    },
+    {
+        "test":  "orders_advance_smart_2",
+        "ok":  true,
+        "detail":  "status=WAITING_GARMENTS"
+    },
+    {
+        "test":  "orders_advance_smart_3",
+        "ok":  true,
+        "detail":  "status=WAITING_ART"
+    },
+    {
+        "test":  "production_job_created",
+        "ok":  false,
+        "detail":  "No job for created order"
+    },
+    {
+        "test":  "lead_create",
+        "ok":  true,
+        "detail":  "leadId=cmoa99sby00052cl04hx3jiv3"
+    },
+    {
+        "test":  "lead_followup_generate",
+        "ok":  true,
+        "detail":  "followupId=60c672b7-5170-4645-bc39-91fb27fe41f6"
+    },
+    {
+        "test":  "lead_convert_order",
+        "ok":  true,
+        "detail":  "orderId=df9920ce-fd99-44ed-bde4-767013d14e97"
+    },
+    {
+        "test":  "followups_run",
+        "ok":  true,
+        "detail":  "count=0"
+    },
+    {
+        "test":  "followup_send_action",
+        "ok":  true,
+        "detail":  "{\"result\":{\"success\":true}}"
+    },
+    {
+        "test":  "followup_done_action",
+        "ok":  true,
+        "detail":  "{\"orderId\":\"1ef59bd4-b554-42e5-8d09-793c57ca33f1\",\"followupDone\":true}"
+    },
+    {
+        "test":  "square_status_real_invoice",
+        "ok":  false,
+        "detail":  "No squareInvoiceId returned from quick order"
+    },
+    {
+        "test":  "env_presence",
+        "ok":  true,
+        "detail":  "{\"squareToken\":false,\"squareLocation\":false,\"resend\":false,\"fromEmail\":false,\"twilioSid\":false,\"twilioToken\":false,\"twilioFrom\":false}"
+    }
+]

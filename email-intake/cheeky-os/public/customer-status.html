@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Order status — Cheeky Tees</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; --bg:#0b0f14; --card:#1a2433; --text:#e9f0fb; --muted:#8fa3bd; --accent:#4da3ff; }
+    body { margin:0; background:var(--bg); color:var(--text); padding:1rem; font-size:16px; }
+    main { max-width:520px; margin:0 auto; }
+    h1 { font-size:1.1rem; }
+    p.lead { color:var(--muted); font-size:0.88rem; }
+    .card { background:var(--card); border:1px solid #2a3a4f; border-radius:12px; padding:0.85rem; margin:0.6rem 0; }
+    .next { background:rgba(77,163,255,0.1); border:1px solid rgba(77,163,255,0.25); border-radius:8px; padding:0.5rem; font-size:0.9rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Your project status</h1>
+    <p class="lead">Informational only — timing can shift with apparel and art. For changes, reply to your Cheeky email thread.</p>
+    <div id="status-root" class="card">Loading…</div>
+  </main>
+  <script>
+    function esc(s) {
+      return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+    (async function () {
+      var q = new URLSearchParams(window.location.search);
+      var token = q.get("token") || "";
+      var root = document.getElementById("status-root");
+      if (!token) {
+        root.innerHTML = "<p>Ask Cheeky for your secure status link. This page does not log you in.</p>";
+        return;
+      }
+      try {
+        var r = await fetch("/api/customer/status?token=" + encodeURIComponent(token), { headers: { Accept: "application/json" } });
+        var j = JSON.parse(await r.text());
+        if (!j.success || !j.data) {
+          root.innerHTML = "<p>" + esc(j.safeMessage || "Status unavailable.") + "</p>";
+          return;
+        }
+        var d = j.data;
+        var lines = [];
+        lines.push("<p><strong>" + esc(d.customer) + "</strong></p>");
+        lines.push("<div class=\"next\">" + esc(d.customerFriendlyMessage) + "</div>");
+        lines.push("<p style=\"color:var(--muted);font-size:.85rem;margin:.5rem 0 0;\">Current milestone: " + esc(d.currentStatus) + "</p>");
+        lines.push("<p style=\"color:var(--muted);font-size:.85rem;\">" + esc(d.estimatedTimeline) + "</p>");
+        (d.orders || []).slice(0, 4).forEach(function (o) {
+          lines.push("<div class=\"card\"><strong>" + esc(o.reference) + "</strong><br/><span style=\"color:var(--muted);font-size:.85rem;\">" + esc(o.productionStageCustomer) + "</span>");
+          if (o.blockerHintCustomerSafe)
+            lines.push("<div class=\"next\" style=\"margin-top:.4rem\">" + esc(o.blockerHintCustomerSafe) + "</div>");
+          lines.push("<p style=\"color:var(--muted);font-size:.8rem;margin:.35rem 0 0;\">" + esc(o.paymentSummaryCustomerSafe) + "</p></div>");
+        });
+        root.innerHTML = lines.join("");
+      } catch (e) {
+        root.textContent = "Could not load status safely.";
+      }
+    })();
+  </script>
+</body>
+</html>

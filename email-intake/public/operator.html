@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Operator Console</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 16px; max-width: 720px; }
+    h1 { font-size: 1.1rem; }
+    select, button { font-size: 1rem; margin: 4px 8px 4px 0; }
+    section { margin-top: 1.25rem; border-top: 1px solid #ccc; padding-top: 8px; }
+    h2 { font-size: 0.95rem; margin: 0 0 8px; }
+    .card { border: 1px solid #ddd; padding: 8px; margin-bottom: 8px; }
+    .card strong { display: block; }
+    .row { margin: 4px 0; font-size: 0.9rem; }
+    .btns button { margin-right: 6px; margin-bottom: 6px; }
+    .err { color: #a00; }
+  </style>
+</head>
+<body>
+  <h1>Operator console</h1>
+  <div>
+    <label>Role <select id="role">
+      <option value="printer">Printer</option>
+      <option value="admin">Admin</option>
+      <option value="owner">Owner</option>
+      <option value="design">Design</option>
+    </select></label>
+    <button type="button" id="load">Load</button>
+  </div>
+  <div id="out" class="err"></div>
+  <div id="sections"></div>
+  <script src="/operator.js"></script>
+</body>
+</html>

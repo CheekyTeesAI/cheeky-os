@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cheeky — Daily digest</title>
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --panel: #131820;
+      --border: #2a3544;
+      --text: #e8edf4;
+      --muted: #8b9aab;
+      --accent: #38bdf8;
+      --warn: #fbbf24;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      padding-bottom: 48px;
+    }
+    header {
+      padding: 14px 16px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    header h1 { margin: 0; font-size: 1.2rem; }
+    .muted { color: var(--muted); font-size: 0.85rem; flex: 1; min-width: 180px; }
+    button {
+      background: var(--accent);
+      color: #0c1220;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    button.secondary { background: #334155; color: var(--text); }
+    a.nav { color: var(--accent); font-weight: 600; text-decoration: none; font-size: 0.88rem; }
+    main { padding: 16px; max-width: 1100px; margin: 0 auto; }
+    .headline {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 12px 0 8px;
+      color: var(--warn);
+    }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+    section h2 {
+      margin: 0 0 10px;
+      font-size: 0.95rem;
+      color: var(--accent);
+    }
+    ul { margin: 0; padding-left: 1.2rem; }
+    li { margin: 6px 0; }
+    .json-preview {
+      font-family: ui-monospace, monospace;
+      font-size: 0.72rem;
+      white-space: pre-wrap;
+      background: #0e1118;
+      padding: 12px;
+      border-radius: 8px;
+      max-height: 220px;
+      overflow: auto;
+      color: #cbd5e1;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Today's Control Brief</h1>
+    <span class="muted" id="status">Draft by default — email only if CHEEKY_DAILY_DIGEST_AUTO_SEND=true.</span>
+    <button type="button" id="btnGen">Generate fresh digest</button>
+    <button type="button" class="secondary" id="btnCopy">Copy digest JSON</button>
+    <a class="nav" href="/owner.html">Owner</a>
+    <a class="nav" href="/cashflow.html">Cashflow</a>
+    <a class="nav" href="/purchasing.html">Purchasing</a>
+    <a class="nav" href="/ai.html">AI operator</a>
+  </header>
+  <main>
+    <div class="headline" id="headline">Loading…</div>
+    <div class="muted" id="meta"></div>
+
+    <section><h2>Cashflow sentinel</h2><ul id="cashflow-s"></ul></section>
+    <section><h2>Purchasing</h2><ul id="purchasing-d"></ul></section>
+    <section><h2>Top 5 priorities</h2><ul id="top"></ul></section>
+    <section><h2>Cash focus</h2><ul id="cash"></ul></section>
+    <section><h2>Stuck orders</h2><ul id="stuck"></ul></section>
+    <section><h2>Production focus</h2><ul id="prod"></ul></section>
+    <section><h2>Customer messages</h2><ul id="comms"></ul></section>
+    <section><h2>Sales actions</h2><ul id="sales"></ul></section>
+    <section><h2>Fulfillment</h2><ul id="fulfill"></ul></section>
+    <section><h2>Risks</h2><ul id="risks"></ul></section>
+    <section><h2>Suggested schedule</h2><ul id="sched"></ul></section>
+
+    <details>
+      <summary style="cursor:pointer;color:var(--muted);">Raw JSON</summary>
+      <div class="json-preview" id="raw"></div>
+    </details>
+  </main>
+  <script>
+    (function () {
+      var lastPayload = null;
+
+      function esc(s) {
+        if (s == null) return "";
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function fillList(id, items) {
+        var ul = document.getElementById(id);
+        ul.innerHTML = "";
+        if (!items || !items.length) {
+          ul.innerHTML = "<li class=\"muted\">—</li>";
+          return;
+        }
+        items.forEach(function (x) {
+          var li = document.createElement("li");
+          if (typeof x === "string") li.textContent = x;
+          else li.textContent = JSON.stringify(x);
+          ul.appendChild(li);
+        });
+      }
+
+      function renderFromDigest(d) {
+        if (!d || !d.ok) {
+          document.getElementById("headline").textContent = "No digest yet — generate one.";
+          return;
+        }
+        document.getElementById("headline").textContent = d.headline || "Digest";
+        fillList("cashflow-s", []);
+        if (d.cashflowSnapshot && d.cashflowSnapshot.ok) {
+          var c = d.cashflowSnapshot;
+          var lines = [
+            "On hand " +
+              c.cashOnHandUsd +
+              " · Obligations 7d/14d " +
+              c.obligations7dUsd +
+              " / " +
+              c.obligations14dUsd,
+            "Safe to spend (capped) " +
+              c.safeToSpendUsd +
+              " · Overdue " +
+              c.overdueTotalUsd,
+          ];
+          (d.recommendedMoneyMoves || []).forEach(function (m) {
+            lines.push(m);
+          });
+          fillList("cashflow-s", lines);
+        } else {
+          fillList("cashflow-s", ["Cashflow snapshot unavailable — open /cashflow.html"]);
+        }
+        fillList("purchasing-d", d.purchasingFocus || []);
+        fillList("top", d.topPriorities || []);
+        fillList("cash", d.cashFocus || []);
+        var stuck = (d.stuckOrders || []).map(function (o) {
+          return (
+            (o.customerName || "?") +
+            " · " +
+            (o.status || "") +
+            " · " +
+            (o.stuckReasons || []).join(", ") +
+            " · " +
+            (o.id || "").slice(0, 8)
+          );
+        });
+        fillList("stuck", stuck);
+        fillList("prod", d.productionFocus || []);
+        var cm = (d.commsToApprove || []).map(function (c) {
+          return (c.subject || c.type || "message") + " · " + (c.orderId || "");
+        });
+        fillList("comms", cm);
+        fillList("sales", d.salesActions || []);
+        fillList("fulfill", d.fulfillmentActions || []);
+        fillList("risks", d.risks || []);
+        fillList("sched", d.recommendedSchedule || []);
+        document.getElementById("raw").textContent = JSON.stringify(d, null, 2);
+      }
+
+      function loadToday() {
+        document.getElementById("status").textContent = "Loading…";
+        fetch("/api/digest/today", { credentials: "same-origin" })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (j) {
+            var d = j.digest;
+            var meta = j.stored
+              ? "Stored " +
+                (j.stored.createdAt || "") +
+                " · mode " +
+                (j.stored.mode || "") +
+                (j.stored.sentAt ? " · emailed " + j.stored.sentAt : "")
+              : j.message || "";
+            document.getElementById("meta").textContent = meta;
+            if (d) {
+              lastPayload = { digest: d };
+              renderFromDigest(d);
+              document.getElementById("status").textContent =
+                "Loaded · NY " + (j.date || "") + " · /api/digest/history for past runs.";
+            } else {
+              lastPayload = null;
+              renderFromDigest({ ok: false });
+              document.getElementById("status").textContent =
+                "No stored digest — Generate. NY " + (j.date || "");
+            }
+          })
+          .catch(function (e) {
+            document.getElementById("status").textContent = e.message || String(e);
+          });
+      }
+
+      document.getElementById("btnGen").addEventListener("click", function () {
+        document.getElementById("status").textContent = "Generating…";
+        fetch("/api/digest/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ persist: true, refreshAi: true }),
+        })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (j) {
+            if (j.digest) renderFromDigest(j.digest);
+            document.getElementById("meta").textContent =
+              (j.email && j.email.skipped ? "Email skipped per policy. " : "") +
+              (j.persisted ? "Saved." : "Preview only.");
+            document.getElementById("status").textContent = "Done.";
+            lastPayload = j;
+          })
+          .catch(function (e) {
+            document.getElementById("status").textContent = e.message || String(e);
+          });
+      });
+
+      document.getElementById("btnCopy").addEventListener("click", function () {
+        var t =
+          lastPayload && lastPayload.digest
+            ? JSON.stringify(lastPayload.digest, null, 2)
+            : document.getElementById("raw").textContent;
+        navigator.clipboard.writeText(t).then(
+          function () {
+            document.getElementById("status").textContent = "Copied.";
+          },
+          function () {
+            document.getElementById("status").textContent = "Copy failed.";
+          }
+        );
+      });
+
+      loadToday();
+    })();
+  </script>
+</body>
+</html>

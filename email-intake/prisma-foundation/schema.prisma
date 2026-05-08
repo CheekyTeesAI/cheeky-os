@@ -1,0 +1,105 @@
+// Cheeky OS — foundation layer (SQLite). Separate from email-intake/prisma (PostgreSQL).
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../src/generated/foundation-client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("FOUNDATION_DATABASE_URL")
+}
+
+enum OsJobStatus {
+  INTAKE
+  QUOTE
+  DEPOSIT
+  READY
+  PRINTING
+  QC
+  COMPLETE
+  BLOCKED
+}
+
+enum OsArtFileStatus {
+  UPLOADED
+  APPROVED
+  PRINT_READY
+}
+
+enum OsTaskStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+  BLOCKED
+}
+
+/// Foundation job — persisted OS job (distinct from legacy JSON store / Square Order rows).
+model FoundationJob {
+  id           String      @id @default(cuid())
+  /// External key e.g. JOB-1734567890-AB12 (matches store jobId / API)
+  jobKey       String      @unique
+  customerName String
+  status       OsJobStatus @default(INTAKE)
+  dueDate      DateTime?
+  depositPaid  Boolean     @default(false)
+  printMethod  String      @default("UNKNOWN")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  lineItems FoundationLineItem[]
+  tasks     FoundationTask[]
+  artFiles  FoundationArtFile[]
+  events    FoundationEventLog[]
+
+  @@index([status])
+  @@index([jobKey])
+  @@map("foundation_jobs")
+}
+
+model FoundationLineItem {
+  id       String @id @default(cuid())
+  jobId    String
+  job      FoundationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  product  String
+  color    String?
+  size     String?
+  quantity Int
+
+  @@index([jobId])
+  @@map("foundation_line_items")
+}
+
+model FoundationTask {
+  id     String       @id @default(cuid())
+  jobId  String
+  job    FoundationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  name   String
+  status OsTaskStatus @default(PENDING)
+
+  @@index([jobId])
+  @@map("foundation_tasks")
+}
+
+model FoundationArtFile {
+  id       String           @id @default(cuid())
+  jobId    String
+  job      FoundationJob    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  filePath String
+  status   OsArtFileStatus  @default(UPLOADED)
+
+  @@index([jobId])
+  @@map("foundation_art_files")
+}
+
+model FoundationEventLog {
+  id        String   @id @default(cuid())
+  jobId     String?
+  job       FoundationJob? @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  type      String
+  message   String
+  createdAt DateTime @default(now())
+
+  @@index([jobId])
+  @@index([createdAt])
+  @@map("foundation_event_logs")
+}

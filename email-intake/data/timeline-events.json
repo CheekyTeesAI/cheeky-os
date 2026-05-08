@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "events": [
+    {
+      "id": "TL-mo3scm4v-6b610922",
+      "relatedType": "INTAKE",
+      "relatedId": "INT-mo3scm4t-79e69f",
+      "customerId": "CUS-mo3scm4s-b7fcdb",
+      "channel": "EMAIL",
+      "eventType": "INTAKE_CREATED",
+      "title": "Email → intake",
+      "summary": "Here is the logo",
+      "rawRefId": "email:em-mo3scm4e-869dc24d",
+      "createdByType": "SYSTEM",
+      "createdById": null,
+      "metadata": {
+        "reviewRequired": true
+      },
+      "createdAt": "2026-04-18T03:36:42.511Z"
+    }
+  ]
+}

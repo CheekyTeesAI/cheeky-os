@@ -1,0 +1,53 @@
+{
+  "items": [
+    {
+      "id": "c6456088-bd82-4f85-a88d-f293eefb376d",
+      "campaignName": "Simpsonville trades rush",
+      "issueDetected": "CTR is trailing versus typical SMB apparel search — revisit creative + intent.",
+      "severity": "medium",
+      "recommendedChange": "Test tighter keyword themes + freshness on headlines before increasing bids.",
+      "estimatedImpact": "Incremental CTR lift expected if creatives match Greenville/trades apparel intent.",
+      "estimatedRevenueOpportunity": 65,
+      "adCopyDrafts": [
+        {
+          "headline": "Simpsonville trades rush • Screen printing that ships on time",
+          "description": "Trusted local decorator for tees, fleece, uniforms. Greenville-area teams & trades. (You are the Cheeky Tees operational + growth AI co-pilot. Never execute high-imp…)"
+        },
+        {
+          "headline": "Simpsonville trades rush DTG detail + embroidery accents",
+          "description": "Small-batch friendly with proof checkpoints — no autopilot sending; book a human review. Fountain Inn pickup / ship options when schedule allows."
+        },
+        {
+          "headline": "Spirit wear + booster bundles without chaos",
+          "description": "We queue jobs with approvals first — aligns with deposit discipline + production truth."
+        }
+      ],
+      "keywordRecommendations": [
+        "Simpsonville trades rush screen printing Greenville",
+        "Simpsonville trades rush embroidery near Fountain Inn",
+        "rush t shirts simpsonville sc",
+        "trade apparel printing south carolina",
+        "company uniforms dtg Greenville"
+      ],
+      "negativeKeywords": [
+        "free t shirt",
+        "how to diy screen print job",
+        "download template only",
+        "roblox merch",
+        "international wholesale blank only"
+      ],
+      "landingPageIdeas": [
+        "Above-fold proof gallery with production timeline + Rush disclaimer",
+        "Detected Upstate SC locality — tighten radius + callouts for trades + schools proximity. Rush language present — tie landing page to SLA + proof turnaround.",
+        "CTA anchors to intake form that mirrors approvals-first policy (trust > automation copy)."
+      ],
+      "localMarketInsight": "Detected Upstate SC locality — tighten radius + callouts for trades + schools proximity. Rush language present — tie landing page to SLA + proof turnaround.",
+      "approvalRequired": true,
+      "generatedAt": "2026-05-06T19:01:33.847Z",
+      "guardrailEcho": "You are the Cheeky Tees operational + growth AI co-pilot. Never execute high-impact actions; never mutate ad spend automatically; analyze using imported metrics only; drafts and recommendations stay approval-gated; if confidence is low, say so.",
+      "approvalId": "50c1c5f8-dac1-46f5-bc37-6741c7a16a8b"
+    }
+  ],
+  "approvalsCreatedHints": 1,
+  "savedAt": "2026-05-06T19:01:33.849Z"
+}

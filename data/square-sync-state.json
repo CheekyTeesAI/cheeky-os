@@ -1,0 +1,122 @@
+{
+  "lastSquareSync": "2026-04-18T01:58:18.105Z",
+  "lastSummary": {
+    "mode": "MOCK",
+    "configured": false,
+    "synced": true,
+    "mock": true,
+    "updatedJobs": [
+      "JOB-1776461775815-G6AQ",
+      "JOB-1776461775837-PMK8",
+      "JOB-1776461775856-4WRJ",
+      "JOB-1776461775874-87VC",
+      "JOB-INV-MOCK-9001",
+      "JOB-INV-MOCK-9002",
+      "JOB-INV-MOCK-9003",
+      "JOB-INV-MOCK-9004",
+      "JOB-INV-MOCK-9005",
+      "JOB-1776463119818-KUB6",
+      "JOB-1776463119847-7YY5",
+      "JOB-1776463163562-APJK",
+      "JOB-1776466354571-INP4",
+      "JOB-1776466359086-5WC6"
+    ],
+    "updatedCustomers": 0,
+    "flaggedIssues": [],
+    "reconciliation": {
+      "matchedCustomers": [],
+      "matchedJobs": [],
+      "unmatchedSquareRecords": [
+        {
+          "kind": "invoice",
+          "id": "INV-MOCK-9001",
+          "reason": "no_internal_job_linked"
+        },
+        {
+          "kind": "invoice",
+          "id": "INV-MOCK-9002",
+          "reason": "no_internal_job_linked"
+        },
+        {
+          "kind": "invoice",
+          "id": "INV-MOCK-9003",
+          "reason": "no_internal_job_linked"
+        },
+        {
+          "kind": "invoice",
+          "id": "INV-MOCK-9004",
+          "reason": "no_internal_job_linked"
+        },
+        {
+          "kind": "invoice",
+          "id": "INV-MOCK-9005",
+          "reason": "no_internal_job_linked"
+        }
+      ],
+      "unmatchedInternalRecords": [],
+      "duplicates": [],
+      "paymentStatusUpdates": [
+        {
+          "jobId": "JOB-1776461775815-G6AQ",
+          "note": "no_square_invoice_id_on_job"
+        },
+        {
+          "jobId": "JOB-1776461775837-PMK8",
+          "note": "no_square_invoice_id_on_job"
+        },
+        {
+          "jobId": "JOB-1776461775856-4WRJ",
+          "note": "no_square_invoice_id_on_job"
+        },
+        {
+          "jobId": "JOB-1776461775874-87VC",
+          "note": "no_square_invoice_id_on_job"
+        },
+        {
+          "jobId": "JOB-INV-MOCK-9001",
+          "note": "no_square_invoice_id_on_job"
+        },
+        {
+          "jobId": "JOB-INV-MOCK-9002",
+          "note": "no_square_invoice_id_on_job"
+        },
+        {
+          "jobId": "JOB-INV-MOCK-9003",
+          "note": "no_square_invoice_id_on_job"
+        },
+        {
+          "jobId": "JOB-INV-MOCK-9004",
+          "note": "no_square_invoice_id_on_job"
+        },
+        {
+          "jobId": "JOB-INV-MOCK-9005",
+          "note": "no_square_invoice_id_on_job"
+        },
+        {
+          "jobId": "JOB-1776463119818-KUB6",
+          "note": "no_square_invoice_id_on_job"
+        },
+        {
+          "jobId": "JOB-1776463119847-7YY5",
+          "note": "no_square_invoice_id_on_job"
+        },
+        {
+          "jobId": "JOB-1776463163562-APJK",
+          "note": "no_square_invoice_id_on_job"
+        },
+        {
+          "jobId": "JOB-1776466354571-INP4",
+          "note": "no_square_invoice_id_on_job"
+        },
+        {
+          "jobId": "JOB-1776466359086-5WC6",
+          "note": "no_square_invoice_id_on_job"
+        }
+      ],
+      "mock": true
+    },
+    "invoiceCount": 5,
+    "paymentCount": 0,
+    "customerCount": 0
+  }
+}
