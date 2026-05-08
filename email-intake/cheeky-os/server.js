@@ -266,6 +266,11 @@ const PORT = listenPort();
 const HOST = "0.0.0.0";
 
 const app = express();
+// Render (and similar) sit behind one reverse proxy; needed for req.ip / X-Forwarded-For
+// and for express-rate-limit v7 validation used by cheekyOsV4.route.js.
+if (String(process.env.RENDER || "").trim()) {
+  app.set("trust proxy", 1);
+}
 
 const { installProcessHandlers, startSelfFixSystem } = require("./services/selfFixService");
 installProcessHandlers();
@@ -607,6 +612,20 @@ try {
 const cors = require("cors");
 app.use(cors());
 
+// Mount dashboard reads outside the large v8 bundle try/catch so a synchronous
+// failure in any other v8 router does not skip /api/dashboard/summary (Power Apps).
+try {
+  app.use(operatorDashboardRoutesV8);
+  console.log(
+    "[operator-dashboard-v8] isolated mount: GET /api/dashboard/summary · main · readiness · production · …"
+  );
+} catch (operatorDashMountErr) {
+  console.warn(
+    "[operator-dashboard-v8] isolated mount failed:",
+    operatorDashMountErr && operatorDashMountErr.message ? operatorDashMountErr.message : operatorDashMountErr
+  );
+}
+
 try {
   app.use(bridgeTaskRoutes);
   console.log(
@@ -653,7 +672,6 @@ try {
 
 try {
   app.use(operatorEntryRoutesV8);
-  app.use(operatorDashboardRoutesV8);
   app.use(blockerDashboardRouter);
   app.use(whatNowRoutes);
   app.use(frictionLogRoutes);
