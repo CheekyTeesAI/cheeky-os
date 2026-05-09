@@ -1,18 +1,19 @@
 "use strict";
 
-const { randomUUID } = require("crypto");
 const { Server } = require("@modelcontextprotocol/sdk/server/index.js");
-const { StreamableHTTPServerTransport } = require("@modelcontextprotocol/sdk/server/streamableHttp.js");
+const { SSEServerTransport } = require("@modelcontextprotocol/sdk/server/sse.js");
 const {
   ListToolsRequestSchema,
   CallToolRequestSchema,
 } = require("@modelcontextprotocol/sdk/types.js");
 
 /**
- * Mount MCP Streamable HTTP transport on the main Cheeky OS Express app.
- * Route: POST /mcp
+ * Mount MCP SSE transport on the main Cheeky OS Express app.
+ * Routes: GET /mcp (SSE), POST /mcp/message (JSON-RPC messages)
  */
 function mountCheekyOsMcpSse(app) {
+  const transports = new Map();
+
   function getOrigin(req) {
     const forwardedProto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim();
     const proto = forwardedProto || req.protocol || "http";
@@ -94,7 +95,7 @@ function mountCheekyOsMcpSse(app) {
     };
   }
 
-  function createMcpServer(req) {
+  function createMcpServerForSession(req) {
     const server = new Server(
       {
         name: "cheeky-os-mcp-http",
@@ -216,43 +217,55 @@ function mountCheekyOsMcpSse(app) {
     return server;
   }
 
-  app.post("/mcp", async (req, res) => {
-    let server = null;
+  app.get("/mcp", async (req, res) => {
     try {
-      server = createMcpServer(req);
-      const transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: () => randomUUID(),
-      });
-
+      const transport = new SSEServerTransport("/mcp/message", res);
+      const server = createMcpServerForSession(req);
+      transports.set(transport.sessionId, { transport, server });
       res.on("close", async () => {
+        transports.delete(transport.sessionId);
+        try {
+          await server.close();
+        } catch (_e) {
+          /* ignore */
+        }
         try {
           await transport.close();
         } catch (_e) {
           /* ignore */
         }
-        try {
-          await server.close();
-        } catch (_e2) {
-          /* ignore */
-        }
       });
-
       await server.connect(transport);
-      await transport.handleRequest(req, res, req.body);
     } catch (err) {
-      console.error("[mcp-http] transport error:", err && err.stack ? err.stack : err);
+      console.error("[mcp-http] SSE init error:", err && err.stack ? err.stack : err);
       if (!res.headersSent) {
         res.status(500).json({
           error: true,
-          message: err && err.message ? err.message : "MCP transport error",
+          message: err && err.message ? err.message : "MCP SSE initialization error",
         });
       }
-      if (server) {
-        try {
-          await server.close();
-        } catch (_e3) {
-          /* ignore */
-        }
+    }
+  });
+
+  app.post("/mcp/message", async (req, res) => {
+    const sessionId = req.query && typeof req.query.sessionId === "string" ? req.query.sessionId : "";
+    const entry = transports.get(sessionId);
+    if (!entry || !entry.transport) {
+      return res.status(400).json({
+        error: true,
+        message: "Invalid or missing sessionId.",
+      });
+    }
+
+    try {
+      await entry.transport.handlePostMessage(req, res, req.body);
+    } catch (err) {
+      console.error("[mcp-http] message handling error:", err && err.stack ? err.stack : err);
+      if (!res.headersSent) {
+        res.status(500).json({
+          error: true,
+          message: err && err.message ? err.message : "MCP message handling failed",
+        });
       }
     }
   });
