@@ -3,14 +3,7 @@
 name: Cheeky Test
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'email-intake/**'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'email-intake/**'
+  workflow_dispatch:
 
 jobs:
   test:
