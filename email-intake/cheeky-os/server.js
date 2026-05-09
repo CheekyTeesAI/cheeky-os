@@ -2163,9 +2163,9 @@ try {
   require("./src/mcp/httpMount").mountCheekyOsMcpSse(app);
   console.log("[mcp-sse] Claude MCP: GET /sse · POST /message");
 } catch (mcpSseErr) {
-  console.warn(
+  console.error(
     "[mcp-sse] mount failed:",
-    mcpSseErr && mcpSseErr.message ? mcpSseErr.message : mcpSseErr
+    mcpSseErr && mcpSseErr.stack ? mcpSseErr.stack : mcpSseErr
   );
 }
 
