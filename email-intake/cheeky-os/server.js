@@ -695,6 +695,7 @@ try {
   app.use(workOrdersV8Router);
   app.use(garmentOrdersRoutesV8);
   app.use("/cheeky-os-ui", express.static(path.join(__dirname, "public"), { index: false }));
+  app.use("/dashboard", express.static(path.join(__dirname, "public", "dashboard"), { index: false }));
   console.log(
     "[cheeky-v8-entry] POST /api/operator/command · GET /api/operator/today|blocks|approvals|production-board|cash-risks · GET /api/dashboard/* · /api/workorders/* · /api/garments/* · static /cheeky-os-ui/"
   );
@@ -1577,7 +1578,7 @@ app.get("/cheeky-dashboard", (_req, res) => {
 });
 app.get("/dashboard", (_req, res) => {
   try {
-    res.sendFile(path.join(viewsRoot, "dashboard.html"));
+    res.sendFile(path.join(__dirname, "public", "dashboard", "index.html"));
   } catch (e) {
     res.status(500).send("view error");
   }
