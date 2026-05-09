@@ -147,6 +147,42 @@ function mountJeremyTasks(app) {
       });
     }
   });
+
+  /** Live Prisma Task rows (PENDING / IN_PROGRESS / COMPLETE) for staff tools */
+  app.get("/api/staff/prisma-tasks", async (_req, res) => {
+    try {
+      const prisma = getPrisma();
+      if (!prisma || !prisma.task) {
+        return res.status(503).json({ ok: false, error: "database_unavailable", tasks: [] });
+      }
+      const rows = await prisma.task.findMany({
+        where: {
+          status: { in: ["PENDING", "IN_PROGRESS", "DONE", "COMPLETE"] },
+        },
+        orderBy: { updatedAt: "desc" },
+        take: 200,
+        select: {
+          id: true,
+          title: true,
+          type: true,
+          status: true,
+          orderId: true,
+          jobId: true,
+          assignedTo: true,
+          updatedAt: true,
+          order: { select: { customerName: true, status: true, email: true } },
+        },
+      });
+      return res.json({ ok: true, tasks: rows, count: rows.length });
+    } catch (e) {
+      console.error("[staff/prisma-tasks]", e && e.message ? e.message : e);
+      return res.status(500).json({
+        ok: false,
+        error: e && e.message ? e.message : String(e),
+        tasks: [],
+      });
+    }
+  });
 }
 
 module.exports = { mountJeremyTasks, JEREMY_NAME };

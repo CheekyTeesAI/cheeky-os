@@ -55,7 +55,7 @@
     {
       "jobId": "JOB-INV-MOCK-9001",
       "customer": "Pine Creek Church",
-      "dueDate": "2026-04-02T03:36:36.368Z",
+      "dueDate": "2026-04-23T03:54:26.953Z",
       "status": "OVERDUE",
       "productionType": "UNKNOWN",
       "amount": 980,
@@ -67,12 +67,12 @@
       "notes": "",
       "artFiles": [],
       "createdAt": "2026-04-17T22:28:57.035Z",
-      "updatedAt": "2026-04-18T03:36:36.368Z"
+      "updatedAt": "2026-05-09T03:54:26.953Z"
     },
     {
       "jobId": "JOB-INV-MOCK-9002",
       "customer": "Metro Realty Group",
-      "dueDate": "2026-04-09T03:36:36.368Z",
+      "dueDate": "2026-04-30T03:54:26.953Z",
       "status": "OVERDUE",
       "productionType": "UNKNOWN",
       "amount": 640,
@@ -84,12 +84,12 @@
       "notes": "",
       "artFiles": [],
       "createdAt": "2026-04-17T22:28:57.036Z",
-      "updatedAt": "2026-04-18T03:36:36.368Z"
+      "updatedAt": "2026-05-09T03:54:26.954Z"
     },
     {
       "jobId": "JOB-INV-MOCK-9003",
       "customer": "River Youth Baseball",
-      "dueDate": "2026-04-19T03:36:36.368Z",
+      "dueDate": "2026-05-10T03:54:26.953Z",
       "status": "UNPAID",
       "productionType": "UNKNOWN",
       "amount": 455,
@@ -101,12 +101,12 @@
       "notes": "",
       "artFiles": [],
       "createdAt": "2026-04-17T22:28:57.036Z",
-      "updatedAt": "2026-04-18T03:36:36.369Z"
+      "updatedAt": "2026-05-09T03:54:26.954Z"
     },
     {
       "jobId": "JOB-INV-MOCK-9004",
       "customer": "Amber HVAC Services",
-      "dueDate": "2026-04-18T03:36:36.368Z",
+      "dueDate": "2026-05-09T03:54:26.953Z",
       "status": "UNPAID",
       "productionType": "UNKNOWN",
       "amount": 1850,
@@ -118,12 +118,12 @@
       "notes": "",
       "artFiles": [],
       "createdAt": "2026-04-17T22:28:57.036Z",
-      "updatedAt": "2026-04-18T03:36:36.369Z"
+      "updatedAt": "2026-05-09T03:54:26.954Z"
     },
     {
       "jobId": "JOB-INV-MOCK-9005",
       "customer": "Sunrise Bakery",
-      "dueDate": "2026-04-08T03:36:36.368Z",
+      "dueDate": "2026-04-29T03:54:26.953Z",
       "status": "PAID",
       "productionType": "UNKNOWN",
       "amount": 325,
@@ -135,7 +135,7 @@
       "notes": "",
       "artFiles": [],
       "createdAt": "2026-04-17T22:28:57.036Z",
-      "updatedAt": "2026-04-18T03:36:36.369Z"
+      "updatedAt": "2026-05-09T03:54:26.954Z"
     }
   ]
 }

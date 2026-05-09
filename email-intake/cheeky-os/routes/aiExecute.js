@@ -8,7 +8,6 @@
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
-const OpenAI = require("openai");
 const { handleOperatorRunRequest } = require("./operatorRun");
 const skillEngine = require(path.join(
   __dirname,
@@ -150,25 +149,39 @@ async function runPromptWithOpenAi(prompt, apiKey, model) {
     };
   }
   try {
-    const client = new OpenAI({ apiKey });
-    const response = await client.responses.create({
-      model,
-      input: prompt,
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 512,
+        messages: [{ role: "user", content: prompt }],
+      }),
     });
-    const text =
-      typeof response.output_text === "string" && response.output_text.trim()
-        ? response.output_text
-        : "";
+    const payload = await response.json();
+    if (!response.ok) {
+      return {
+        ok: false,
+        status: response.status,
+        error: payload && payload.error && payload.error.message ? payload.error.message : "Anthropic request failed",
+      };
+    }
+    const first = Array.isArray(payload && payload.content) ? payload.content[0] : null;
+    const text = first && first.type === "text" && typeof first.text === "string" ? first.text : "";
     return {
       ok: true,
       model,
       text,
-      response,
+      response: payload,
     };
   } catch (err) {
     const status = err && typeof err.status === "number" ? err.status : 503;
     const message =
-      err && err.message ? String(err.message) : "OpenAI request failed";
+      err && err.message ? String(err.message) : "Anthropic request failed";
     return {
       ok: false,
       status,
@@ -182,9 +195,8 @@ router.post("/execute", async (req, res) => {
   if (typeof promptRaw === "string" && promptRaw.trim()) {
     const prompt = promptRaw.trim();
     // Read runtime env at request time so stale module state cannot block valid keys.
-    const runtimeApiKey = String(process.env.OPENAI_API_KEY || "").trim();
-    const runtimeModel =
-      String(process.env.OPENAI_MODEL || "gpt-4.1-mini").trim() || "gpt-4.1-mini";
+    const runtimeApiKey = String(process.env.ANTHROPIC_API_KEY || "").trim();
+    const runtimeModel = "claude-sonnet-4-6";
     const aiOut = await runPromptWithOpenAi(prompt, runtimeApiKey, runtimeModel);
     if (!aiOut.ok) {
       return res.status(aiOut.status || 503).json({
@@ -192,6 +204,7 @@ router.post("/execute", async (req, res) => {
         error: aiOut.error || "AI not configured",
       });
     }
+    console.log("[AI] /api/ai/execute success model=", aiOut.model);
     appendLog({
       prompt,
       result: { text: aiOut.text, model: aiOut.model },

@@ -1094,6 +1094,102 @@
         "category": "report_requested",
         "outcome": "success"
       }
+    },
+    {
+      "timestamp": "2026-05-09T03:53:41.882Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Argument for 'body' failed validation.\n\nExpected value to be of type 'Optional<number>' but found 'bigint'.\n\nGiven value: \"200\"\nType: 'bigint'\nExpected type: 'Optional<number>'\nPath: limit"
+      }
+    },
+    {
+      "timestamp": "2026-05-09T03:53:41.892Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Argument for 'body' failed validation.\n\nExpected value to be of type 'Optional<number>' but found 'bigint'.\n\nGiven value: \"200\"\nType: 'bigint'\nExpected type: 'Optional<number>'\nPath: limit"
+      }
+    },
+    {
+      "timestamp": "2026-05-09T03:53:53.052Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 5,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-05-09T03:53:53.096Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-05-09T03:54:17.764Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Argument for 'body' failed validation.\n\nExpected value to be of type 'Optional<number>' but found 'bigint'.\n\nGiven value: \"200\"\nType: 'bigint'\nExpected type: 'Optional<number>'\nPath: limit"
+      }
+    },
+    {
+      "timestamp": "2026-05-09T03:54:17.789Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Argument for 'body' failed validation.\n\nExpected value to be of type 'Optional<number>' but found 'bigint'.\n\nGiven value: \"200\"\nType: 'bigint'\nExpected type: 'Optional<number>'\nPath: limit"
+      }
+    },
+    {
+      "timestamp": "2026-05-09T03:54:17.804Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getOrders",
+        "message": "Argument for 'body' failed validation.\n\nExpected value to be of type 'Optional<number>' but found 'bigint'.\n\nGiven value: \"200\"\nType: 'bigint'\nExpected type: 'Optional<number>'\nPath: limit"
+      }
+    },
+    {
+      "timestamp": "2026-05-09T03:54:17.819Z",
+      "type": "square_error",
+      "data": {
+        "step": "reports_getInvoices",
+        "message": "Argument for 'body' failed validation.\n\nExpected value to be of type 'Optional<number>' but found 'bigint'.\n\nGiven value: \"200\"\nType: 'bigint'\nExpected type: 'Optional<number>'\nPath: limit"
+      }
+    },
+    {
+      "timestamp": "2026-05-09T03:54:25.910Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 5,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-05-09T03:54:25.936Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
+    },
+    {
+      "timestamp": "2026-05-09T03:54:26.329Z",
+      "type": "daily_sales_targets_generated",
+      "data": {
+        "count": 5,
+        "limit": 5
+      }
+    },
+    {
+      "timestamp": "2026-05-09T03:54:26.351Z",
+      "type": "decision_logged",
+      "data": {
+        "category": "sales_call_list",
+        "outcome": "success"
+      }
     }
   ],
   "insights": [
@@ -1599,6 +1695,192 @@
       },
       "outcome": "success",
       "notes": "Daily summary generated"
+    },
+    {
+      "timestamp": "2026-05-09T03:53:53.056Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 5,
+        "leads": [
+          {
+            "name": "Chris Wedekind",
+            "customerId": "AXBSPWADWHNAY0JG36PK02XTTC",
+            "email": "Scexquisitepoolandspa@gmail.com",
+            "phone": "",
+            "score": 8,
+            "lastOrder": null,
+            "lastContact": null,
+            "totalSpend": 0,
+            "numberOfOrders": 0,
+            "unpaidInvoices": 0,
+            "recentEstimates": 0,
+            "reason": "Last order older than 60 days",
+            "suggestedScript": "Hi Chris Wedekind, this is Cheeky Tees checking in on your project. I can help you move forward today.",
+            "vip": false
+          },
+          {
+            "name": "Branden Thomas",
+            "customerId": "HKQE05E9Q4HVGMPXDV728EY06C",
+            "email": "lumendistrictco@gmail.com",
+            "phone": "",
+            "score": 8,
+            "lastOrder": null,
+            "lastContact": null,
+            "totalSpend": 0,
+            "numberOfOrders": 0,
+            "unpaidInvoices": 0,
+            "recentEstimates": 0,
+            "reason": "Last order older than 60 days",
+            "suggestedScript": "Hi Branden Thomas, this is Cheeky Tees checking in on your project. I can help you move forward today.",
+            "vip": false
+          },
+          {
+            "name": "Cheryl Wuest",
+            "customerId": "KBHKK4GJK6ECJ31MARNTDC0EEW",
+            "email": "CGWuest429@gmail.com",
+            "phone": "",
+            "score": 8,
+            "lastOrder": null,
+            "lastContact": null,
+            "totalSpend": 0,
+            "numberOfOrders": 0,
+            "unpaidInvoices": 0,
+            "recentEstimates": 0,
+            "reason": "Last order older than 60 days",
+            "suggestedScript": "Hi Cheryl Wuest, this is Cheeky Tees checking in on your project. I can help you move forward today.",
+            "vip": false
+          }
+        ]
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
+    },
+    {
+      "timestamp": "2026-05-09T03:54:25.911Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 5,
+        "leads": [
+          {
+            "name": "Chris Wedekind",
+            "customerId": "AXBSPWADWHNAY0JG36PK02XTTC",
+            "email": "Scexquisitepoolandspa@gmail.com",
+            "phone": "",
+            "score": 8,
+            "lastOrder": null,
+            "lastContact": null,
+            "totalSpend": 0,
+            "numberOfOrders": 0,
+            "unpaidInvoices": 0,
+            "recentEstimates": 0,
+            "reason": "Last order older than 60 days",
+            "suggestedScript": "Hi Chris Wedekind, this is Cheeky Tees checking in on your project. I can help you move forward today.",
+            "vip": false
+          },
+          {
+            "name": "Branden Thomas",
+            "customerId": "HKQE05E9Q4HVGMPXDV728EY06C",
+            "email": "lumendistrictco@gmail.com",
+            "phone": "",
+            "score": 8,
+            "lastOrder": null,
+            "lastContact": null,
+            "totalSpend": 0,
+            "numberOfOrders": 0,
+            "unpaidInvoices": 0,
+            "recentEstimates": 0,
+            "reason": "Last order older than 60 days",
+            "suggestedScript": "Hi Branden Thomas, this is Cheeky Tees checking in on your project. I can help you move forward today.",
+            "vip": false
+          },
+          {
+            "name": "Cheryl Wuest",
+            "customerId": "KBHKK4GJK6ECJ31MARNTDC0EEW",
+            "email": "CGWuest429@gmail.com",
+            "phone": "",
+            "score": 8,
+            "lastOrder": null,
+            "lastContact": null,
+            "totalSpend": 0,
+            "numberOfOrders": 0,
+            "unpaidInvoices": 0,
+            "recentEstimates": 0,
+            "reason": "Last order older than 60 days",
+            "suggestedScript": "Hi Cheryl Wuest, this is Cheeky Tees checking in on your project. I can help you move forward today.",
+            "vip": false
+          }
+        ]
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
+    },
+    {
+      "timestamp": "2026-05-09T03:54:26.332Z",
+      "category": "sales_call_list",
+      "input": {
+        "limit": 5
+      },
+      "output": {
+        "count": 5,
+        "leads": [
+          {
+            "name": "Chris Wedekind",
+            "customerId": "AXBSPWADWHNAY0JG36PK02XTTC",
+            "email": "Scexquisitepoolandspa@gmail.com",
+            "phone": "",
+            "score": 8,
+            "lastOrder": null,
+            "lastContact": null,
+            "totalSpend": 0,
+            "numberOfOrders": 0,
+            "unpaidInvoices": 0,
+            "recentEstimates": 0,
+            "reason": "Last order older than 60 days",
+            "suggestedScript": "Hi Chris Wedekind, this is Cheeky Tees checking in on your project. I can help you move forward today.",
+            "vip": false
+          },
+          {
+            "name": "Branden Thomas",
+            "customerId": "HKQE05E9Q4HVGMPXDV728EY06C",
+            "email": "lumendistrictco@gmail.com",
+            "phone": "",
+            "score": 8,
+            "lastOrder": null,
+            "lastContact": null,
+            "totalSpend": 0,
+            "numberOfOrders": 0,
+            "unpaidInvoices": 0,
+            "recentEstimates": 0,
+            "reason": "Last order older than 60 days",
+            "suggestedScript": "Hi Branden Thomas, this is Cheeky Tees checking in on your project. I can help you move forward today.",
+            "vip": false
+          },
+          {
+            "name": "Cheryl Wuest",
+            "customerId": "KBHKK4GJK6ECJ31MARNTDC0EEW",
+            "email": "CGWuest429@gmail.com",
+            "phone": "",
+            "score": 8,
+            "lastOrder": null,
+            "lastContact": null,
+            "totalSpend": 0,
+            "numberOfOrders": 0,
+            "unpaidInvoices": 0,
+            "recentEstimates": 0,
+            "reason": "Last order older than 60 days",
+            "suggestedScript": "Hi Cheryl Wuest, this is Cheeky Tees checking in on your project. I can help you move forward today.",
+            "vip": false
+          }
+        ]
+      },
+      "outcome": "success",
+      "notes": "Daily sales call list generated"
     }
   ]
 }

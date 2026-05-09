@@ -18,7 +18,7 @@ function stripHtml(html: string): string {
 }
 
 function voiceBaseUrl(): string {
-  const port = String(process.env.PORT || process.env.CHEEKY_OS_PORT || "3847").trim();
+  const port = String(process.env.PORT || process.env.CHEEKY_OS_PORT || "3000").trim();
   return `http://127.0.0.1:${port}`;
 }
 
@@ -26,6 +26,10 @@ export async function processInboundEmail(message: GraphMessage): Promise<void> 
   const fromAddr = message.from?.emailAddress?.address || "";
   const subject = message.subject || "";
   const plain = stripHtml(message.body?.content || "");
+  const text =
+    subject && plain
+      ? `Subject: ${subject}\n\n${plain}`
+      : plain || subject || "";
 
   let voiceRunStatus = "unknown";
   let invoiceId: string | undefined;
@@ -35,9 +39,10 @@ export async function processInboundEmail(message: GraphMessage): Promise<void> 
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        text: plain,
+        text,
         source: "email",
         fromEmail: fromAddr,
+        product: "T-Shirts",
       }),
     });
     const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;

@@ -15,56 +15,172 @@ const { parseIntent, ALLOWED_INTENTS } = require("../ai/intent-parser");
 const { intentToCommand, listShortcutIntents } = require("../commands/intent-bridge");
 const { executeCommand } = require("../commands/executor");
 const { logger } = require("../utils/logger");
+const {
+  syncVoiceSuccessToPrisma,
+  notifyOrderConfirmationIfEligible,
+} = require("../services/voiceOrderConfirmation.service");
 
 const router = Router();
+const MAX_VOICE_TEXT = 8000;
 
-// ── POST /voice/run — parse + execute natural language command ──────────────
+function logSquareStageIfNeeded(action, result) {
+  if (!result || !result.data) return;
+  const d = result.data;
+  if (action !== "create_invoice" && action !== "close_deal") return;
+  const inv = action === "close_deal" ? d.invoice : d;
+  if (!inv || typeof inv !== "object") return;
+  const mode = inv.mode;
+  if (mode === "error" || mode === "square_draft" || inv.status === "failed") {
+    logger.warn(
+      `[VOICE][square] invoice stage incomplete (non-fatal): mode=${mode || "?"} status=${inv.status || "?"}`
+    );
+  }
+}
+
 router.post("/voice/run", async (req, res) => {
-  const { text } = req.body || {};
-  if (!text) {
-    return res.json({ ok: false, data: null, error: 'Missing "text" field in request body' });
-  }
+  try {
+    const body = req.body;
+    if (body === undefined || body === null || typeof body !== "object" || Array.isArray(body)) {
+      return res.status(400).json({
+        ok: false,
+        data: null,
+        error: "invalid_body",
+        message: "JSON object body required",
+      });
+    }
 
-  logger.info(`[VOICE] Processing: "${text}"`);
-  const intent = await parseIntent(text);
+    const textRaw = body.text;
+    if (textRaw === undefined || textRaw === null || String(textRaw).trim() === "") {
+      return res.status(400).json({
+        ok: false,
+        data: null,
+        error: "missing_text",
+        message: 'Missing or empty "text" field',
+      });
+    }
 
-  if (intent.intent === "UNKNOWN" || intent.confidence < 0.5) {
-    return res.json({
+    const text = String(textRaw).trim();
+    if (text.length > MAX_VOICE_TEXT) {
+      return res.status(400).json({
+        ok: false,
+        data: null,
+        error: "text_too_long",
+        message: `text must be at most ${MAX_VOICE_TEXT} characters`,
+      });
+    }
+
+    logger.info(`[VOICE] Processing: "${text.slice(0, 200)}${text.length > 200 ? "…" : ""}"`);
+
+    let intent;
+    try {
+      intent = await parseIntent(text);
+    } catch (parseErr) {
+      const msg = parseErr && parseErr.message ? parseErr.message : String(parseErr);
+      logger.warn(`[VOICE][intent] parse failed (non-fatal): ${msg}`);
+      return res.status(200).json({
+        ok: false,
+        data: null,
+        error: `intent_parse_error: ${msg}`,
+      });
+    }
+
+    const params = { ...intent.params };
+    if (body.product != null && String(body.product).trim() !== "") {
+      params.product = String(body.product).trim();
+    }
+
+    if (intent.intent === "UNKNOWN" || intent.confidence < 0.5) {
+      return res.status(200).json({
+        ok: false,
+        data: { intent: intent.intent, confidence: intent.confidence },
+        error: `Could not confidently classify intent (got ${intent.intent} @ ${intent.confidence})`,
+      });
+    }
+
+    const cmd = intentToCommand(intent.intent, params);
+    if (!cmd) {
+      return res.status(200).json({
+        ok: false,
+        data: { intent: intent.intent },
+        error: `No executor mapping for intent: ${intent.intent}`,
+      });
+    }
+
+    let result;
+    try {
+      result = await executeCommand({
+        action: cmd.action,
+        params: cmd.params || {},
+      });
+    } catch (execErr) {
+      const msg = execErr && execErr.message ? execErr.message : String(execErr);
+      logger.error(`[VOICE][execute] command threw: ${msg}`);
+      return res.status(200).json({
+        ok: false,
+        data: { intent: intent.intent, action: cmd.action },
+        error: `execute_error: ${msg}`,
+      });
+    }
+
+    logSquareStageIfNeeded(cmd.action, result);
+
+    let prismaTaskId = null;
+    if (result.ok) {
+      let syncMeta = null;
+      try {
+        syncMeta = await syncVoiceSuccessToPrisma({
+          action: cmd.action,
+          params: cmd.params || {},
+          result,
+          meta: {
+            fromEmail: body.fromEmail,
+            source: body.source || "voice",
+          },
+        });
+        if (syncMeta && syncMeta.taskId) {
+          prismaTaskId = syncMeta.taskId;
+          logger.info(`[VOICE] Prisma task created: ${syncMeta.taskId} orderId=${syncMeta.orderId}`);
+        }
+      } catch (syncErr) {
+        logger.warn(
+          `[VOICE][prisma] sync failed (non-fatal): ${syncErr && syncErr.message ? syncErr.message : syncErr}`
+        );
+      }
+      try {
+        if (syncMeta) {
+          await notifyOrderConfirmationIfEligible(syncMeta, cmd.params || {}, body, result);
+        }
+      } catch (notifyErr) {
+        logger.warn(
+          `[VOICE][notify] failed (non-fatal): ${notifyErr && notifyErr.message ? notifyErr.message : notifyErr}`
+        );
+      }
+    }
+
+    return res.status(200).json({
+      ok: result.ok,
+      data: {
+        intent: intent.intent,
+        confidence: intent.confidence,
+        params,
+        action: cmd.action,
+        result: result.data,
+        prismaTaskId,
+      },
+      error: result.error,
+    });
+  } catch (err) {
+    const msg = err && err.message ? err.message : String(err);
+    logger.error(`[VOICE] unhandled: ${msg}`);
+    return res.status(200).json({
       ok: false,
-      data: { intent: intent.intent, confidence: intent.confidence },
-      error: `Could not confidently classify intent (got ${intent.intent} @ ${intent.confidence})`,
+      data: null,
+      error: `voice_internal_error: ${msg}`,
     });
   }
-
-  const cmd = intentToCommand(intent.intent, intent.params);
-  if (!cmd) {
-    return res.json({
-      ok: false,
-      data: { intent: intent.intent },
-      error: `No executor mapping for intent: ${intent.intent}`,
-    });
-  }
-
-  const result = await executeCommand({
-    action: cmd.action,
-    params: cmd.params || {}
-  });
-
-  res.json({
-    ok: result.ok,
-    data: {
-      intent: intent.intent,
-      confidence: intent.confidence,
-      params: intent.params,
-      action: cmd.action,
-      result: result.data,
-    },
-    error: result.error,
-  });
 });
 
-// ── GET /voice/commands — list all recognized commands ──────────────────────
-router.get("/voice/commands", (req, res) => {
+router.get("/voice/commands", (_req, res) => {
   res.json({
     ok: true,
     data: {
@@ -86,29 +202,91 @@ router.get("/voice/commands", (req, res) => {
   });
 });
 
-// ── POST /voice/shortcut — named shortcut (skip AI parsing) ────────────────
 router.post("/voice/shortcut", async (req, res) => {
-  const { intent, params } = req.body || {};
-  if (!intent) {
-    return res.json({ ok: false, data: null, error: 'Missing "intent" field' });
-  }
+  try {
+    const body = req.body;
+    if (body === undefined || body === null || typeof body !== "object" || Array.isArray(body)) {
+      return res.status(400).json({
+        ok: false,
+        data: null,
+        error: "invalid_body",
+        message: "JSON object body required",
+      });
+    }
 
-  const cmd = intentToCommand(intent, params || {});
-  if (!cmd) {
-    return res.json({
+    const { intent, params } = body;
+    if (intent === undefined || intent === null || String(intent).trim() === "") {
+      return res.status(400).json({
+        ok: false,
+        data: null,
+        error: "missing_intent",
+        message: 'Missing or empty "intent" field',
+      });
+    }
+
+    const cmd = intentToCommand(intent, params || {});
+    if (!cmd) {
+      return res.status(200).json({
+        ok: false,
+        data: { intent },
+        error: `Unknown intent: ${intent}. Valid: ${listShortcutIntents().join(", ")}`,
+      });
+    }
+
+    logger.info(`[VOICE] Shortcut: ${intent} → ${cmd.action}`);
+
+    let result;
+    try {
+      result = await executeCommand(cmd);
+    } catch (execErr) {
+      const msg = execErr && execErr.message ? execErr.message : String(execErr);
+      logger.error(`[VOICE][execute] shortcut threw: ${msg}`);
+      return res.status(200).json({
+        ok: false,
+        data: { intent, action: cmd.action },
+        error: `execute_error: ${msg}`,
+      });
+    }
+
+    logSquareStageIfNeeded(cmd.action, result);
+
+    let prismaTaskId = null;
+    if (result.ok) {
+      try {
+        const syncMeta = await syncVoiceSuccessToPrisma({
+          action: cmd.action,
+          params: cmd.params || {},
+          result,
+          meta: { source: "voice_shortcut" },
+        });
+        if (syncMeta && syncMeta.taskId) {
+          prismaTaskId = syncMeta.taskId;
+          logger.info(`[VOICE] Prisma task created: ${syncMeta.taskId} orderId=${syncMeta.orderId}`);
+        }
+        if (syncMeta) {
+          await notifyOrderConfirmationIfEligible(syncMeta, cmd.params || {}, {}, result);
+        }
+      } catch (sideErr) {
+        logger.warn(
+          `[VOICE] shortcut sync/notify (non-fatal): ${sideErr && sideErr.message ? sideErr.message : sideErr}`
+        );
+      }
+    }
+
+    return res.status(200).json({
+      ok: result.ok,
+      data: { intent, action: cmd.action, result: result.data, prismaTaskId },
+      error: result.error,
+    });
+  } catch (err) {
+    const msg = err && err.message ? err.message : String(err);
+    logger.error(`[VOICE] shortcut unhandled: ${msg}`);
+    return res.status(200).json({
       ok: false,
-      data: { intent },
-      error: `Unknown intent: ${intent}. Valid: ${listShortcutIntents().join(", ")}`,
+      data: null,
+      error: `voice_internal_error: ${msg}`,
     });
   }
-
-  logger.info(`[VOICE] Shortcut: ${intent} → ${cmd.action}`);
-  const result = await executeCommand(cmd);
-  res.json({
-    ok: result.ok,
-    data: { intent, action: cmd.action, result: result.data },
-    error: result.error,
-  });
 });
 
 module.exports = router;

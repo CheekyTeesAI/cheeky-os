@@ -12,6 +12,7 @@ This module exposes Cheeky OS operations to MCP-compatible clients (for example,
   - `tools/system.js`
   - `tools/memory.js`
   - `tools/voice.js`
+  - `tools/cursorQueue.js`
 
 ## Tools
 
@@ -39,6 +40,14 @@ This module exposes Cheeky OS operations to MCP-compatible clients (for example,
 6. `run_voice_command`
    - Input: `command` (required)
    - Action: POSTs to local voice endpoint (`/voice/run`, fallback `/cheeky/voice/run`)
+
+7. `push_cursor_task`
+   - Input: `task` (required), `context?`, `priority?`
+   - Action: `POST /api/cursor/task` with header `x-api-key: CHATGPT_ACTION_API_KEY` (base URL from `PUBLIC_BASE_URL` / `CHEEKY_OS_BASE_URL` or `127.0.0.1` + `PORT`)
+
+8. `get_next_cursor_task`
+   - Input: none
+   - Action: `GET /api/cursor/task/next` with the same API key header
 
 ## Setup
 

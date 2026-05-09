@@ -763,7 +763,7 @@ try {
 }
 try {
   require("./routes/jeremyTasks.route").mountJeremyTasks(app);
-  console.log("[jeremy] GET /api/jeremy/tasks");
+  console.log("[jeremy] GET /api/jeremy/tasks · GET /api/staff/prisma-tasks");
 } catch (jerErr) {
   console.warn("[jeremy] mount failed:", jerErr && jerErr.message ? jerErr.message : jerErr);
 }
@@ -1143,6 +1143,8 @@ app.use(chatgptRouteModule);
 console.log(
   "[ROUTES] ChatGPT routes module mounted from ./src/routes/chatgpt.route; HTTP paths are /api/chatgpt/* (includes GET /api/chatgpt/launch-check)"
 );
+app.use(require("./src/routes/cursorTask.route"));
+console.log("[ROUTES] Cursor task queue: POST /api/cursor/task · GET /api/cursor/task/next (CHATGPT_ACTION_API_KEY)");
 app.use(require("./src/routes/mobileOperator.route"));
 app.use(require("./src/routes/decision.route"));
 app.use(require("./src/routes/cash.route"));

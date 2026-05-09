@@ -131,16 +131,15 @@ Return ONLY valid JSON. No markdown, no explanation.`;
   }
 
   try {
-    if (!result.data || !result.data.output || !result.data.output[0]) {
-      return { intent: "UNKNOWN", confidence: 0, params: {} };
-    }
-
-    const content = 
+    const content =
       result.data?.choices?.[0]?.message?.content ||
       result.data?.output?.[0]?.content?.[0]?.text ||
       "";
 
     const parsedText = String(content).trim();
+    if (!parsedText) {
+      return { intent: "UNKNOWN", confidence: 0, params: {} };
+    }
 
     let parsed;
     try {

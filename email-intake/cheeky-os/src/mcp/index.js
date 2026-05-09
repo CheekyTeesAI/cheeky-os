@@ -5,6 +5,7 @@ const { getTasks, updateTaskStatus } = require("./tools/tasks");
 const { getSystemStatus } = require("./tools/system");
 const { createMemo } = require("./tools/memory");
 const { runVoiceCommand } = require("./tools/voice");
+const { pushCursorTask, getNextCursorTask } = require("./tools/cursorQueue");
 
 const tools = [
   {
@@ -85,6 +86,33 @@ const tools = [
       additionalProperties: false,
     },
     handler: runVoiceCommand,
+  },
+  {
+    name: "push_cursor_task",
+    description:
+      "Enqueue a Cursor background task: POST /api/cursor/task (task, context, priority) using CHATGPT_ACTION_API_KEY.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        task: { type: "string", description: "Work instruction for the Cursor agent." },
+        context: { type: "string", description: "Supporting context (files, constraints, background)." },
+        priority: { type: "string", description: 'Priority label (e.g. high, normal, low); default "normal".' },
+      },
+      required: ["task"],
+      additionalProperties: false,
+    },
+    handler: pushCursorTask,
+  },
+  {
+    name: "get_next_cursor_task",
+    description:
+      "Dequeue the highest-priority pending Cursor task: GET /api/cursor/task/next using CHATGPT_ACTION_API_KEY.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    },
+    handler: getNextCursorTask,
   },
 ];
 

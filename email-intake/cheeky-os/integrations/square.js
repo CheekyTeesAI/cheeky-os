@@ -238,10 +238,36 @@ async function createSquareInvoice(payload) {
   };
 
   try {
+    // 0. Create/attach Square customer (required for invoice primary_recipient.customer_id)
+    const customerBody = {
+      idempotency_key: "cheek-cust-" + Date.now(),
+      given_name: customerName || "Customer",
+      email_address: customerEmail || undefined,
+    };
+    const customerRes = await fetchSafeTransientRetry(
+      baseUrl + "/customers",
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify(customerBody),
+        timeoutMs: 45000,
+      },
+      { label: "square:customers-create" }
+    );
+    const customerData = customerRes.data;
+    const customerId = customerData && customerData.customer && customerData.customer.id;
+    if (!customerRes.ok || !customerId) {
+      logger.error(
+        `[SQUARE] Customer creation failed: ${JSON.stringify((customerData && customerData.errors) || customerData || customerRes.error)}`
+      );
+      return { mode: "error", invoiceId: null, orderId: null, status: "failed", total, deposit, raw: customerData };
+    }
+
     // 1. Create order
     const orderBody = {
       order: {
         location_id: locationId,
+        customer_id: customerId,
         line_items: [
           {
             name: title || "Custom Order",
@@ -286,8 +312,7 @@ async function createSquareInvoice(payload) {
         order_id: orderId,
         title: `Invoice: ${title || "Custom Order"} — ${customerName}`,
         primary_recipient: {
-          given_name: customerName || "Customer",
-          email_address: customerEmail || undefined,
+          customer_id: customerId,
         },
         payment_requests: [
           {

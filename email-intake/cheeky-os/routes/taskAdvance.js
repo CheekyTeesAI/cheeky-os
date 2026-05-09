@@ -90,6 +90,63 @@ async function findCaptureOrderContext(id) {
 }
 
 /**
+ * Advance a Prisma Task row (PENDING → IN_PROGRESS → COMPLETE).
+ * @param {string} rawId - task id
+ * @returns {Promise<{ success: boolean, taskId: string, previousStatus: string, newStatus: string } | { error: string } | null>}
+ */
+async function tryAdvancePrismaTask(rawId) {
+  try {
+    const prisma = getPgPrisma();
+    if (!prisma || !prisma.task) return null;
+
+    const id = String(rawId || "").trim();
+    const task = await prisma.task.findUnique({
+      where: { id },
+    });
+    if (!task) return null;
+
+    const cur = String(task.status || "PENDING").toUpperCase();
+    let next;
+    if (cur === "PENDING") next = "IN_PROGRESS";
+    else if (cur === "IN_PROGRESS") next = "COMPLETE";
+    else if (cur === "COMPLETE" || cur === "DONE") {
+      return { error: `task already ${cur}` };
+    } else {
+      next = "IN_PROGRESS";
+    }
+
+    await prisma.task.update({
+      where: { id: task.id },
+      data: { status: next, updatedAt: new Date() },
+    });
+
+    if (next === "COMPLETE" && task.jobId) {
+      const remaining = await prisma.task.count({
+        where: {
+          jobId: task.jobId,
+          status: { notIn: ["DONE", "COMPLETE"] },
+        },
+      });
+      if (remaining === 0) {
+        await prisma.job.update({
+          where: { id: task.jobId },
+          data: { status: "QC", updatedAt: new Date() },
+        });
+      }
+    }
+
+    return {
+      success: true,
+      taskId: task.id,
+      previousStatus: cur,
+      newStatus: next,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * @param {string} rawId
  * @returns {Promise<{ success: boolean, taskId: string, previousStatus: string, newStatus: string } | { error: string } | null>}
  */
@@ -99,18 +156,9 @@ async function tryAdvancePostgresOrder(rawId) {
     if (!prisma) return null;
 
     const id = String(rawId || "").trim();
-    let order = await prisma.order.findFirst({
+    const order = await prisma.order.findFirst({
       where: { id, deletedAt: null },
     });
-    if (!order) {
-      const task = await prisma.task.findUnique({
-        where: { id },
-        include: { order: true },
-      });
-      if (task && task.order && !task.order.deletedAt) {
-        order = task.order;
-      }
-    }
     if (!order) return null;
 
     const cur = String(order.status);
@@ -247,6 +295,33 @@ router.post("/:id/advance", async (req, res) => {
         taskId: row.id,
         previousStatus,
         newStatus: result.status,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const prismaTaskAdv = await tryAdvancePrismaTask(id);
+    if (prismaTaskAdv) {
+      if (prismaTaskAdv.error) {
+        return res.status(400).json({ success: false, error: prismaTaskAdv.error });
+      }
+      const st = String(prismaTaskAdv.newStatus || "").toUpperCase();
+      if (st === "DONE" || st === "COMPLETE") {
+        try {
+          memoryService.logEvent("task_completed", {
+            taskId: prismaTaskAdv.taskId,
+            newStatus: prismaTaskAdv.newStatus,
+            channel: "prisma_task",
+          });
+        } catch (_) {
+          /* optional */
+        }
+      }
+      return res.json({
+        success: true,
+        taskId: prismaTaskAdv.taskId,
+        previousStatus: prismaTaskAdv.previousStatus,
+        newStatus: prismaTaskAdv.newStatus,
+        scope: "prisma_task",
         timestamp: new Date().toISOString(),
       });
     }

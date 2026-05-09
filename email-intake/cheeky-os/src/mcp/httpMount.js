@@ -54,6 +54,46 @@ function mountCheekyOsMcpSse(app) {
     };
   }
 
+  async function callChatgptActionRoute(req, method, path, body) {
+    const key = String(process.env.CHATGPT_ACTION_API_KEY || "").trim();
+    if (!key) {
+      return {
+        ok: false,
+        status: 401,
+        data: {
+          error: true,
+          message: "CHATGPT_ACTION_API_KEY is not set on the Cheeky OS server.",
+        },
+      };
+    }
+
+    const baseUrl = getOrigin(req);
+    const headers = { "x-api-key": key };
+    if (body !== undefined) {
+      headers["Content-Type"] = "application/json";
+    }
+
+    const response = await fetch(`${baseUrl}${path}`, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+
+    const text = await response.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch (_e) {
+      data = text;
+    }
+
+    return {
+      ok: response.ok,
+      status: response.status,
+      data,
+    };
+  }
+
   function createMcpServer(req) {
     const server = new Server(
       {
@@ -107,6 +147,29 @@ function mountCheekyOsMcpSse(app) {
           additionalProperties: true,
         },
       },
+      {
+        name: "push_cursor_task",
+        description: "POST /api/cursor/task — enqueue Cursor task (CHATGPT_ACTION_API_KEY).",
+        inputSchema: {
+          type: "object",
+          properties: {
+            task: { type: "string", description: "Work instruction." },
+            context: { type: "string", description: "Supporting context." },
+            priority: { type: "string", description: "Priority label." },
+          },
+          required: ["task"],
+          additionalProperties: false,
+        },
+      },
+      {
+        name: "get_next_cursor_task",
+        description: "GET /api/cursor/task/next — dequeue next task (CHATGPT_ACTION_API_KEY).",
+        inputSchema: {
+          type: "object",
+          properties: {},
+          additionalProperties: false,
+        },
+      },
     ];
 
     server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
@@ -126,6 +189,21 @@ function mountCheekyOsMcpSse(app) {
       }
       if (toolName === "create_voice_run") {
         return toToolContent(await callJson(req, "POST", "/voice/run", args));
+      }
+      if (toolName === "push_cursor_task") {
+        const task = args && typeof args.task === "string" ? args.task.trim() : "";
+        if (!task) {
+          return toToolContent({ ok: false, error: true, message: 'Missing required field "task".' });
+        }
+        const context = args && args.context != null ? String(args.context) : "";
+        const priority =
+          args && args.priority != null && String(args.priority).trim()
+            ? String(args.priority).trim()
+            : "normal";
+        return toToolContent(await callChatgptActionRoute(req, "POST", "/api/cursor/task", { task, context, priority }));
+      }
+      if (toolName === "get_next_cursor_task") {
+        return toToolContent(await callChatgptActionRoute(req, "GET", "/api/cursor/task/next"));
       }
 
       return toToolContent({

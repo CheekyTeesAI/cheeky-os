@@ -248,4 +248,9 @@ async function runFollowupExecutor() {
   return out;
 }
 
-module.exports = { runFollowupExecutor, MAX_SENDS_PER_RUN, normalizeE164 };
+module.exports = {
+  runFollowupExecutor,
+  MAX_SENDS_PER_RUN,
+  normalizeE164,
+  sendFollowupSms,
+};
