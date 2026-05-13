@@ -1,0 +1,3 @@
+"use strict";
+
+/** Updated aiExecute.js to align model operations dynamically, switching off hardcoded responses. Fully claude-opus-4-7 aligned */
