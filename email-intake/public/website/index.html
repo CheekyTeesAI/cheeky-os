@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cheeky Tees — Custom Apparel, Built Right Here in SC</title>
+  <meta name="description" content="Cheeky Tees is a South Carolina custom print shop specializing in screen printing, DTG, DTF, embroidery, team uniforms, and event apparel." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cheeky: {
+              red: '#dc2626',
+              'red-dark': '#b91c1c',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+    /* Mobile nav toggle */
+    #mobile-menu { display: none; }
+    #mobile-menu.open { display: block; }
+  </style>
+</head>
+<body class="bg-white text-slate-800 font-sans">
+
+<!-- =====================================================================
+     Cheeky Tees Marketing Homepage
+     LIVE: All links to /stores/sdpc/ point to the live SDPC uniform store
+     LIVE: All links to /website/custom-order.html — page not yet built
+     NOTE: Contact form not wired — email customer.service@cheekyteesllc.com
+     ===================================================================== -->
+
+<!-- ===== NAV ===== -->
+<nav class="bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm">
+  <div class="max-w-6xl mx-auto px-4 py-0">
+    <div class="flex items-center justify-between h-16">
+      <!-- Logo -->
+      <a href="/website/" class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-[#dc2626] rounded-lg flex items-center justify-center flex-shrink-0">
+          <span class="text-white font-black text-sm leading-none">CT</span>
+        </div>
+        <span class="font-black text-slate-900 text-xl tracking-tight">Cheeky Tees</span>
+      </a>
+
+      <!-- Desktop Nav -->
+      <div class="hidden md:flex items-center gap-6">
+        <a href="/website/custom-order.html" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition">Custom Order</a>
+        <a href="#private-stores" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition">Private Stores</a>
+        <a href="#about" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition">About</a>
+        <a href="#contact" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition">Contact</a>
+        <a href="/website/custom-order.html"
+          class="bg-[#dc2626] text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-[#b91c1c] transition">
+          Start an Order
+        </a>
+      </div>
+
+      <!-- Mobile hamburger -->
+      <button
+        class="md:hidden text-slate-600 p-2"
+        onclick="document.getElementById('mobile-menu').classList.toggle('open')"
+        aria-label="Toggle menu"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile Nav -->
+    <div id="mobile-menu" class="md:hidden border-t border-slate-100 py-4 space-y-3">
+      <a href="/website/custom-order.html" class="block text-sm font-medium text-slate-700 py-1">Custom Order</a>
+      <a href="#private-stores" class="block text-sm font-medium text-slate-700 py-1" onclick="document.getElementById('mobile-menu').classList.remove('open')">Private Stores</a>
+      <a href="#about" class="block text-sm font-medium text-slate-700 py-1" onclick="document.getElementById('mobile-menu').classList.remove('open')">About</a>
+      <a href="#contact" class="block text-sm font-medium text-slate-700 py-1" onclick="document.getElementById('mobile-menu').classList.remove('open')">Contact</a>
+      <a href="/website/custom-order.html"
+        class="block bg-[#dc2626] text-white px-5 py-2.5 rounded-lg text-sm font-bold text-center hover:bg-[#b91c1c] transition">
+        Start an Order
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+  <div class="max-w-6xl mx-auto px-4 py-20 md:py-28">
+    <div class="max-w-3xl">
+      <div class="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 mb-6">
+        <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+        <span class="text-sm font-medium text-white/90">Pickens, South Carolina</span>
+      </div>
+      <h1 class="text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-5">
+        Custom Apparel,<br />
+        <span class="text-[#dc2626]">Built Right Here in SC.</span>
+      </h1>
+      <p class="text-lg md:text-xl text-slate-300 mb-8 leading-relaxed max-w-2xl">
+        Screen printing, DTG, embroidery — done with care, delivered on time.
+        From one-off custom orders to full private stores for schools and teams.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <a href="/website/custom-order.html"
+          class="bg-[#dc2626] text-white px-7 py-3.5 rounded-xl font-bold text-base hover:bg-[#b91c1c] transition text-center shadow-lg">
+          Start Custom Order
+        </a>
+        <a href="/stores/sdpc/"
+          class="bg-white/10 border border-white/30 text-white px-7 py-3.5 rounded-xl font-bold text-base hover:bg-white/20 transition text-center">
+          Shop SDPC Uniforms →
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="bg-white py-16 md:py-20">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl md:text-4xl font-black text-slate-900 mb-3">How It Works</h2>
+      <p class="text-slate-500 text-lg">Simple process. Real communication. No surprises.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+      <!-- Connector line (desktop only) -->
+      <div class="hidden md:block absolute top-8 left-1/3 right-1/3 h-0.5 bg-slate-100 -z-0"></div>
+
+      <!-- Step 1 -->
+      <div class="text-center relative z-10">
+        <div class="w-16 h-16 bg-[#dc2626] rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <div class="text-xs font-bold text-[#dc2626] uppercase tracking-widest mb-2">Step 1</div>
+        <h3 class="text-xl font-bold text-slate-900 mb-2">Submit Your Order</h3>
+        <p class="text-slate-500 text-sm leading-relaxed">Tell us what you need — garment type, quantity, artwork description. Use our intake form or shop your private store.</p>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="text-center relative z-10">
+        <div class="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Step 2</div>
+        <h3 class="text-xl font-bold text-slate-900 mb-2">We Quote &amp; Confirm</h3>
+        <p class="text-slate-500 text-sm leading-relaxed">We'll send your final quote within 1 business day. A small deposit locks in your order and gets it into production.</p>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="text-center relative z-10">
+        <div class="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 10V7"/>
+          </svg>
+        </div>
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Step 3</div>
+        <h3 class="text-xl font-bold text-slate-900 mb-2">We Print &amp; Deliver</h3>
+        <p class="text-slate-500 text-sm leading-relaxed">Your order is printed in-house in Pickens, SC and delivered or available for pickup. We keep you updated the whole way.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SERVICES ===== -->
+<section id="about" class="bg-slate-50 py-16 md:py-20 border-t border-slate-100">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl md:text-4xl font-black text-slate-900 mb-3">What We Do</h2>
+      <p class="text-slate-500 text-lg">Full-service custom apparel from a real shop with real people.</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+      <!-- Screen Printing -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition">
+        <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+          <svg class="w-6 h-6 text-[#dc2626]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+          </svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">Screen Printing</h3>
+        <p class="text-slate-500 text-sm leading-relaxed">The classic. Vibrant, durable ink on any garment. Best for bulk orders with consistent designs.</p>
+      </div>
+
+      <!-- DTG -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition">
+        <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H4a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-1"/>
+          </svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">DTG (Direct to Garment)</h3>
+        <p class="text-slate-500 text-sm leading-relaxed">Full-color photo-quality prints with no minimums. Perfect for complex artwork or small runs.</p>
+      </div>
+
+      <!-- DTF -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition">
+        <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center mb-4">
+          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">DTF (Direct to Film)</h3>
+        <p class="text-slate-500 text-sm leading-relaxed">Transfer prints that work on virtually any fabric. Sharp edges, soft hand-feel, long-lasting color.</p>
+      </div>
+
+      <!-- Embroidery -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition">
+        <div class="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center mb-4">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+          </svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">Embroidery</h3>
+        <p class="text-slate-500 text-sm leading-relaxed">Stitched logos and text for a premium, professional look. Ideal for polos, jackets, hats, and uniforms.</p>
+      </div>
+
+      <!-- Team Uniforms -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition">
+        <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center mb-4">
+          <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">Team Uniforms</h3>
+        <p class="text-slate-500 text-sm leading-relaxed">Outfitting your whole team? We handle school districts, sports teams, and corporate programs at scale.</p>
+      </div>
+
+      <!-- Event Apparel -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition">
+        <div class="w-10 h-10 bg-pink-50 rounded-xl flex items-center justify-center mb-4">
+          <svg class="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <h3 class="font-bold text-slate-900 mb-2">Event Apparel</h3>
+        <p class="text-slate-500 text-sm leading-relaxed">Race shirts, fundraiser tees, family reunion gear — we love a good event. Fast turnaround, no drama.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== PRIVATE STORES ===== -->
+<section id="private-stores" class="bg-white py-16 md:py-20 border-t border-slate-100">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="max-w-2xl mb-10">
+      <h2 class="text-3xl md:text-4xl font-black text-slate-900 mb-3">Private Online Stores</h2>
+      <p class="text-slate-500 text-lg leading-relaxed">We run private, managed stores for schools, teams, and companies. Employees or members order directly — no purchase orders, no spreadsheets, no guesswork.</p>
+    </div>
+
+    <!-- SDPC Feature Card -->
+    <div class="bg-gradient-to-br from-[#1e3a8a] to-[#1e3270] rounded-2xl overflow-hidden shadow-xl">
+      <div class="p-8 md:p-10">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="text-white">
+            <div class="inline-block bg-white/10 border border-white/20 text-white/80 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4">Live Store</div>
+            <h3 class="text-2xl md:text-3xl font-black mb-2">SDPC Uniform Store</h3>
+            <p class="text-blue-200 text-base mb-1">School District of Pickens County</p>
+            <p class="text-blue-300 text-sm leading-relaxed max-w-md">
+              SDPC employees can order their approved work uniforms directly — shirts, polos, pants, and jackets, all managed through Cheeky Tees.
+            </p>
+            <div class="flex flex-wrap gap-2 mt-4">
+              <span class="bg-white/10 text-white/80 text-xs px-3 py-1 rounded-full">12 items</span>
+              <span class="bg-white/10 text-white/80 text-xs px-3 py-1 rounded-full">Shirts · Polos · Pants · Jackets</span>
+              <span class="bg-white/10 text-white/80 text-xs px-3 py-1 rounded-full">Starting at $28</span>
+            </div>
+          </div>
+          <div class="flex-shrink-0">
+            <a href="/stores/sdpc/"
+              class="block bg-white text-[#1e3a8a] px-8 py-3.5 rounded-xl font-black text-base hover:bg-blue-50 transition shadow-lg whitespace-nowrap text-center">
+              Shop Now →
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA for other orgs -->
+    <div class="mt-8 bg-slate-50 rounded-2xl p-6 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        <h4 class="font-bold text-slate-900 mb-1">Want a store for your school, team, or company?</h4>
+        <p class="text-slate-500 text-sm">We set it up, manage it, and handle all the orders. You just share the link.</p>
+      </div>
+      <a href="/website/custom-order.html"
+        class="flex-shrink-0 bg-[#dc2626] text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-[#b91c1c] transition">
+        Get in Touch
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== WHY CHEEKY TEES ===== -->
+<section class="bg-slate-900 py-16 md:py-20">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl md:text-4xl font-black text-white mb-3">Why Cheeky Tees</h2>
+      <p class="text-slate-400 text-lg">We're a real shop. Here's what that means for you.</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+      <div class="text-center">
+        <div class="w-14 h-14 bg-[#dc2626]/10 border border-[#dc2626]/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <svg class="w-7 h-7 text-[#dc2626]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </div>
+        <h4 class="font-bold text-white mb-2">Real SC Shop</h4>
+        <p class="text-slate-400 text-sm leading-relaxed">Based in Pickens, SC. We're in your community, not a fulfillment warehouse across the country.</p>
+      </div>
+
+      <div class="text-center">
+        <div class="w-14 h-14 bg-[#dc2626]/10 border border-[#dc2626]/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <svg class="w-7 h-7 text-[#dc2626]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <h4 class="font-bold text-white mb-2">Real Turnaround</h4>
+        <p class="text-slate-400 text-sm leading-relaxed">We quote within 1 business day and hit our deadlines. Rush available when you need it.</p>
+      </div>
+
+      <div class="text-center">
+        <div class="w-14 h-14 bg-[#dc2626]/10 border border-[#dc2626]/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <svg class="w-7 h-7 text-[#dc2626]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+          </svg>
+        </div>
+        <h4 class="font-bold text-white mb-2">Real Quality</h4>
+        <p class="text-slate-400 text-sm leading-relaxed">We inspect every job before it ships. If it's not right, we fix it. Simple as that.</p>
+      </div>
+
+      <div class="text-center">
+        <div class="w-14 h-14 bg-[#dc2626]/10 border border-[#dc2626]/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <svg class="w-7 h-7 text-[#dc2626]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+        </div>
+        <h4 class="font-bold text-white mb-2">Real Communication</h4>
+        <p class="text-slate-400 text-sm leading-relaxed">You'll hear from a real person, not a ticket system. We keep you in the loop start to finish.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA SECTION ===== -->
+<section class="bg-[#dc2626] py-14 md:py-16">
+  <div class="max-w-4xl mx-auto px-4 text-center">
+    <h2 class="text-3xl md:text-4xl font-black text-white mb-4">Ready to order?</h2>
+    <p class="text-red-100 text-lg mb-8">Tell us what you need. We'll handle the rest.</p>
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="/website/custom-order.html"
+        class="bg-white text-[#dc2626] px-8 py-3.5 rounded-xl font-black text-base hover:bg-red-50 transition shadow-lg">
+        Start a Custom Order
+      </a>
+      <a href="mailto:customer.service@cheekyteesllc.com"
+        class="bg-red-700 text-white px-8 py-3.5 rounded-xl font-black text-base hover:bg-red-800 transition">
+        Email Us Directly
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CONTACT / FOOTER ===== -->
+<footer id="contact" class="bg-slate-900 text-white py-12 border-t border-slate-800">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+      <!-- Brand -->
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 bg-[#dc2626] rounded-lg flex items-center justify-center flex-shrink-0">
+            <span class="text-white font-black text-sm">CT</span>
+          </div>
+          <span class="font-black text-white text-xl">Cheeky Tees</span>
+        </div>
+        <p class="text-slate-400 text-sm leading-relaxed">South Carolina's custom apparel shop. Screen printing, DTG, DTF, embroidery, and private store management.</p>
+      </div>
+
+      <!-- Contact -->
+      <div>
+        <h4 class="font-bold text-white mb-3">Contact</h4>
+        <ul class="space-y-2 text-sm text-slate-400">
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-slate-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Pickens, SC
+          </li>
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-slate-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <a href="mailto:customer.service@cheekyteesllc.com" class="hover:text-white transition">customer.service@cheekyteesllc.com</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Quick Links -->
+      <div>
+        <h4 class="font-bold text-white mb-3">Quick Links</h4>
+        <ul class="space-y-2 text-sm text-slate-400">
+          <li><a href="/website/custom-order.html" class="hover:text-white transition">Start a Custom Order</a></li>
+          <li><a href="/stores/sdpc/" class="hover:text-white transition">SDPC Uniform Store</a></li>
+          <li><a href="mailto:customer.service@cheekyteesllc.com" class="hover:text-white transition">Contact Us</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="border-t border-slate-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
+      <p class="text-slate-500 text-xs">&copy; 2025 Cheeky Tees LLC. All rights reserved.</p>
+      <p class="text-slate-600 text-xs">Pickens, SC &bull; Built with care.</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
