@@ -1,0 +1,22 @@
+{
+  "storeName": "SDPC - School District of Pickens County",
+  "catalog": [
+    {"item": "Tall Short Sleeve w/Logo", "sku": "SP20EX", "type": "shirt"},
+    {"item": "Short Sleeve Grey T-Shirt w/Logo", "sku": "8300", "type": "shirt"},
+    {"item": "Oxford Button-Up SS with Logo 16 1/2", "sku": "Oxford-SS-16.5", "type": "shirt"},
+    {"item": "Tall LT. Blue No Pocket Polo", "sku": "TST-650", "type": "polo"},
+    {"item": "LT. Blue Pocketed Polo", "sku": "K540P", "type": "polo"},
+    {"item": "Long Sleeve w/Logo", "sku": "SP10EX", "type": "shirt"},
+    {"item": "Short Sleeve w/Logo", "sku": "SP20EX", "type": "shirt"},
+    {"item": "Navy Cargo Pant", "sku": "PT88", "type": "pant"},
+    {"item": "Navy Regular Pant", "sku": "PT10", "type": "pant"},
+    {"item": "Navy Rip Stock Pant", "sku": "PT2L", "type": "pant"},
+    {"item": "Heavy Weight Jacket w/Logo", "sku": "J754", "type": "jacket"},
+    {"item": "Light Weight Jacket w/Logo", "sku": "J701", "type": "jacket"}
+  ],
+  "sizes": {
+    "tops": ["Small", "Medium", "Large", "XL", "XXL", "3XL", "4XL"],
+    "pants": ["29x32", "30x32", "30x34", "..."]
+  },
+  "lastUpdated": "2025-05-15"
+}
