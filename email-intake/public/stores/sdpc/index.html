@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SDPC Uniform Store — Cheeky Tees</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: {
+              50: '#f0f4ff',
+              100: '#dbe4ff',
+              600: '#1e3a8a',
+              700: '#1e3270',
+              800: '#162554',
+              900: '#0f1a3d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Cart drawer transition */
+    #cart-drawer {
+      transition: transform 0.3s ease;
+      transform: translateX(100%);
+    }
+    #cart-drawer.open {
+      transform: translateX(0);
+    }
+    #cart-overlay {
+      transition: opacity 0.3s ease;
+    }
+    /* Qty button focus ring */
+    .qty-btn:focus { outline: 2px solid #1e3a8a; outline-offset: 1px; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+
+<!-- =====================================================================
+     LIVE: Header + Store UI connects to real /api/intake/create endpoint
+     LIVE: Cart stored in localStorage via CheekyCart engine
+     NOTE: Square payment flow not wired — intake form creates job record only
+     ===================================================================== -->
+
+<!-- Load shared cart engine -->
+<script src="../shared/cart.js"></script>
+
+<!-- ===== HEADER ===== -->
+<header class="bg-[#1e3a8a] text-white shadow-lg sticky top-0 z-40">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div>
+      <div class="text-xs font-medium text-blue-200 tracking-wider uppercase">Official Uniform Program</div>
+      <h1 class="text-xl font-bold leading-tight">SDPC Uniform Store</h1>
+      <div class="text-sm text-blue-200">School District of Pickens County</div>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="hidden sm:block text-right">
+        <div class="text-xs text-blue-200">Managed by</div>
+        <div class="text-sm font-semibold text-white">Cheeky Tees</div>
+      </div>
+      <button
+        id="cart-btn"
+        onclick="openCart()"
+        class="relative bg-white text-[#1e3a8a] font-bold px-4 py-2 rounded-lg hover:bg-blue-50 transition flex items-center gap-2"
+        aria-label="Open cart"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+        Cart
+        <span
+          id="cart-count-badge"
+          class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center hidden"
+        >0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ===== NOTICE BANNER ===== -->
+<div class="bg-blue-50 border-b border-blue-100">
+  <div class="max-w-6xl mx-auto px-4 py-2 text-sm text-blue-700">
+    <strong>Ordering info:</strong> Prices shown are starting prices. Cheeky Tees will send you a final quote and deposit request before production begins.
+  </div>
+</div>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="max-w-6xl mx-auto px-4 py-6">
+
+  <!-- Filter Tabs -->
+  <div class="flex gap-2 flex-wrap mb-6" role="tablist" aria-label="Filter by category">
+    <button class="filter-tab active-tab bg-[#1e3a8a] text-white px-4 py-2 rounded-full text-sm font-medium transition" data-filter="all" onclick="setFilter('all', this)">All Items</button>
+    <button class="filter-tab bg-white text-slate-600 border border-slate-200 px-4 py-2 rounded-full text-sm font-medium hover:bg-slate-50 transition" data-filter="shirt" onclick="setFilter('shirt', this)">Shirts</button>
+    <button class="filter-tab bg-white text-slate-600 border border-slate-200 px-4 py-2 rounded-full text-sm font-medium hover:bg-slate-50 transition" data-filter="polo" onclick="setFilter('polo', this)">Polos</button>
+    <button class="filter-tab bg-white text-slate-600 border border-slate-200 px-4 py-2 rounded-full text-sm font-medium hover:bg-slate-50 transition" data-filter="pant" onclick="setFilter('pant', this)">Pants</button>
+    <button class="filter-tab bg-white text-slate-600 border border-slate-200 px-4 py-2 rounded-full text-sm font-medium hover:bg-slate-50 transition" data-filter="jacket" onclick="setFilter('jacket', this)">Jackets</button>
+  </div>
+
+  <!-- Product Grid -->
+  <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    <!-- Cards injected by JS -->
+  </div>
+
+  <p id="no-results" class="hidden text-center text-slate-500 py-12 text-lg">No items match this filter.</p>
+</main>
+
+<!-- ===== CART OVERLAY ===== -->
+<div
+  id="cart-overlay"
+  class="fixed inset-0 bg-black/40 z-40 hidden"
+  onclick="closeCart()"
+  aria-hidden="true"
+></div>
+
+<!-- ===== CART DRAWER ===== -->
+<aside
+  id="cart-drawer"
+  class="fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white shadow-2xl z-50 flex flex-col"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Shopping cart"
+>
+  <!-- Drawer Header -->
+  <div class="bg-[#1e3a8a] text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
+    <h2 class="text-lg font-bold">Your Cart</h2>
+    <button onclick="closeCart()" class="text-blue-200 hover:text-white transition" aria-label="Close cart">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Drawer Body (scrollable) -->
+  <div id="cart-body" class="flex-1 overflow-y-auto px-5 py-4">
+    <!-- Empty state -->
+    <div id="cart-empty" class="hidden text-center py-16">
+      <svg class="w-16 h-16 text-slate-200 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+      </svg>
+      <p class="text-slate-400 font-medium">Your cart is empty</p>
+      <p class="text-slate-400 text-sm mt-1">Add items from the store to get started.</p>
+    </div>
+
+    <!-- Line items container -->
+    <div id="cart-items-list"></div>
+
+    <!-- Order Form (shown after "Place Order" click) -->
+    <div id="order-form-section" class="hidden mt-4 border-t border-slate-100 pt-4">
+      <h3 class="font-bold text-slate-800 mb-3">Your Information</h3>
+      <form id="order-form" onsubmit="submitOrder(event)" novalidate>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1" for="fname">First Name <span class="text-red-500">*</span></label>
+            <input id="fname" type="text" required placeholder="Jane"
+              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1" for="lname">Last Name <span class="text-red-500">*</span></label>
+            <input id="lname" type="text" required placeholder="Smith"
+              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]" />
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-slate-700 mb-1" for="email">Email <span class="text-red-500">*</span></label>
+          <input id="email" type="email" required placeholder="jane.smith@pickens.k12.sc.us"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]" />
+        </div>
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-slate-700 mb-1" for="phone">Phone (optional)</label>
+          <input id="phone" type="tel" placeholder="(864) 555-1234"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]" />
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-slate-700 mb-1" for="notes">Notes (optional)</label>
+          <textarea id="notes" rows="2" placeholder="Any special instructions..."
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] resize-none"></textarea>
+        </div>
+
+        <!-- Form error -->
+        <div id="form-error" class="hidden bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2 mb-3"></div>
+
+        <div class="flex gap-2">
+          <button type="button" onclick="hideOrderForm()"
+            class="flex-1 border border-slate-200 text-slate-600 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-50 transition">
+            Back
+          </button>
+          <button type="submit" id="submit-btn"
+            class="flex-2 bg-[#1e3a8a] text-white py-2.5 px-5 rounded-lg text-sm font-bold hover:bg-[#1e3270] transition disabled:opacity-50 disabled:cursor-not-allowed">
+            Submit Order
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Success State -->
+    <div id="order-success" class="hidden text-center py-8">
+      <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <h3 class="text-lg font-bold text-slate-800 mb-2">Order Submitted!</h3>
+      <p class="text-slate-600 text-sm mb-3" id="success-job-id"></p>
+      <p class="text-slate-600 text-sm mb-4" id="success-deposit"></p>
+      <p class="text-slate-500 text-xs">Cheeky Tees will contact you within 1 business day with your final quote and deposit instructions.</p>
+      <button onclick="closeCart(); CheekyCart.clear(); renderCart();"
+        class="mt-5 bg-[#1e3a8a] text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-[#1e3270] transition">
+        Done
+      </button>
+    </div>
+  </div>
+
+  <!-- Drawer Footer -->
+  <div id="cart-footer" class="border-t border-slate-100 px-5 py-4 flex-shrink-0 bg-white">
+    <div class="flex justify-between items-center mb-1">
+      <span class="text-slate-500 text-sm">Est. Subtotal</span>
+      <span id="cart-subtotal" class="font-bold text-slate-800">$0.00</span>
+    </div>
+    <p class="text-xs text-slate-400 mb-3">Starting prices only. Final quote will be sent by Cheeky Tees.</p>
+    <button
+      id="place-order-btn"
+      onclick="showOrderForm()"
+      class="w-full bg-[#1e3a8a] text-white py-3 rounded-lg font-bold hover:bg-[#1e3270] transition disabled:opacity-40 disabled:cursor-not-allowed"
+      disabled
+    >
+      Place Order →
+    </button>
+  </div>
+</aside>
+
+<!-- ===== INLINE CATALOG DATA + LOGIC ===== -->
+<script>
+/* -----------------------------------------------------------------------
+   CATALOG — embedded inline, no async dependency
+   ----------------------------------------------------------------------- */
+var CATALOG = [
+  { item: "Tall Short Sleeve w/Logo",       sku: "SP20EX-T",       type: "shirt"  },
+  { item: "Short Sleeve Grey T-Shirt w/Logo", sku: "8300",           type: "shirt"  },
+  { item: "Oxford Button-Up SS with Logo 16 1/2", sku: "Oxford-SS-16.5", type: "shirt" },
+  { item: "Tall LT. Blue No Pocket Polo",   sku: "TST-650",        type: "polo"   },
+  { item: "LT. Blue Pocketed Polo",         sku: "K540P",          type: "polo"   },
+  { item: "Long Sleeve w/Logo",             sku: "SP10EX",         type: "shirt"  },
+  { item: "Short Sleeve w/Logo",            sku: "SP20EX",         type: "shirt"  },
+  { item: "Navy Cargo Pant",               sku: "PT88",           type: "pant"   },
+  { item: "Navy Regular Pant",             sku: "PT10",           type: "pant"   },
+  { item: "Navy Rip Stock Pant",           sku: "PT2L",           type: "pant"   },
+  { item: "Heavy Weight Jacket w/Logo",    sku: "J754",           type: "jacket" },
+  { item: "Light Weight Jacket w/Logo",    sku: "J701",           type: "jacket" }
+];
+
+var SIZES = {
+  tops:  ["Small", "Medium", "Large", "XL", "XXL", "3XL", "4XL"],
+  pants: ["29x30","29x32","30x30","30x32","30x34","32x30","32x32","32x34","34x32","34x34","36x32","38x32","40x32"]
+};
+
+var PRICES = { shirt: 28, polo: 34, pant: 52, jacket: 72 };
+
+var TYPE_LABELS = { shirt: "Shirt", polo: "Polo", pant: "Pant", jacket: "Jacket" };
+
+var TYPE_BADGE_COLORS = {
+  shirt:  "bg-sky-100 text-sky-800",
+  polo:   "bg-indigo-100 text-indigo-800",
+  pant:   "bg-slate-100 text-slate-700",
+  jacket: "bg-amber-100 text-amber-800"
+};
+
+/* qty state keyed by sku (for product grid controls) */
+var gridQty = {};
+CATALOG.forEach(function(p) { gridQty[p.sku] = 1; });
+
+var activeFilter = 'all';
+
+/* -----------------------------------------------------------------------
+   RENDER PRODUCT GRID
+   ----------------------------------------------------------------------- */
+function renderGrid() {
+  var grid = document.getElementById('product-grid');
+  var noResults = document.getElementById('no-results');
+  var filtered = activeFilter === 'all'
+    ? CATALOG
+    : CATALOG.filter(function(p) { return p.type === activeFilter; });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '';
+    noResults.classList.remove('hidden');
+    return;
+  }
+  noResults.classList.add('hidden');
+
+  grid.innerHTML = filtered.map(function(product) {
+    var price = PRICES[product.type] || 0;
+    var sizes = (product.type === 'pant') ? SIZES.pants : SIZES.tops;
+    var sizeOptions = sizes.map(function(s) {
+      return '<option value="' + s + '">' + s + '</option>';
+    }).join('');
+    var badgeClass = TYPE_BADGE_COLORS[product.type] || 'bg-slate-100 text-slate-700';
+    var typeLabel = TYPE_LABELS[product.type] || product.type;
+    var qty = gridQty[product.sku] || 1;
+
+    return [
+      '<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col" data-type="' + product.type + '" data-sku="' + product.sku + '">',
+        '<div class="bg-gradient-to-br from-slate-100 to-slate-200 px-5 pt-6 pb-4">',
+          '<div class="flex gap-2 mb-3">',
+            '<span class="text-xs font-mono bg-white/80 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">' + product.sku + '</span>',
+            '<span class="text-xs font-medium px-2 py-0.5 rounded-full ' + badgeClass + '">' + typeLabel + '</span>',
+          '</div>',
+          '<h3 class="font-bold text-slate-800 text-base leading-snug">' + product.item + '</h3>',
+          '<div class="mt-2">',
+            '<span class="text-2xl font-bold text-[#1e3a8a]">$' + price + '</span>',
+            '<span class="text-slate-400 text-xs ml-1">starting price</span>',
+          '</div>',
+        '</div>',
+        '<div class="px-5 py-4 flex flex-col gap-3 flex-1">',
+          '<div>',
+            '<label class="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wide" for="size-' + product.sku + '">Size <span class="text-red-500">*</span></label>',
+            '<select id="size-' + product.sku + '" required',
+              ' class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] appearance-none">',
+              '<option value="">— Select size —</option>',
+              sizeOptions,
+            '</select>',
+          '</div>',
+          '<div>',
+            '<label class="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wide">Quantity</label>',
+            '<div class="flex items-center gap-2">',
+              '<button type="button" class="qty-btn w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-50 transition flex items-center justify-center"',
+                ' onclick="changeGridQty(\'' + product.sku + '\', -1)">',
+                '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M20 12H4"/></svg>',
+              '</button>',
+              '<span id="qty-display-' + product.sku + '" class="w-8 text-center font-bold text-slate-800">' + qty + '</span>',
+              '<button type="button" class="qty-btn w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-50 transition flex items-center justify-center"',
+                ' onclick="changeGridQty(\'' + product.sku + '\', 1)">',
+                '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>',
+              '</button>',
+            '</div>',
+          '</div>',
+          '<button type="button"',
+            ' onclick="addToCart(\'' + product.sku + '\', \'' + product.item.replace(/'/g, "\\'") + '\', \'' + product.type + '\', ' + price + ')"',
+            ' class="mt-auto bg-[#1e3a8a] text-white py-2.5 rounded-lg text-sm font-bold hover:bg-[#1e3270] transition active:scale-95">',
+            '+ Add to Cart',
+          '</button>',
+        '</div>',
+      '</div>'
+    ].join('');
+  }).join('');
+}
+
+function changeGridQty(sku, delta) {
+  gridQty[sku] = Math.max(1, (gridQty[sku] || 1) + delta);
+  var display = document.getElementById('qty-display-' + sku);
+  if (display) display.textContent = gridQty[sku];
+}
+
+function setFilter(type, btn) {
+  activeFilter = type;
+  document.querySelectorAll('.filter-tab').forEach(function(b) {
+    b.classList.remove('active-tab', 'bg-[#1e3a8a]', 'text-white');
+    b.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+  });
+  btn.classList.add('active-tab', 'bg-[#1e3a8a]', 'text-white');
+  btn.classList.remove('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+  renderGrid();
+}
+
+function addToCart(sku, name, type, unitPrice) {
+  var sizeEl = document.getElementById('size-' + sku);
+  if (!sizeEl || !sizeEl.value) {
+    sizeEl.classList.add('ring-2', 'ring-red-400', 'border-red-400');
+    sizeEl.focus();
+    setTimeout(function() { sizeEl.classList.remove('ring-2', 'ring-red-400', 'border-red-400'); }, 1800);
+    return;
+  }
+  var qty = gridQty[sku] || 1;
+  CheekyCart.add({ sku: sku, name: name, type: type, size: sizeEl.value, qty: qty, unitPrice: unitPrice, storeId: 'sdpc' });
+
+  /* brief visual feedback on button */
+  var btns = document.querySelectorAll('[data-sku="' + sku + '"] button[onclick*="addToCart"]');
+  btns.forEach(function(b) {
+    var orig = b.textContent;
+    b.textContent = '✓ Added!';
+    b.disabled = true;
+    setTimeout(function() { b.textContent = orig; b.disabled = false; }, 1200);
+  });
+
+  openCart();
+}
+
+/* -----------------------------------------------------------------------
+   RENDER CART
+   ----------------------------------------------------------------------- */
+function renderCart() {
+  var cart = CheekyCart.get();
+  var count = CheekyCart.count();
+  var total = CheekyCart.total();
+
+  /* badge */
+  var badge = document.getElementById('cart-count-badge');
+  badge.textContent = count;
+  badge.classList.toggle('hidden', count === 0);
+
+  /* subtotal */
+  document.getElementById('cart-subtotal').textContent = '$' + total.toFixed(2);
+
+  /* place order button */
+  var placeBtn = document.getElementById('place-order-btn');
+  placeBtn.disabled = (count === 0);
+
+  var emptyEl = document.getElementById('cart-empty');
+  var listEl = document.getElementById('cart-items-list');
+
+  if (cart.length === 0) {
+    emptyEl.classList.remove('hidden');
+    listEl.innerHTML = '';
+    return;
+  }
+  emptyEl.classList.add('hidden');
+
+  listEl.innerHTML = cart.map(function(item, idx) {
+    return [
+      '<div class="py-3 border-b border-slate-100 last:border-0">',
+        '<div class="flex justify-between items-start gap-2">',
+          '<div class="flex-1 min-w-0">',
+            '<p class="font-medium text-slate-800 text-sm leading-tight">' + item.name + '</p>',
+            '<p class="text-xs text-slate-400 mt-0.5">' + item.sku + ' &bull; ' + item.size + '</p>',
+          '</div>',
+          '<button onclick="removeCartItem(' + idx + ')" class="text-slate-300 hover:text-red-500 transition flex-shrink-0 mt-0.5" aria-label="Remove item">',
+            '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>',
+          '</button>',
+        '</div>',
+        '<div class="flex items-center justify-between mt-2">',
+          '<div class="flex items-center gap-2">',
+            '<button class="qty-btn w-7 h-7 rounded border border-slate-200 bg-white text-slate-600 font-bold hover:bg-slate-50 transition flex items-center justify-center"',
+              ' onclick="cartUpdateQty(' + idx + ', ' + (item.qty - 1) + ')" aria-label="Decrease quantity">',
+              '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M20 12H4"/></svg>',
+            '</button>',
+            '<span class="text-sm font-bold text-slate-800 w-6 text-center">' + item.qty + '</span>',
+            '<button class="qty-btn w-7 h-7 rounded border border-slate-200 bg-white text-slate-600 font-bold hover:bg-slate-50 transition flex items-center justify-center"',
+              ' onclick="cartUpdateQty(' + idx + ', ' + (item.qty + 1) + ')" aria-label="Increase quantity">',
+              '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>',
+            '</button>',
+          '</div>',
+          '<span class="text-sm font-bold text-[#1e3a8a]">$' + (item.unitPrice * item.qty).toFixed(2) + '</span>',
+        '</div>',
+      '</div>'
+    ].join('');
+  }).join('');
+}
+
+function cartUpdateQty(index, newQty) {
+  CheekyCart.updateQty(index, newQty);
+}
+
+function removeCartItem(index) {
+  CheekyCart.remove(index);
+}
+
+/* -----------------------------------------------------------------------
+   CART DRAWER OPEN / CLOSE
+   ----------------------------------------------------------------------- */
+function openCart() {
+  renderCart();
+  document.getElementById('cart-drawer').classList.add('open');
+  document.getElementById('cart-overlay').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCart() {
+  document.getElementById('cart-drawer').classList.remove('open');
+  document.getElementById('cart-overlay').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+/* -----------------------------------------------------------------------
+   ORDER FORM
+   ----------------------------------------------------------------------- */
+function showOrderForm() {
+  document.getElementById('order-form-section').classList.remove('hidden');
+  document.getElementById('place-order-btn').classList.add('hidden');
+  document.getElementById('fname').focus();
+}
+
+function hideOrderForm() {
+  document.getElementById('order-form-section').classList.add('hidden');
+  document.getElementById('place-order-btn').classList.remove('hidden');
+  document.getElementById('form-error').classList.add('hidden');
+}
+
+function submitOrder(e) {
+  e.preventDefault();
+  var fname = document.getElementById('fname').value.trim();
+  var lname = document.getElementById('lname').value.trim();
+  var email = document.getElementById('email').value.trim();
+  var phone = document.getElementById('phone').value.trim();
+  var notes = document.getElementById('notes').value.trim();
+  var errEl = document.getElementById('form-error');
+
+  if (!fname || !lname || !email) {
+    errEl.textContent = 'Please fill in your first name, last name, and email.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'Please enter a valid email address.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  errEl.classList.add('hidden');
+
+  var payload = CheekyCart.buildIntakePayload({
+    firstName: fname, lastName: lname, email: email, phone: phone, notes: notes
+  });
+
+  var submitBtn = document.getElementById('submit-btn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting…';
+
+  /* LIVE: POST to real intake API */
+  fetch('/api/intake/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(res) {
+    if (!res.ok) return res.json().then(function(d) { throw new Error(d.error || 'Server error ' + res.status); });
+    return res.json();
+  })
+  .then(function(data) {
+    if (!data.success) throw new Error(data.error || 'Order failed');
+
+    document.getElementById('order-form-section').classList.add('hidden');
+    document.getElementById('cart-footer').classList.add('hidden');
+
+    var successEl = document.getElementById('order-success');
+    successEl.classList.remove('hidden');
+
+    document.getElementById('success-job-id').textContent =
+      'Job ID: ' + (data.jobId || 'Assigned on confirmation');
+
+    var depositMsg = '';
+    if (data.depositGate && data.depositGate.required && data.depositGate.depositDue) {
+      depositMsg = 'Deposit required: $' + parseFloat(data.depositGate.depositDue).toFixed(2);
+    }
+    document.getElementById('success-deposit').textContent = depositMsg;
+  })
+  .catch(function(err) {
+    errEl.textContent = 'Something went wrong: ' + err.message + '. Your cart is intact — please try again or email customer.service@cheekyteesllc.com.';
+    errEl.classList.remove('hidden');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit Order';
+  });
+}
+
+/* -----------------------------------------------------------------------
+   CART EVENT LISTENER
+   ----------------------------------------------------------------------- */
+document.addEventListener('cheeky:cart:updated', function() {
+  renderCart();
+});
+
+/* -----------------------------------------------------------------------
+   INIT
+   ----------------------------------------------------------------------- */
+renderGrid();
+renderCart();
+</script>
+
+</body>
+</html>
