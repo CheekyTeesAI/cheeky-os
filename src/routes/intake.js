@@ -43,6 +43,7 @@ const { buildMissingInfoResponse } = require("../services/intakeResponseService"
 const { generatePortalToken } = require("../services/portalTokenService");
 const { logAction } = require("../services/auditService");
 const { CHEEKY_createIntakeOrder } = require("../services/orderService");
+const { buildWebIntakeBody } = require("../services/webIntakePayload");
 
 /** Accept Copilot prefixes on intake GUID (dynamic keys ending _intakequeueid). */
 function pickDataverseIntakeGuidFromBody(b) {
@@ -135,7 +136,7 @@ router.post("/web", async (req, res) => {
     const out = await intake.ingestPipeline({
       source: "WEB",
       subject: b.subject || "Web form",
-      body: b.body || b.message || "",
+      body: buildWebIntakeBody(b),
       phone: b.phone || "",
       customerName: b.customerName || "",
       from: { name: b.customerName || "", email: b.email || "" },

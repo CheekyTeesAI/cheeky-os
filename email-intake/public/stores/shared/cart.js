@@ -73,6 +73,11 @@
       var fullName = [customerInfo.firstName, customerInfo.lastName].filter(Boolean).join(' ') || 'Customer';
       var extraNotes = ['Store: ' + storeName, 'Est. subtotal: $' + estTotal.toFixed(2), customerInfo.notes || '']
         .filter(Boolean).join(' | ');
+      var orderBody = [
+        'Product: Uniform Order: ' + lines.join(', '),
+        'Quantity: ' + CheekyCart.count(),
+        'Notes: ' + extraNotes
+      ].join('\n');
 
       return {
         customerName: fullName,
@@ -80,7 +85,8 @@
         phone: customerInfo.phone || '',
         product: 'Uniform Order: ' + lines.join(', '),
         quantity: CheekyCart.count(),
-        notes: extraNotes
+        notes: extraNotes,
+        body: orderBody
       };
     }
   };
