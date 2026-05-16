@@ -42,7 +42,7 @@
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
 
 <!-- =====================================================================
-     LIVE: Header + Store UI connects to real /api/intake/create endpoint
+     LIVE: Header + Store UI connects to real /api/intake/web endpoint
      LIVE: Cart stored in localStorage via CheekyCart engine
      NOTE: Square payment flow not wired — intake form creates job record only
      ===================================================================== -->
@@ -521,7 +521,7 @@ function submitOrder(e) {
   submitBtn.textContent = 'Submitting…';
 
   /* LIVE: POST to real intake API */
-  fetch('/api/intake/create', {
+  fetch('/api/intake/web', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
